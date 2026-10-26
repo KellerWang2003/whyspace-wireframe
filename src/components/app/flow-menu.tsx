@@ -16,9 +16,9 @@ import { useStore } from "@/lib/store"
 // Prototype helper only, not part of the app: jump to any screen while reviewing the flow.
 const SCREENS: [string, [string, string][]][] = [
   ["Getting in", [["Sign up", "/signup"], ["Log in", "/login"], ["Create workspace", "/new"]]],
-  ["Workspace", [["Projects", "/projects"], ["Inbox", "/inbox"], ["My tasks", "/my-tasks"], ["All decisions", "/decisions"]]],
-  ["Project", [["Overview", "/p/plantpal/overview"], ["Tasks", "/p/plantpal/tasks"], ["Decisions", "/p/plantpal/decisions"], ["Decision detail", "/p/plantpal/decisions/ondevice"], ["Sessions", "/p/plantpal/sessions"], ["Live session", "/p/plantpal/sessions/s1"], ["Project settings", "/p/plantpal/settings/general"]]],
-  ["Playground", [["Decision views", "/playground/plantpal/board"]]],
+  ["Workspace", [["All projects", "/projects"], ["Inbox", "/inbox"], ["My tasks", "/my-tasks"]]],
+  ["Project", [["Overview", "/p/platiful/overview"], ["Tasks", "/p/platiful/tasks"], ["Decisions", "/p/platiful/decisions"], ["Decision detail", "/p/platiful/decisions/ondevice"], ["Meetings", "/p/platiful/sessions"], ["Live meeting", "/p/platiful/sessions/s1"], ["Project settings", "/p/platiful/settings/general"]]],
+  ["Playground", [["Decision display states", "/playground/decisions/states"], ["Section map & outline", "/playground/platiful/canvas"], ["Earlier decision views", "/playground/platiful/board"]]],
   ["Settings", [["Workspace settings", "/settings/general"], ["Plan and billing", "/settings/billing"], ["Profile", "/account/profile"], ["My AI tools", "/account/ai-tools"], ["Notifications", "/account/notifications"]]],
 ]
 

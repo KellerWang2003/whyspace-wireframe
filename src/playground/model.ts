@@ -4,7 +4,7 @@ import { ARTIFACTS, DECISIONS, LINKS, PROJECTS, partsOf, type Artifact, type Dec
 // Kept in its own file so the main prototype data stays untouched.
 
 // The prototype's "today" and the reader's last visit, as day numbers counted from Oct 1.
-export const TODAY = 24
+export const TODAY = 25
 export const LAST_VISIT = 20
 
 const MONTH_START: Record<string, number> = { Sep: -30, Oct: 0, Nov: 31, Dec: 61 }
@@ -57,8 +57,8 @@ const SHAPES: Record<string, string[]> = {
 
 // Decisions that pull against each other (the misalignment alerts in Inbox).
 export const CONFLICTS: [string, string, string][] = [
-  ["swiftui", "screens", "Ana's screenshots show an Android phone"],
-  ["figma", "a16", "Jordan started a React repo"],
+  ["swiftui", "screens", "The beta email still promises a paid trial"],
+  ["figma", "a16", "Two generated questions lack a supporting source passage"],
 ]
 
 export type Model = {
@@ -135,15 +135,15 @@ export function spanOf(m: Model, a: Artifact) {
 // Each lists the decisions and artifacts that live in it instead of in its parent.
 export type SectionSeed = { id: string; name: string; parent: string; items: string[] }
 export const SUBSECTIONS: Record<string, SectionSeed[]> = {
-  plantpal: [
-    { id: "add", name: "Add a plant", parent: "part:Design", items: ["d:photo", "a:a1"] },
+  platiful: [
+    { id: "add", name: "Choose dinners", parent: "part:Design", items: ["d:photo", "a:a1"] },
     { id: "empty", name: "First run", parent: "add", items: ["d:empty"] },
-    { id: "schedule", name: "Watering schedule", parent: "part:Design", items: ["d:calendar", "d:type"] },
-    { id: "plantid", name: "Plant ID", parent: "part:Engineering", items: ["d:ondevice"] },
-    { id: "reminders", name: "Reminders", parent: "part:Engineering", items: ["d:local"] },
+    { id: "schedule", name: "Weekly meal plan", parent: "part:Design", items: ["d:calendar", "d:type"] },
+    { id: "plantid", name: "Grocery merging", parent: "part:Engineering", items: ["d:ondevice"] },
+    { id: "reminders", name: "Offline grocery list", parent: "part:Engineering", items: ["d:local"] },
   ],
   studio: [
     { id: "quiz", name: "Quiz flow", parent: "part:Prototype", items: ["d:figma", "a:a15"] },
-    { id: "react", name: "Code experiment", parent: "part:Prototype", items: ["a:a16"] },
+    { id: "react", name: "Generation and evaluation", parent: "part:Prototype", items: ["a:a16"] },
   ],
 }

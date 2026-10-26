@@ -49,7 +49,7 @@ function General() {
         </Field>
         <Field>
           <FieldLabel htmlFor="wg-url">Join link</FieldLabel>
-          <Input id="wg-url" readOnly defaultValue="whyspace.app/join/tidepool-8f2k" className="font-mono text-xs" />
+          <Input id="wg-url" readOnly defaultValue="whyspace.app/join/design-studio-8f2k" className="font-mono text-xs" />
           <FieldDescription>Anyone with this link can ask to join.</FieldDescription>
         </Field>
         <Field orientation="horizontal">

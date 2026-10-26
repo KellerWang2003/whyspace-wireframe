@@ -16,6 +16,13 @@ export const KIND_ICON: Record<ArtifactKind, typeof FileText> = {
 export function ArtifactPicture({ artifact: a, version: asked = 3, className }: { artifact: Artifact; version?: number; className?: string }) {
   const version = Math.min(asked, 3)
   const bar = "rounded-sm bg-muted-foreground/20"
+  if (a.content)
+    return (
+      <article className={cn("h-full overflow-y-auto rounded-lg bg-background p-5", className)}>
+        <h3 className="mb-4 text-sm font-semibold">{a.content.heading}</h3>
+        <div className="space-y-3">{a.content.paragraphs.map((paragraph, index) => <p key={index} className="text-sm leading-6 text-muted-foreground">{paragraph}</p>)}</div>
+      </article>
+    )
   if (a.kind === "Prototype")
     return (
       <div className={cn("flex h-full items-center justify-center gap-3", className)}>

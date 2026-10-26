@@ -7,7 +7,6 @@ import {
   ChevronRight,
   ChevronsUpDown,
   CircleUser,
-  GitFork,
   Inbox,
   LayoutGrid,
   ListChecks,
@@ -57,10 +56,9 @@ import { useStore } from "@/lib/store"
 
 export function AppSidebar() {
   const route = useRoute()
-  const { workspaces, current, switchWorkspace, setInviteOpen, setNewProjectOpen, setSearchOpen, setWorkspaceOpen } = useStore()
+  const { inboxState, workspaces, current, switchWorkspace, setInviteOpen, setNewProjectOpen, setSearchOpen, setWorkspaceOpen } = useStore()
   const projects = current?.example ? PROJECTS : []
-  const unread = current?.example ? INBOX.filter((i) => i.unread).length : 0
-  const toReview = current?.example ? DECISIONS.filter((d) => d.status === "inf").length : 0
+  const unread = current?.example ? INBOX.filter((i) => !inboxState[i.id]?.done && !(inboxState[i.id]?.read ?? !i.unread)).length : 0
   const at = (path: string) => "/" + route.join("/") === path
 
   return (
@@ -120,7 +118,7 @@ export function AppSidebar() {
       </SidebarHeader>
 
       <SidebarContent>
-        {/* 2. Search, Inbox, My tasks, All projects, Decisions. New project is the + beside Projects. */}
+        {/* 2. Search, Inbox, My tasks, All projects. New project is the + beside Projects. */}
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
@@ -145,18 +143,10 @@ export function AppSidebar() {
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton isActive={route[0] === "projects" || route.length === 0} onClick={() => navigate("/projects")}>
+                <SidebarMenuButton isActive={route[0] === "projects" || route[0] === "decisions" || route.length === 0} onClick={() => navigate("/projects")}>
                   <LayoutGrid />
                   <span>All projects</span>
                 </SidebarMenuButton>
-              </SidebarMenuItem>
-              {/* Every decision across projects, same views as inside a project */}
-              <SidebarMenuItem>
-                <SidebarMenuButton isActive={route[0] === "decisions"} onClick={() => navigate("/decisions")}>
-                  <GitFork />
-                  <span>Decisions</span>
-                </SidebarMenuButton>
-                {toReview > 0 && <SidebarMenuBadge>{toReview}</SidebarMenuBadge>}
               </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
@@ -193,7 +183,7 @@ export function AppSidebar() {
               <DropdownMenuTrigger asChild>
                 <SidebarMenuButton size="lg">
                   <Avatar className="size-8 rounded-md">
-                    <AvatarFallback className="rounded-md">MC</AvatarFallback>
+                    <AvatarFallback className="rounded-md">K</AvatarFallback>
                   </Avatar>
                   <div className="grid flex-1 text-left text-sm leading-tight">
                     <span className="truncate font-medium">{ME.name}</span>
@@ -235,10 +225,10 @@ export function AppSidebar() {
 // 3a. Each project expands in place to its sections. Settings live in the project's ⋯ menu.
 const SECTIONS = [
   ["overview", "Overview"],
+  ["tasks", "Tasks"],
   ["decisions", "Decisions"],
   ["artifacts", "Artifacts"],
-  ["tasks", "Tasks"],
-  ["sessions", "Sessions"],
+  ["sessions", "Meetings"],
 ] as const
 
 function ProjectNavItem({ id, name, route }: { id: string; name: string; route: string[] }) {

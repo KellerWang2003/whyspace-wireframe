@@ -53,7 +53,7 @@ export function CreateWorkspaceStep() {
               <Item variant="outline" size="sm">
                 <ItemMedia variant="icon"><JoinIcon /></ItemMedia>
                 <ItemContent>
-                  <ItemTitle>Tidepool</ItemTitle>
+                  <ItemTitle>Keller’s workspace</ItemTitle>
                   <ItemDescription>Invited by Priya Shah</ItemDescription>
                 </ItemContent>
                 <ItemActions>
@@ -115,8 +115,8 @@ export function WorkspaceDialog() {
               <Item variant="outline">
                 <ItemMedia variant="icon"><JoinIcon /></ItemMedia>
                 <ItemContent>
-                  <ItemTitle>Tidepool</ItemTitle>
-                  <ItemDescription>Invited by Priya Shah · 5 members</ItemDescription>
+                  <ItemTitle>Keller’s workspace</ItemTitle>
+                  <ItemDescription>Invited by Priya Shah · 6 members</ItemDescription>
                 </ItemContent>
                 <ItemActions>
                   <Button size="sm" onClick={() => { joinWorkspace(); close(); navigate("/inbox") }}>Accept</Button>

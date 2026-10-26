@@ -117,11 +117,11 @@ function NewProjectDialog() {
         <FieldGroup>
           <Field>
             <FieldLabel htmlFor="np-name">Project name</FieldLabel>
-            <Input id="np-name" placeholder="PlantPal app" />
+            <Input id="np-name" placeholder="Platiful app" />
           </Field>
           <Field>
             <FieldLabel htmlFor="np-brief">Brief</FieldLabel>
-            <Textarea id="np-brief" rows={3} placeholder="An iPhone app that reminds you when to water your plants." />
+            <Textarea id="np-brief" rows={3} placeholder="A meal-planning app that turns a few dinners into one grocery list." />
             <FieldDescription>You can edit this later in project settings.</FieldDescription>
           </Field>
           <Field>
@@ -145,7 +145,7 @@ function NewProjectDialog() {
           <Button
             onClick={() => {
               setNewProjectOpen(false)
-              navigate("/p/plantpal/overview")
+              navigate("/p/platiful/overview")
               toast("Project created", { description: "Opening the example project for now." })
             }}
           >
@@ -169,7 +169,7 @@ function InviteDialog() {
         <FieldGroup>
           <Field>
             <FieldLabel htmlFor="inv-emails">Emails</FieldLabel>
-            <Textarea id="inv-emails" rows={3} placeholder="priya@tidepool.co, sam@tidepool.co" />
+            <Textarea id="inv-emails" rows={3} placeholder="priya@platiful.example, sam@platiful.example" />
           </Field>
           <Field>
             <FieldLabel>Role</FieldLabel>
@@ -184,7 +184,7 @@ function InviteDialog() {
             </Select>
           </Field>
           <Field orientation="horizontal">
-            <Input readOnly value="whyspace.app/join/tidepool-8f2k" className="font-mono text-xs" />
+            <Input readOnly value="whyspace.app/join/design-studio-8f2k" className="font-mono text-xs" />
             <Button variant="outline" onClick={() => toast("Link copied")}>Copy link</Button>
           </Field>
         </FieldGroup>

@@ -40,16 +40,16 @@ type Line = { who: string; at: string; text: string; decision?: string }
 type Caught = { id: string; title: string; status: Status; who: string; at: string }
 
 const SCRIPT: Line[] = [
-  { who: "PS", at: "12:02", text: "Okay, the question is a push for every plant, or one daily digest." },
-  { who: "SO", at: "12:03", text: "Either is easy on the phone. But beta testers with 10 plants got 10 pings on Sunday morning." },
-  { who: "MC", at: "12:04", text: "And look at option A on the lock screen. It's a wall of notifications." },
-  { who: "PS", at: "12:06", text: "So one digest by default, but thirsty plants can't wait a day.", decision: "Plants that are overdue get their own push" },
-  { who: "SO", at: "12:07", text: "We can send the digest at 9 am and only push separately when a plant is overdue." },
-  { who: "MC", at: "12:08", text: "Then the digest opens straight to a checklist you can tick off.", decision: "The digest opens to a checklist of plants to water" },
+  { who: "PS", at: "12:02", text: "Should planning reminders go out every Sunday, or at a time each person chooses?" },
+  { who: "SO", at: "12:03", text: "Both are possible. We need a timezone and an explicit opt-in before scheduling anything." },
+  { who: "MC", at: "12:04", text: "The fixed Sunday prompt misses people who plan after their grocery trip." },
+  { who: "PS", at: "12:06", text: "Let people choose the day and time after they save their first plan.", decision: "Ask for reminder permission after the first saved plan" },
+  { who: "SO", at: "12:07", text: "I can store the chosen time and keep the reminder off until they opt in." },
+  { who: "MC", at: "12:08", text: "The reminder should open the weekly plan, with the last plan ready to reuse.", decision: "Planning reminders open the weekly meal plan" },
 ]
 const LIVE_LINES: Line[] = [
-  { who: "PS", at: "12:09", text: "I like B. It's one tap to see everything for the day." },
-  { who: "SO", at: "12:10", text: "Agreed. I'll keep a setting for per-plant pushes so we can test it later." },
+  { who: "PS", at: "12:09", text: "I like B. It fits the routines we saw in the diary notes." },
+  { who: "SO", at: "12:10", text: "I’ll add an editable day and time to settings." },
   { who: "MC", at: "12:11", text: "Let's pick B and park A in the archive." },
 ]
 
@@ -58,33 +58,43 @@ const SHADES = ["bg-neutral-100", "bg-neutral-200", "bg-neutral-300"]
 export function LiveSession({ id, sessionId }: { id: string; sessionId?: string }) {
   const project = PROJECTS.find((p) => p.id === id) ?? PROJECTS[0]
   const session = SESSIONS.find((s) => s.id === sessionId) ?? SESSIONS.find((s) => s.project === project.id && s.status === "Live") ?? {
-    title: "New session",
+    title: "New meeting",
     host: "MC",
     people: ["MC"],
   }
   const people = [...new Set(["MC", ...session.people])]
 
-  const [lines, setLines] = useState<Line[]>(SCRIPT)
-  const [speaking, setSpeaking] = useState("PS")
+  const studio = project.id === "studio"
+  const script: Line[] = studio ? [
+    { who: "JK", at: "18:02", text: "Two of the fifteen generated questions have no supporting passage." },
+    { who: "MC", at: "18:03", text: "Then we should reject those questions and explain why we returned fewer than five.", decision: "Reject questions without a supporting source passage" },
+    { who: "JK", at: "18:04", text: "I’ll return a reason code so the interface can show a useful retry." },
+    { who: "MC", at: "18:05", text: "Let’s test that state with classmates, alongside a successful upload.", decision: "Include a generation failure in usability testing" },
+  ] : SCRIPT
+  const [lines, setLines] = useState<Line[]>(script)
+  const [speaking, setSpeaking] = useState(studio ? "JK" : "PS")
   const [muted, setMuted] = useState(false)
   const [tool, setTool] = useState("select")
   const [zoom, setZoom] = useState(1)
   const [pan, setPan] = useState({ x: 20, y: 10 })
   const [picked, setPicked] = useState<"A" | "B" | null>(null)
-  const [stickies, setStickies] = useState<Sticky[]>([
-    { id: "s1", x: 40, y: 120, text: "4 of 6 beta testers muted us within 3 days", by: "PS", shade: 1 },
-    { id: "s2", x: 40, y: 290, text: "People water on weekends, mostly in the morning", by: "SO", shade: 0 },
-    { id: "s3", x: 40, y: 460, text: "Do people with 1 plant even need a digest?", by: "AT", shade: 2 },
+  const [stickies, setStickies] = useState<Sticky[]>(studio ? [
+    { id: "s1", x: 40, y: 120, text: "2 of 15 generated questions lacked a supporting passage", by: "JK", shade: 1 },
+    { id: "s2", x: 40, y: 290, text: "Test missing-source and retry states with four classmates", by: "MC", shade: 0 },
+  ] : [
+    { id: "s1", x: 40, y: 120, text: "5 of 8 diary participants planned on different days each week", by: "PS", shade: 1 },
+    { id: "s2", x: 40, y: 290, text: "Planning often happened just before a grocery trip", by: "SO", shade: 0 },
+    { id: "s3", x: 40, y: 460, text: "Should someone get a reminder before saving their first plan?", by: "AT", shade: 2 },
   ])
   const [caught, setCaught] = useState<Caught[]>(
-    SCRIPT.filter((l) => l.decision).map((l, i) => ({ id: `c${i}`, title: l.decision!, status: "inf" as Status, who: l.who, at: l.at })),
+    script.filter((l) => l.decision).map((l, i) => ({ id: `c${i}`, title: l.decision!, status: "inf" as Status, who: l.who, at: l.at })),
   )
 
   // Play the rest of the conversation in, a line every few seconds, so the room feels live.
   useEffect(() => {
     let i = 0
     const timer = setInterval(() => {
-      if (i >= LIVE_LINES.length) {
+      if (i >= (studio ? 0 : LIVE_LINES.length)) {
         clearInterval(timer)
         return
       }
@@ -93,12 +103,12 @@ export function LiveSession({ id, sessionId }: { id: string; sessionId?: string 
       setSpeaking(line.who)
     }, 4000)
     return () => clearInterval(timer)
-  }, [])
+  }, [studio])
 
   const pick = (option: "A" | "B") => {
     setPicked(option)
     setCaught((c) => [
-      { id: "pick", title: option === "B" ? "One daily digest at 9 am, with a push for overdue plants" : "A push for every plant when it needs water", status: "conf", who: "MC", at: "now" },
+      { id: "pick", title: studio ? (option === "B" ? "Reject questions without source support" : "Show unverified questions with a warning") : option === "B" ? "A planning reminder at the day and time the person chooses" : "A fixed Sunday planning reminder", status: "conf", who: "MC", at: "now" },
       ...c,
     ])
     toast(`Option ${option} picked`, { description: "Saved as a confirmed decision. The other option went to the idea archive." })
@@ -117,7 +127,7 @@ export function LiveSession({ id, sessionId }: { id: string; sessionId?: string 
         <Badge className="gap-1.5"><span className="size-1.5 animate-pulse rounded-full bg-primary-foreground" />Live · 11:24</Badge>
         <span className="hidden items-center gap-1.5 rounded-md border px-2 py-1 text-xs text-muted-foreground lg:flex">
           <ShieldCheck className="size-3.5" />
-          Everyone agreed to save decisions from this session
+          Everyone agreed to save decisions from this meeting
         </span>
         <div className="ml-auto flex items-center gap-2">
           <div className="flex -space-x-1">
@@ -137,14 +147,15 @@ export function LiveSession({ id, sessionId }: { id: string; sessionId?: string 
             {muted ? <MicOff /> : <Mic />}
             <span className="sr-only">{muted ? "Unmute" : "Mute"}</span>
           </Button>
-          <Button size="sm" onClick={() => { toast("Session ended", { description: "Summary and decisions saved to the project." }); navigate(`/p/${project.id}/decisions`) }}>
-            End session
+          <Button size="sm" onClick={() => { toast("Meeting ended", { description: "Summary and decisions saved to the project." }); navigate(`/p/${project.id}/decisions`) }}>
+            End meeting
           </Button>
         </div>
       </header>
 
       <div className="flex min-h-0 flex-1">
         <Canvas
+          studio={studio}
           zoom={zoom}
           pan={pan}
           setPan={setPan}
@@ -200,16 +211,16 @@ export function LiveSession({ id, sessionId }: { id: string; sessionId?: string 
                   <div className="flex items-start gap-3 rounded-lg border p-3 text-sm">
                     <Archive className="mt-0.5 size-4 text-muted-foreground" />
                     <div>
-                      <div className="font-medium">Option {picked === "B" ? "A · 1-hour slots" : "B · 2-hour slots"}</div>
-                      <div className="text-xs text-muted-foreground">Not picked today · {picked === "B" ? "Picker too long on mobile, more failed deliveries" : "Evenings too coarse"}</div>
+                      <div className="font-medium">Option {studio ? (picked === "B" ? "A · Unverified questions" : "B · Reject unsupported questions") : picked === "B" ? "A · Sunday reminder" : "B · Choose your time"}</div>
+                      <div className="text-xs text-muted-foreground">Not picked today · {studio ? (picked === "B" ? "Requires students to verify unreliable content" : "Returns fewer questions when evidence is missing") : picked === "B" ? "Fixed timing missed several planning routines" : "Extra setup before the first reminder"}</div>
                     </div>
                   </div>
                 )}
                 <div className="flex items-start gap-3 rounded-lg border p-3 text-sm">
                   <Archive className="mt-0.5 size-4 text-muted-foreground" />
                   <div>
-                    <div className="font-medium">Calendar-style slot picker</div>
-                    <div className="text-xs text-muted-foreground">From “One page or three steps”, Oct 14 · Too heavy for one page</div>
+                    <div className="font-medium">{studio ? "Generate questions without citations" : "Remind after every recipe save"}</div>
+                    <div className="text-xs text-muted-foreground">{studio ? "From concept review, Oct 15 · Students could not verify explanations" : "From beta readiness, Oct 23 · Too many notifications"}</div>
                   </div>
                 </div>
               </div>
@@ -298,6 +309,7 @@ function Transcript({ lines, speaking }: { lines: Line[]; speaking: string }) {
 }
 
 type CanvasProps = {
+  studio: boolean
   zoom: number
   pan: { x: number; y: number }
   setPan: (p: { x: number; y: number }) => void
@@ -308,7 +320,7 @@ type CanvasProps = {
   onPick: (o: "A" | "B") => void
 }
 
-function Canvas({ zoom, pan, setPan, tool, stickies, setStickies, picked, onPick }: CanvasProps) {
+function Canvas({ studio, zoom, pan, setPan, tool, stickies, setStickies, picked, onPick }: CanvasProps) {
   const drag = useRef<{ kind: "pan" | "sticky"; id?: string; sx: number; sy: number; ox: number; oy: number } | null>(null)
 
   const onDown = (e: ReactPointerEvent) => {
@@ -341,8 +353,8 @@ function Canvas({ zoom, pan, setPan, tool, stickies, setStickies, picked, onPick
       onPointerUp={onUp}
     >
       <div className="absolute top-0 left-0 origin-top-left" style={{ transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})` }}>
-        <div className="absolute top-10 left-10 w-[900px] text-2xl font-semibold">Watering reminders</div>
-        <div className="absolute top-[72px] left-10 text-sm whitespace-nowrap text-muted-foreground">Part of Research · owned by Priya Shah</div>
+        <div className="absolute top-10 left-10 w-[900px] text-2xl font-semibold">{studio ? "Unsupported question handling" : "Planning reminders"}</div>
+        <div className="absolute top-[72px] left-10 text-sm whitespace-nowrap text-muted-foreground">{studio ? "Part of Prototype · Keller and Jordan Kim" : "Part of Research · owned by Priya Shah"}</div>
 
         {/* Connectors from the research stickies to the options */}
         <svg className="pointer-events-none absolute top-0 left-0 overflow-visible" width="1" height="1">
@@ -354,9 +366,9 @@ function Canvas({ zoom, pan, setPan, tool, stickies, setStickies, picked, onPick
           x={340}
           y={120}
           label="Option A"
-          title="A push for every plant"
+          title={studio ? "Show an unverified question" : "A fixed Sunday reminder"}
           rows={8}
-          note="10 plants means 10 notifications on a Sunday"
+          note={studio ? "Keeps five questions, but makes verification harder" : "Easy to configure, but assumes everyone plans on Sunday"}
           state={picked === null ? "open" : picked === "A" ? "picked" : "archived"}
           onPick={() => onPick("A")}
         />
@@ -364,9 +376,9 @@ function Canvas({ zoom, pan, setPan, tool, stickies, setStickies, picked, onPick
           x={690}
           y={120}
           label="Option B"
-          title="One daily digest at 9 am"
+          title={studio ? "Reject and explain the missing source" : "Choose your planning time"}
           rows={4}
-          note="Overdue plants still get their own push"
+          note={studio ? "Return fewer questions and offer a retry" : "Opt in after saving the first plan"}
           state={picked === null ? "open" : picked === "B" ? "picked" : "archived"}
           onPick={() => onPick("B")}
         />
@@ -389,8 +401,8 @@ function Canvas({ zoom, pan, setPan, tool, stickies, setStickies, picked, onPick
         ))}
 
         {/* Other people's cursors */}
-        <Cursor x={700} y={420} name="Priya Shah" />
-        <Cursor x={960} y={430} name="Sam Okafor" />
+        <Cursor x={700} y={420} name={studio ? "Jordan Kim" : "Priya Shah"} />
+        {!studio && <Cursor x={960} y={430} name="Sam Okafor" />}
       </div>
     </div>
   )

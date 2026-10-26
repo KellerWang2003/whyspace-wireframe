@@ -1,22 +1,17 @@
 import { useState } from "react"
 import { toast } from "sonner"
-import { List, Network, Plus, Search, Sparkles } from "lucide-react"
+import { List, Network, Plus, Search } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Separator } from "@/components/ui/separator"
 import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { AppShell } from "@/components/app/app-shell"
-import { PersonAvatar } from "@/components/app/person"
-import { ProjectMark } from "@/components/app/project-mark"
-import { StatusBadge, StatusIcon } from "@/components/app/status-badge"
+import { StatusBadge } from "@/components/app/status-badge"
 import { DecisionList } from "@/screens/decision-views"
 import { DecisionCanvas } from "@/screens/decision-canvas"
-import { DECISIONS, ME, PEOPLE, PROJECTS, PROJECT_DECISION_SUMMARY, STATUS_LABEL, WEEK_SUMMARY, partsOf, projectName, type Decision, type Status } from "@/data"
+import { DECISIONS, PEOPLE, PROJECTS, STATUS_LABEL, partsOf, projectName, type Decision, type Status } from "@/data"
 import { navigate } from "@/lib/router"
-import { useStore } from "@/lib/store"
 
 const VIEWS = [
   ["canvas", "Canvas", Network],
@@ -143,114 +138,8 @@ export function DecisionsExplorer({ decisions, basePath, acrossProjects, selecte
   )
 }
 
-// Main nav "Decisions" is not a canvas: canvases belong to a project and its team.
-// This page is the overview across projects, mostly AI summaries of what changed,
-// so you can catch up on everything without opening each project.
-const THIS_WEEK = ["Today", "Yesterday", "Oct 22", "Oct 21", "Oct 20", "Oct 19"]
-
-export function AllDecisions({ id }: { id?: string }) {
-  const { current } = useStore()
-  const [tab, setTab] = useState("summary")
-  const week = DECISIONS.filter((d) => THIS_WEEK.includes(d.when ?? ""))
-  const toConfirm = DECISIONS.filter((d) => d.status === "inf")
-  const mine = toConfirm.filter((d) => d.owner === ME.id)
-  const changed = DECISIONS.filter((d) => d.status === "chg")
-  const open = DECISIONS.filter((d) => d.status === "open")
-
-  return (
-    <AppShell crumbs={[{ label: current?.name ?? "" }, { label: "Decisions" }]}>
-      <div className="flex flex-col gap-6 p-8">
-        <div className="flex flex-wrap items-end justify-between gap-4">
-          <div className="space-y-1">
-            <h1 className="text-2xl font-semibold tracking-tight">Decisions</h1>
-            <p className="text-sm text-muted-foreground">What your teams decided across {PROJECTS.length} projects, summarized by Whyspace.</p>
-          </div>
-          <Tabs value={tab} onValueChange={setTab}>
-            <TabsList>
-              <TabsTrigger value="summary"><Sparkles />Summary</TabsTrigger>
-              <TabsTrigger value="all"><List />All decisions</TabsTrigger>
-            </TabsList>
-          </Tabs>
-        </div>
-
-        {tab === "summary" ? (
-          <>
-            <Card>
-              <CardHeader>
-                <CardDescription className="flex items-center gap-1.5"><Sparkles className="size-3.5" />This week, across everything</CardDescription>
-                <CardTitle className="text-lg leading-snug font-medium">
-                  {week.length} decisions moved this week. The biggest change: PlantPal's plant ID now runs on the phone. {toConfirm.length} decisions came in from AI tools and are waiting for a person, {mine.length} of them yours.
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="grid gap-3 sm:grid-cols-4">
-                {[
-                  ["New this week", week.length, "conf" as Status],
-                  ["To confirm", toConfirm.length, "inf" as Status],
-                  ["Changed", changed.length, "chg" as Status],
-                  ["Still open", open.length, "open" as Status],
-                ].map(([label, n, st]) => (
-                  <div key={label as string} className="rounded-lg border p-3">
-                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground"><StatusIcon status={st as Status} className="size-3.5" />{label}</div>
-                    <div className="mt-1 text-2xl font-semibold tabular-nums">{n}</div>
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
-
-            {PROJECTS.map((p) => {
-              const ds = DECISIONS.filter((d) => d.project === p.id)
-              const recent = ds.filter((d) => THIS_WEEK.includes(d.when ?? "") || d.status === "open").slice(0, 5)
-              const waiting = ds.filter((d) => d.status === "inf").length
-              return (
-                <Card key={p.id}>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2"><ProjectMark project={p.id} className="size-6" />{p.name}</CardTitle>
-                    <CardDescription>
-                      {ds.filter((d) => THIS_WEEK.includes(d.when ?? "")).length} decisions this week{waiting > 0 && ` · ${waiting} to confirm`}
-                    </CardDescription>
-                    <CardAction><Button size="sm" variant="outline" onClick={() => navigate(`/p/${p.id}/decisions`)}><Network />Open canvas</Button></CardAction>
-                  </CardHeader>
-                  <CardContent className="grid gap-6 lg:grid-cols-2">
-                    <div className="space-y-4">
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground"><Sparkles className="size-3.5" />What changed</div>
-                        <p className="text-sm leading-relaxed">{WEEK_SUMMARY[p.id]}</p>
-                      </div>
-                      <div className="space-y-1">
-                        <div className="text-xs font-medium text-muted-foreground">Where it stands</div>
-                        <p className="text-sm leading-relaxed text-muted-foreground">{PROJECT_DECISION_SUMMARY[p.id]}</p>
-                      </div>
-                    </div>
-                    <div className="divide-y self-start rounded-lg border">
-                      {recent.map((d) => (
-                        <button key={d.id} className="flex w-full items-start gap-2.5 px-3 py-2.5 text-left hover:bg-muted" onClick={() => navigate(`/decisions/${d.id}`)}>
-                          <StatusIcon status={d.status} className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
-                          <span className="min-w-0 flex-1">
-                            <span className="block text-sm">{d.title}</span>
-                            <span className="block text-xs text-muted-foreground">
-                              {STATUS_LABEL[d.status]} · {d.part} · {d.when ?? `due ${d.due}`}{d.tool && ` · from ${d.tool}`}
-                            </span>
-                          </span>
-                          <PersonAvatar id={d.owner} />
-                        </button>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              )
-            })}
-          </>
-        ) : (
-          <DecisionList decisions={DECISIONS} basePath="/decisions" showProject />
-        )}
-      </div>
-      <DecisionSheet basePath="/decisions" id={id} />
-    </AppShell>
-  )
-}
-
 // Decision detail opens over the current view as a sheet, so the view stays in place.
-function DecisionSheet({ basePath, id }: { basePath: string; id?: string }) {
+export function DecisionSheet({ basePath, id }: { basePath: string; id?: string }) {
   const d = DECISIONS.find((x) => x.id === id)
   return (
     <Sheet open={!!d} onOpenChange={(o) => !o && navigate(basePath)}>

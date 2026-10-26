@@ -16,9 +16,9 @@ export type Crumb = { label: string; to?: string }
 
 export function AppShell({ crumbs, actions, children }: { crumbs: Crumb[]; actions?: ReactNode; children: ReactNode }) {
   return (
-    <SidebarProvider>
+    <SidebarProvider className="h-svh overflow-hidden">
       <AppSidebar />
-      <SidebarInset>
+      <SidebarInset className="min-h-0 min-w-0 overflow-hidden">
         <header className="flex h-14 shrink-0 items-center gap-2 border-b px-4">
           <SidebarTrigger className="-ml-1" />
           <Separator orientation="vertical" className="mr-2 data-[orientation=vertical]:h-4" />
@@ -42,7 +42,7 @@ export function AppShell({ crumbs, actions, children }: { crumbs: Crumb[]; actio
           </Breadcrumb>
           <div className="ml-auto flex items-center gap-2">{actions}</div>
         </header>
-        <div className="flex min-h-0 flex-1 flex-col">{children}</div>
+        <div className="relative flex min-h-0 flex-1 flex-col overflow-y-auto">{children}</div>
       </SidebarInset>
     </SidebarProvider>
   )

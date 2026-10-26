@@ -1,14 +1,16 @@
 import { ProjectDecisions } from "@/screens/project-decisions"
+import { OverviewSections } from "@/components/decisions/overview-sections"
+import { ProjectWork } from "@/components/app/project-work"
 import { ProjectArtifacts } from "@/screens/project-artifacts"
 import { useState } from "react"
 import { toast } from "sonner"
 import {
   Archive,
   ArrowRight,
-  Circle,
-  CircleCheck,
   Plus,
   CalendarPlus,
+  CalendarDays,
+  Clock3,
   Code,
   FileText,
   MonitorPlay,
@@ -36,8 +38,7 @@ import { Item, ItemActions, ItemContent, ItemDescription, ItemGroup, ItemMedia, 
 import { Progress } from "@/components/ui/progress"
 import { Separator } from "@/components/ui/separator"
 import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Textarea } from "@/components/ui/textarea"
 import { AppShell } from "@/components/app/app-shell"
 import { ProBadge } from "@/components/app/global-dialogs"
@@ -45,7 +46,6 @@ import { AvatarStack, PersonAvatar } from "@/components/app/person"
 import { ProjectMark } from "@/components/app/project-mark"
 import { TasksView } from "@/components/app/tasks"
 import {
-  ACTIVITY,
   ARTIFACTS,
   DECISIONS,
   PEOPLE,
@@ -63,10 +63,10 @@ import { cn } from "@/lib/utils"
 
 type Project = (typeof PROJECTS)[number]
 
-const PAGE: Record<string, string> = { overview: "Overview", tasks: "Tasks", decisions: "Decisions", artifacts: "Artifacts", sessions: "Sessions", settings: "Settings" }
+const PAGE: Record<string, string> = { overview: "Overview", tasks: "Tasks", decisions: "Decisions", artifacts: "Artifacts", sessions: "Meetings", settings: "Settings" }
 
-// A project has four sections, picked in the sidebar: Overview, Tasks, Decisions, Sessions.
-// Settings sit behind the ⋯ menu. A session itself opens full screen from Sessions.
+// Project navigation: Overview, Tasks, Decisions, Artifacts, Meetings.
+// Settings sit behind the project menu. Meetings open a shared canvas.
 export function Project({ id, section, sub }: { id: string; section: string; sub?: string }) {
   const project = PROJECTS.find((p) => p.id === id) ?? PROJECTS[0]
   const { current, setUpgradeOpen } = useStore()
@@ -108,9 +108,9 @@ export function Project({ id, section, sub }: { id: string; section: string; sub
           <div className="p-8"><NoDecisions /></div>
         )
       ) : section === "artifacts" ? (
-        <ProjectArtifacts project={project} />
+        <ProjectArtifacts key={project.id} project={project} selectedId={sub} />
       ) : section === "sessions" ? (
-        <Sessions project={project} free={free} onUpgrade={() => setUpgradeOpen(true)} />
+        <Meetings project={project} free={free} onUpgrade={() => setUpgradeOpen(true)} />
       ) : section === "settings" ? (
         <ProjectSettings project={project} tab={sub ?? "general"} />
       ) : (
@@ -123,22 +123,21 @@ export function Project({ id, section, sub }: { id: string; section: string; sub
 /* ---------------- Overview ---------------- */
 
 // Overview is a calm one-page brief, like Linear's or Asana's project overview: a main
-// column you read top to bottom (AI summary, what needs you, milestones, key links) and a
-// thin properties rail on the right. Detail lives in Tasks, Decisions and Sessions.
+// column for the AI summary, sections, and key links, with team activity and
+// project properties on the right. Detail lives in Tasks, Decisions and Sessions.
 function Overview({ decisions: ds, project }: { decisions: Decision[]; project: Project }) {
   const tasks = TASKS.filter((t) => t.project === project.name)
   const timeline = TIMELINE[project.id] ?? []
-  const next = timeline.find((m) => !m.done)
   // A live session already shows as a live icon in the sidebar, so only scheduled ones go here.
   const session = SESSIONS.find((s) => s.project === project.id && s.status === "Scheduled")
   const done = tasks.filter((t) => t.status === "done").length
   const pct = tasks.length ? Math.round((done / tasks.length) * 100) : 0
   const needsYou = ds.filter((d) => ["chg", "inf", "flag"].includes(d.status))
-  const active = ACTIVITY.filter((a) => a.project === project.id && a.state === "active")
   const links = ARTIFACTS.filter((a) => a.project === project.id).slice(0, 4)
 
   return (
-    <div className="mx-auto flex w-full max-w-5xl flex-col gap-10 px-8 py-10 lg:flex-row">
+    <div className="min-h-0 flex-1 overflow-y-auto">
+    <div className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 py-8 sm:px-8 sm:py-10 lg:flex-row">
       <div className="min-w-0 flex-1 space-y-10">
         <header className="space-y-2">
           <ProjectMark project={project.id} className="size-8" />
@@ -156,19 +155,7 @@ function Overview({ decisions: ds, project }: { decisions: Decision[]; project: 
           )}
         </section>
 
-        <section className="space-y-3">
-          <SectionTitle>Milestones</SectionTitle>
-          <ul className="divide-y rounded-lg border">
-            {timeline.map((m) => (
-              <li key={m.name} className={cn("flex items-center gap-3 px-4 py-2.5 text-sm", m.done && "text-muted-foreground")}>
-                {m.done ? <CircleCheck className="size-4" /> : <Circle className={cn("size-4", m !== next && "text-muted-foreground")} />}
-                <span className={cn("flex-1", m === next && "font-medium")}>{m.name}</span>
-                {m === next && <Badge variant="secondary" className="font-normal">Next</Badge>}
-                <span className="w-14 text-right text-muted-foreground tabular-nums">{m.date}</span>
-              </li>
-            ))}
-          </ul>
-        </section>
+        <OverviewSections key={project.id} project={project} />
 
         <section className="space-y-3">
           <div className="flex items-center justify-between">
@@ -179,7 +166,7 @@ function Overview({ decisions: ds, project }: { decisions: Decision[]; project: 
             {links.map((a) => {
               const Icon = KIND_ICON[a.kind]
               return (
-                <button key={a.id} onClick={() => toast(`Opens ${a.name}`)} className="flex items-center gap-3 rounded-lg border px-3 py-2.5 text-left text-sm hover:bg-muted/50">
+                <button key={a.id} onClick={() => navigate(`/p/${project.id}/artifacts/${a.id}`)} className="flex items-center gap-3 rounded-lg border px-3 py-2.5 text-left text-sm hover:bg-muted/50">
                   <Icon className="size-4 shrink-0 text-muted-foreground" />
                   <span className="min-w-0 flex-1 truncate">{a.name}</span>
                   <span className="text-xs text-muted-foreground">{a.kind}</span>
@@ -190,8 +177,9 @@ function Overview({ decisions: ds, project }: { decisions: Decision[]; project: 
         </section>
       </div>
 
-      {/* Properties rail */}
-      <aside className="w-full shrink-0 space-y-5 text-sm lg:w-60 lg:border-l lg:pl-8">
+      {/* Team activity and project properties */}
+      <aside aria-label="Project activity and properties" className="w-full min-w-0 shrink-0 space-y-6 text-sm lg:w-80 lg:border-l lg:pl-6">
+        <div className="space-y-5">
         <Prop label="Progress">
           <div className="flex w-full items-center gap-2">
             <Progress value={pct} className="h-1.5 flex-1" />
@@ -202,20 +190,14 @@ function Overview({ decisions: ds, project }: { decisions: Decision[]; project: 
         <Prop label="Members"><AvatarStack ids={project.members} /></Prop>
         <Prop label="Target date">{timeline.at(-1)?.date ?? "None"}</Prop>
         {session && (
-          <Prop label="Next session">
+          <Prop label="Next meeting">
             <a href={`#/p/${project.id}/sessions`} className="hover:underline">{session.title}</a>
           </Prop>
         )}
-        <Prop label="Working now">
-          <div className="flex -space-x-1.5">
-            {active.map((a) => (
-              <span key={a.who} title={`${PEOPLE[a.who].name}: ${a.doing}${a.tool ? ` (${a.tool})` : ""}`}>
-                <PersonAvatar id={a.who} className="ring-2 ring-background" />
-              </span>
-            ))}
-          </div>
-        </Prop>
+        </div>
+        <div className="border-t pt-5"><ProjectWork project={project} /></div>
       </aside>
+    </div>
     </div>
   )
 }
@@ -237,111 +219,96 @@ const KIND_ICON = { Prototype: MonitorPlay, Figma: PenTool, Doc: FileText, Repo:
 
 /* ---------------- Sessions ---------------- */
 
-// Sessions works like a meeting room for the project: join what's live, start or
-// schedule one, and look back at past sessions with their summaries.
-function Sessions({ project, free, onUpgrade }: { project: Project; free: boolean; onUpgrade: () => void }) {
+// Upcoming and past sessions share the same list and detail view.
+function Meetings({ project, free, onUpgrade }: { project: Project; free: boolean; onUpgrade: () => void }) {
   const all = SESSIONS.filter((s) => s.project === project.id)
-  const live = all.find((s) => s.status === "Live")
-  const scheduled = all.filter((s) => s.status === "Scheduled")
-  const past = all.filter((s) => s.status === "Ended")
+  const upcoming = all.filter((s) => s.status !== "Ended").sort((a, b) => Number(b.status === "Live") - Number(a.status === "Live"))
+  const past = all.filter((s) => s.status === "Ended").reverse()
   const [summary, setSummary] = useState<Session | null>(null)
   const start = () => (free ? onUpgrade() : navigate(`/p/${project.id}/sessions/new`))
 
   return (
-    <div className="flex flex-col gap-6 p-8">
-      <div className="flex items-end justify-between gap-4">
+    <div className="flex min-w-0 flex-col gap-6 p-4 sm:p-8">
+      <div className="flex flex-wrap items-end justify-between gap-4">
         <div className="space-y-1">
-          <h1 className="text-2xl font-semibold tracking-tight">Sessions</h1>
-          <p className="text-sm text-muted-foreground">Work through decisions together on a shared canvas. Whyspace saves what you decide.</p>
+          <h1 className="text-2xl font-semibold tracking-tight">Meetings</h1>
+          <p className="text-sm text-muted-foreground">Meet with your team. Keep the decisions.</p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={() => toast("Schedule a session")}><CalendarPlus />Schedule</Button>
-          <Button size="sm" onClick={start}><Radio />Start session{free && <ProBadge />}</Button>
+          <Button variant="outline" size="sm" onClick={() => toast("Schedule a meeting")}><CalendarPlus />Schedule</Button>
+          <Button size="sm" onClick={start}><Radio />Start meeting{free && <ProBadge />}</Button>
         </div>
       </div>
 
-      {live ? (
-        <div className="flex items-center gap-5 rounded-xl border bg-muted/40 p-6">
-          <div className="flex size-12 items-center justify-center rounded-full bg-foreground text-background"><Radio className="size-5" /></div>
-          <div className="flex-1 space-y-1">
-            <div className="flex items-center gap-2 text-lg font-semibold">{live.title}<Badge>Live</Badge></div>
-            <div className="text-sm text-muted-foreground">{PEOPLE[live.host].name} is hosting · {live.length} · {live.decisions} decisions caught so far</div>
-          </div>
-          <AvatarStack ids={live.people} />
-          <Button onClick={() => navigate(`/p/${project.id}/sessions/${live.id}`)}>Join</Button>
+      <Tabs defaultValue="upcoming" className="gap-0">
+        <div className="border-b">
+          <TabsList variant="line" className="h-11 gap-5 p-0">
+            <TabsTrigger value="upcoming" className="h-full rounded-none px-0 pb-3 after:bottom-0">Upcoming <span className="text-xs tabular-nums text-muted-foreground">{upcoming.length}</span></TabsTrigger>
+            <TabsTrigger value="past" className="h-full rounded-none px-0 pb-3 after:bottom-0">Past <span className="text-xs tabular-nums text-muted-foreground">{past.length}</span></TabsTrigger>
+          </TabsList>
         </div>
-      ) : (
-        <Empty className="border border-dashed py-10">
-          <EmptyHeader>
-            <EmptyMedia variant="icon"><Radio /></EmptyMedia>
-            <EmptyTitle>No session running</EmptyTitle>
-            <EmptyDescription>Start one when a decision needs the group. Everyone joins the same canvas.</EmptyDescription>
-          </EmptyHeader>
-          <EmptyContent><Button onClick={start}>Start session</Button></EmptyContent>
-        </Empty>
-      )}
-
-      {scheduled.length > 0 && (
-        <div className="space-y-3">
-          <h2 className="text-sm font-medium text-muted-foreground">Scheduled</h2>
-          <div className="grid gap-3 md:grid-cols-2">
-            {scheduled.map((s) => (
-              <Item key={s.id} variant="outline">
-                <ItemMedia variant="icon"><CalendarPlus /></ItemMedia>
-                <ItemContent>
-                  <ItemTitle>{s.title}</ItemTitle>
-                  <ItemDescription>{s.when} · hosted by {PEOPLE[s.host].name}</ItemDescription>
-                </ItemContent>
-                <ItemActions><AvatarStack ids={s.people} max={3} /></ItemActions>
-              </Item>
-            ))}
-          </div>
-        </div>
-      )}
-
-      <div className="space-y-3">
-        <h2 className="text-sm font-medium text-muted-foreground">Past sessions</h2>
-        <div className="rounded-lg border">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Session</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead>Length</TableHead>
-                <TableHead>People</TableHead>
-                <TableHead className="text-right">Decisions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {past.map((s) => (
-                <TableRow key={s.id} className="cursor-pointer" onClick={() => setSummary(s)}>
-                  <TableCell className="font-medium">{s.title}</TableCell>
-                  <TableCell className="text-muted-foreground">{s.when}</TableCell>
-                  <TableCell className="text-muted-foreground">{s.length}</TableCell>
-                  <TableCell><AvatarStack ids={s.people} max={3} /></TableCell>
-                  <TableCell className="text-right tabular-nums">{s.decisions}</TableCell>
-                </TableRow>
+        {([{ key: "upcoming", sessions: upcoming }, { key: "past", sessions: past }] as const).map(({ key, sessions }) => (
+          <TabsContent key={key} value={key}>
+            <ul aria-label={`${key === "upcoming" ? "Upcoming" : "Past"} meetings`} className="divide-y">
+              {sessions.map((session) => (
+                <li key={session.id} className="flex flex-wrap items-center gap-x-6 gap-y-4 py-6">
+                  <div className={cn("flex size-10 shrink-0 items-center justify-center rounded-lg border", session.status === "Live" ? "border-foreground bg-foreground text-background" : "bg-muted/40 text-muted-foreground")}>
+                    {session.status === "Live" ? <Radio className="size-4" /> : session.status === "Ended" ? <MonitorPlay className="size-4" /> : <CalendarDays className="size-4" />}
+                  </div>
+                  <div className="min-w-0 flex-1 basis-48 space-y-1.5">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <button className="text-left text-sm font-medium hover:underline focus-visible:rounded-sm focus-visible:outline-2 focus-visible:outline-ring" onClick={() => setSummary(session)}>{session.title}</button>
+                      {session.status === "Live" && <Badge variant="secondary" className="gap-1.5 text-xs font-normal"><span className="size-1.5 rounded-full bg-current" />Live now</Badge>}
+                    </div>
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                      <span>{session.when}</span>
+                      {session.length && <span className="inline-flex items-center gap-1"><Clock3 className="size-3" />{session.length}</span>}
+                      <span>Hosted by {PEOPLE[session.host].name}</span>
+                      {session.status !== "Scheduled" && <span>{session.decisions} {session.decisions === 1 ? "decision" : "decisions"}</span>}
+                    </div>
+                  </div>
+                  <div className="ml-16 flex items-center gap-6 sm:ml-0">
+                    <div className="flex w-24 flex-col items-start gap-1.5">
+                      <AvatarStack ids={session.people} max={3} />
+                      <span className="text-xs text-muted-foreground">{session.people.length} people</span>
+                    </div>
+                    <div className="flex w-28 justify-end">
+                      {session.status === "Live" ? (
+                        <Button size="sm" onClick={() => navigate(`/p/${project.id}/sessions/${session.id}`)}>Join meeting</Button>
+                      ) : (
+                        <Button size="sm" variant="outline" onClick={() => setSummary(session)}>{session.status === "Ended" ? "View summary" : "View details"}</Button>
+                      )}
+                    </div>
+                  </div>
+                </li>
               ))}
-              {!past.length && (
-                <TableRow><TableCell colSpan={5} className="py-8 text-center text-muted-foreground">No past sessions yet.</TableCell></TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </div>
-      </div>
+            </ul>
+            {!sessions.length && (
+              <Empty className="py-16">
+                <EmptyHeader>
+                  <EmptyMedia variant="icon">{key === "upcoming" ? <CalendarDays /> : <MonitorPlay />}</EmptyMedia>
+                  <EmptyTitle>{key === "upcoming" ? "No upcoming meetings" : "No past meetings yet"}</EmptyTitle>
+                  <EmptyDescription>{key === "upcoming" ? "Start a meeting now or schedule time with your team." : "Past meetings and their summaries will appear here."}</EmptyDescription>
+                </EmptyHeader>
+                {key === "upcoming" && <EmptyContent><Button variant="outline" onClick={() => toast("Schedule a meeting")}><CalendarPlus />Schedule meeting</Button></EmptyContent>}
+              </Empty>
+            )}
+          </TabsContent>
+        ))}
+      </Tabs>
 
       <Sheet open={!!summary} onOpenChange={(o) => !o && setSummary(null)}>
         <SheetContent className="w-[480px] sm:max-w-[480px]">
           {summary && (
             <>
               <SheetHeader>
-                <SheetDescription>{summary.when} · {summary.length} · hosted by {PEOPLE[summary.host].name}</SheetDescription>
+                <SheetDescription>{summary.when}{summary.length && ` · ${summary.length}`} · hosted by {PEOPLE[summary.host].name}</SheetDescription>
                 <SheetTitle className="text-lg">{summary.title}</SheetTitle>
               </SheetHeader>
               <div className="flex flex-col gap-5 px-4">
                 <div className="space-y-1">
-                  <div className="text-xs font-medium text-muted-foreground">Summary</div>
-                  <p className="text-sm">{summary.summary}</p>
+                  <div className="text-xs font-medium text-muted-foreground">{summary.status === "Ended" ? "Summary" : "Meeting details"}</div>
+                  <p className="text-sm">{summary.summary ?? (summary.status === "Live" ? "Your team is working together on the shared canvas. Join to take part." : "A scheduled meeting with your team on a shared canvas.")}</p>
                 </div>
                 <div className="space-y-2">
                   <div className="text-xs font-medium text-muted-foreground">People</div>
@@ -351,11 +318,12 @@ function Sessions({ project, free, onUpgrade }: { project: Project; free: boolea
                     ))}
                   </div>
                 </div>
-                <div className="text-sm text-muted-foreground">{summary.decisions} decisions saved · 1 idea archived</div>
+                {summary.status !== "Scheduled" && <div className="text-sm text-muted-foreground">{summary.decisions} {summary.decisions === 1 ? "decision" : "decisions"} {summary.status === "Live" ? "caught so far" : "saved"}</div>}
               </div>
               <SheetFooter className="flex-row">
-                <Button onClick={() => navigate(`/p/${project.id}/sessions/${summary.id}`)}>Open canvas</Button>
-                <Button variant="outline" onClick={() => navigate(`/p/${project.id}/decisions`)}>See decisions</Button>
+                {summary.status !== "Scheduled" && <Button onClick={() => navigate(`/p/${project.id}/sessions/${summary.id}`)}>{summary.status === "Live" ? "Join meeting" : "Open canvas"}</Button>}
+                {summary.status === "Ended" && <Button variant="outline" onClick={() => navigate(`/p/${project.id}/decisions`)}>See decisions</Button>}
+                {summary.status === "Scheduled" && <Button variant="outline" onClick={() => setSummary(null)}>Done</Button>}
               </SheetFooter>
             </>
           )}

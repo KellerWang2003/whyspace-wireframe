@@ -41,11 +41,11 @@ export function SignUp() {
               <FieldSeparator className="*:data-[slot=field-separator-content]:bg-card">Or</FieldSeparator>
               <Field>
                 <FieldLabel htmlFor="su-name">Full name</FieldLabel>
-                <Input id="su-name" placeholder="Maya Chen" />
+                <Input id="su-name" placeholder="Keller" />
               </Field>
               <Field>
                 <FieldLabel htmlFor="su-email">Work email</FieldLabel>
-                <Input id="su-email" type="email" placeholder="maya@tidepool.co" />
+                <Input id="su-email" type="email" placeholder="keller@platiful.example" />
               </Field>
               <Field>
                 <FieldLabel htmlFor="su-pw">Password</FieldLabel>
@@ -93,7 +93,7 @@ export function LogIn() {
               <FieldSeparator className="*:data-[slot=field-separator-content]:bg-card">Or</FieldSeparator>
               <Field>
                 <FieldLabel htmlFor="li-email">Email</FieldLabel>
-                <Input id="li-email" type="email" placeholder="maya@tidepool.co" />
+                <Input id="li-email" type="email" placeholder="keller@platiful.example" />
               </Field>
               <Field>
                 <div className="flex items-center">

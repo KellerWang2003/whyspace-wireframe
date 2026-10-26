@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react"
+import { useEffect, useRef, useState, type ReactNode } from "react"
 import { ArrowUp, ChevronRight, PanelRight, PictureInPicture2, Quote, Sparkles, X } from "lucide-react"
 import { toast } from "sonner"
 import { PersonAvatar } from "@/components/app/person"
@@ -6,7 +6,7 @@ import { StatusBadge, StatusIcon } from "@/components/app/status-badge"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { Separator } from "@/components/ui/separator"
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
@@ -216,36 +216,46 @@ function Focus({ m, a, onDecision }: { m: Model; a: Artifact; onDecision: (id: s
 
 // ---------- chat: bottom-right button, floating panel or docked sidebar ----------
 
-type Msg = { who: "me" | "ai"; text: string; refs?: string[]; arts?: string[] }
+type Msg = { who: "me" | "ai"; text: string; refs?: Decision[]; arts?: Artifact[] }
 
-function reply(q: string, m: Model): Msg {
+type ChatContext = Pick<Model, "decisions" | "artifacts"> & { scopeName: string }
+
+function reply(q: string, m: ChatContext): Msg {
   const t = q.toLowerCase()
   if (t.includes("open")) {
     const ds = m.decisions.filter((d) => d.status === "open")
-    return { who: "ai", text: `${ds.length} decisions are still open.`, refs: ds.map((d) => d.id) }
+    return { who: "ai", text: `${ds.length} decisions are still open.`, refs: ds }
   }
   if (t.includes("changed") || t.includes("new")) {
     const ds = m.decisions.filter(isNew)
-    return { who: "ai", text: `${ds.length} decisions came in since your last visit on Oct 20.`, refs: ds.map((d) => d.id) }
+    return { who: "ai", text: `${ds.length} decisions came in since your last visit on Oct 20.`, refs: ds }
   }
   if (t.includes("ai") || t.includes("confirm")) {
     const ds = m.decisions.filter(isAI)
-    return { who: "ai", text: `${ds.length} decisions were inferred by AI tools and need a person to confirm.`, refs: ds.map((d) => d.id) }
+    return { who: "ai", text: `${ds.length} decisions were inferred by AI tools and need a person to confirm.`, refs: ds }
   }
   if (t.includes("prototype") || t.includes("show")) {
     const as = m.artifacts.filter((a) => a.kind === "Prototype" || a.kind === "Figma")
-    return { who: "ai", text: "Here's the design work for this project.", arts: as.map((a) => a.id) }
+    return { who: "ai", text: "Here's the design work for this project.", arts: as }
   }
   const words = t.split(/\W+/).filter((w) => w.length > 3)
   const hit = m.decisions.filter((d) => words.some((w) => `${d.title} ${d.why ?? ""}`.toLowerCase().includes(w)))
-  if (hit.length) return { who: "ai", text: hit[0].why ? `${hit[0].title}: ${hit[0].why}` : `Here's what I found.`, refs: hit.slice(0, 4).map((d) => d.id) }
+  if (hit.length) return { who: "ai", text: hit[0].why ? `${hit[0].title}: ${hit[0].why}` : `Here's what I found.`, refs: hit.slice(0, 4) }
   return { who: "ai", text: "I couldn't find a decision about that. Try asking what's open or what changed." }
 }
 
-export function Chat({ m, onDecision, onArtifact }: { m: Model; onDecision: (id: string) => void; onArtifact: (id: string) => void }) {
+export function Chat({ m, onDecision, onArtifact }: { m: ChatContext; onDecision: (decision: Decision) => void; onArtifact: (artifact: Artifact) => void }) {
   const [mode, setMode] = useState<"closed" | "float" | "dock">("closed")
   const [msgs, setMsgs] = useState<Msg[]>([])
   const [text, setText] = useState("")
+  const messagesRef = useRef<HTMLDivElement>(null)
+  const inputRef = useRef<HTMLTextAreaElement>(null)
+  useEffect(() => {
+    if (mode !== "closed") inputRef.current?.focus()
+  }, [mode])
+  useEffect(() => {
+    messagesRef.current?.scrollTo({ top: messagesRef.current.scrollHeight, behavior: "smooth" })
+  }, [msgs, mode])
   const send = (q: string) => {
     if (!q.trim()) return
     setMsgs((ms) => [...ms, { who: "me", text: q }, reply(q, m)])
@@ -253,52 +263,65 @@ export function Chat({ m, onDecision, onArtifact }: { m: Model; onDecision: (id:
   }
   if (mode === "closed")
     return (
-      <Button onClick={() => setMode("float")} className="fixed right-5 bottom-5 z-40 h-11 rounded-full px-4 shadow-lg">
-        <Sparkles />Ask Whyspace
-      </Button>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button variant="outline" size="icon" aria-label="Ask Whyspace" onClick={() => setMode("dock")} className="fixed right-5 bottom-5 z-40 size-10 rounded-xl border-border/70 bg-background text-muted-foreground shadow-sm transition-colors hover:text-foreground">
+            <Sparkles className="size-4" />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent side="left" sideOffset={8}>Ask Whyspace</TooltipContent>
+      </Tooltip>
     )
-  const suggested = ["What changed since I was here?", "What's still open?", "What did AI tools decide?", `Why ${m.decisions.find((d) => d.was)?.title.toLowerCase() ?? "this"}?`]
+  const suggested = ["What changed since I was here?", "What's still open?", "Which decisions need confirmation?"]
   return (
-    <div className={cn("fixed z-40 flex flex-col border bg-background shadow-xl", mode === "float" ? "right-5 bottom-5 h-[520px] w-[380px] rounded-xl" : "inset-y-0 right-0 w-[400px] border-y-0 border-r-0")}>
-      <div className="flex items-center gap-2 border-b px-3 py-2.5">
-        <Sparkles className="size-4" />
+    <div role="region" aria-label="Ask Whyspace" onKeyDown={(event) => { if (event.key === "Escape") setMode("closed") }} className={cn("flex flex-col border bg-background", mode === "float" ? "fixed right-5 bottom-5 z-40 h-[520px] max-h-[calc(100svh-2.5rem)] w-[380px] max-w-[calc(100vw-2.5rem)] rounded-xl shadow-xl" : "relative h-full min-w-0 w-[min(400px,45vw)] shrink-0 border-y-0 border-r-0")}>
+      <div className="flex h-14 shrink-0 items-center gap-2 px-4">
         <span className="text-sm font-medium">Ask Whyspace</span>
-        <span className="text-xs text-muted-foreground">· {m.project.name}</span>
-        <div className="ml-auto flex">
+        <div className="ml-auto flex shrink-0 text-muted-foreground">
           <Button variant="ghost" size="icon" className="size-7" title={mode === "float" ? "Dock to the side" : "Float"} onClick={() => setMode(mode === "float" ? "dock" : "float")}>
             {mode === "float" ? <PanelRight /> : <PictureInPicture2 />}
           </Button>
-          <Button variant="ghost" size="icon" className="size-7" onClick={() => setMode("closed")}><X /></Button>
+          <Button variant="ghost" size="icon" className="size-7" aria-label="Minimize Ask Whyspace" onClick={() => setMode("closed")}><X /></Button>
         </div>
       </div>
-      <div className="min-h-0 flex-1 space-y-3 overflow-y-auto p-3">
+      <div ref={messagesRef} className="min-h-0 flex-1 space-y-5 overflow-y-auto px-5 py-6" aria-live="polite">
         {msgs.length === 0 && (
-          <div className="space-y-2">
-            <p className="text-sm text-muted-foreground">Ask anything about this project's decisions.</p>
-            {suggested.map((s) => <button key={s} onClick={() => send(s)} className="block w-full rounded-lg border px-3 py-2 text-left text-sm hover:bg-muted">{s}</button>)}
+          <div className="pt-10">
+            <Sparkles className="mb-4 size-6 text-muted-foreground" strokeWidth={1.5} />
+            <h2 className="text-lg font-medium tracking-tight">Where should we start?</h2>
+            <p className="mt-2 text-sm leading-relaxed text-muted-foreground">Find the thinking behind your team's work.</p>
+            <div className="-mx-2 mt-6 space-y-1">
+              {suggested.map((s) => <button key={s} onClick={() => send(s)} className="group flex w-full items-center gap-3 rounded-md px-2 py-2.5 text-left text-sm text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground"><ChevronRight className="size-3.5 shrink-0 opacity-60" />{s}</button>)}
+            </div>
           </div>
         )}
         {msgs.map((msg, i) => (
           <div key={i} className={cn("space-y-1.5", msg.who === "me" && "flex justify-end")}>
             <div className={cn("text-sm", msg.who === "me" ? "max-w-[80%] rounded-2xl bg-muted px-3 py-1.5" : "")}>{msg.text}</div>
-            {msg.refs?.map((id) => {
-              const d = m.byId(id)
-              if (!d) return null
+            {msg.refs?.map((d) => {
               return (
-                <button key={id} onClick={() => onDecision(id)} className="flex w-full items-center gap-2 rounded-md border px-2.5 py-1.5 text-left text-xs hover:bg-muted">
+                <button key={d.id} onClick={() => onDecision(d)} className="flex w-full items-center gap-2 rounded-md border px-2.5 py-1.5 text-left text-xs hover:bg-muted">
                   <StatusIcon status={d.status} className="size-3.5 text-muted-foreground" />
                   <span className="flex-1 truncate">{d.title}</span>
                   <span className="text-muted-foreground">{d.part}</span>
                 </button>
               )
             })}
-            {msg.arts && <div className="grid grid-cols-2 gap-2">{msg.arts.map((id) => <ArtifactThumb key={id} artifact={m.artifacts.find((a) => a.id === id)!} onOpen={() => onArtifact(id)} />)}</div>}
+            {msg.arts && <div className="grid grid-cols-2 gap-2">{msg.arts.map((artifact) => <ArtifactThumb key={artifact.id} artifact={artifact} onOpen={() => onArtifact(artifact)} />)}</div>}
           </div>
         ))}
       </div>
-      <form className="flex gap-2 border-t p-2.5" onSubmit={(e) => (e.preventDefault(), send(text))}>
-        <Input value={text} onChange={(e) => setText(e.target.value)} placeholder="Why did we…" />
-        <Button type="submit" size="icon"><ArrowUp /></Button>
+      <form className="m-3 mt-0 rounded-xl border border-border/80 bg-muted/20 p-3 transition-colors focus-within:border-ring/50" onSubmit={(e) => (e.preventDefault(), send(text))}>
+        <textarea ref={inputRef} rows={2} aria-label="Ask Whyspace" value={text} onChange={(e) => setText(e.target.value)} onKeyDown={(event) => {
+          if (event.key === "Enter" && !event.shiftKey && !event.nativeEvent.isComposing) {
+            event.preventDefault()
+            send(text)
+          }
+        }} placeholder="Ask anything about your work…" className="block w-full resize-none bg-transparent text-sm leading-relaxed outline-none placeholder:text-muted-foreground/70" />
+        <div className="mt-2 flex items-center gap-3">
+          <span className="min-w-0 flex-1 truncate text-xs text-muted-foreground" title={m.scopeName}>{m.scopeName}</span>
+          <Button type="submit" size="icon" className="size-7 shrink-0 rounded-lg shadow-none" disabled={!text.trim()} aria-label="Send message"><ArrowUp className="size-4" /></Button>
+        </div>
       </form>
     </div>
   )
