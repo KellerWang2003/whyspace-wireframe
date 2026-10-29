@@ -1,5 +1,7 @@
 import { useState } from "react"
+import { toast } from "sonner"
 import {
+  Archive,
   Bell,
   Bot,
   Building2,
@@ -11,11 +13,14 @@ import {
   LayoutGrid,
   ListChecks,
   LogIn,
+  Link2,
   LogOut,
+  MoreHorizontal,
   Plus,
   Radio,
   Search,
   Settings,
+  Sparkles,
   UserPlus,
 } from "lucide-react"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
@@ -50,7 +55,7 @@ import {
   SidebarMenuSubButton,
   SidebarMenuSubItem,
 } from "@/components/ui/sidebar"
-import { DECISIONS, INBOX, ME, MY_PROJECTS, PROJECTS, SESSIONS, TASKS } from "@/data"
+import { INBOX, ME, MY_PROJECTS, SESSIONS, SETTINGS_TABS, needsYou } from "@/data"
 import { navigate, useRoute } from "@/lib/router"
 import { useStore } from "@/lib/store"
 
@@ -222,9 +227,9 @@ export function AppSidebar() {
   )
 }
 
-// 3a. Each project expands in place to its sections. Settings live in the project's ⋯ menu.
+// 3a. Each project expands in place to its pages. Hovering the project shows ⋯ for its settings.
 const SECTIONS = [
-  ["overview", "Overview"],
+  ["ask", "Ask"],
   ["tasks", "Tasks"],
   ["decisions", "Decisions"],
   ["artifacts", "Artifacts"],
@@ -234,51 +239,64 @@ const SECTIONS = [
 function ProjectNavItem({ id, name, route }: { id: string; name: string; route: string[] }) {
   const inProject = route[0] === "p" && route[1] === id
   const [open, setOpen] = useState(inProject)
-  const section = inProject ? route[2] ?? "overview" : null
+  const section = inProject ? (!route[2] || ["overview", "catch-up"].includes(route[2]) ? "ask" : route[2]) : null
   const live = SESSIONS.some((s) => s.project === id && s.status === "Live")
-  const toReview = DECISIONS.filter((d) => d.project === id && d.status === "inf").length
-  const projectName = PROJECTS.find((p) => p.id === id)?.name
-  const openTasks = TASKS.filter((t) => t.project === projectName && t.status !== "done").length
+  const waiting = needsYou(id).length
 
   return (
     <Collapsible asChild open={open || inProject} onOpenChange={setOpen}>
       <SidebarMenuItem>
         <SidebarMenuButton
-          isActive={inProject && section === "overview"}
+          isActive={inProject && section === "ask"}
           onClick={() => {
             setOpen(true)
-            navigate(`/p/${id}/overview`)
+            navigate(`/p/${id}/ask`)
           }}
         >
           <ProjectMark project={id} />
           <span>{name}</span>
-          {live && <Radio className="ml-auto size-3.5 text-muted-foreground" />}
+          {live && <Radio className="ml-auto size-3.5 text-muted-foreground group-hover/menu-item:hidden" />}
         </SidebarMenuButton>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <SidebarMenuAction showOnHover className="right-7">
+              <MoreHorizontal />
+              <span className="sr-only">{name} settings</span>
+            </SidebarMenuAction>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent side="right" align="start" className="w-48">
+            <DropdownMenuLabel className="text-xs text-muted-foreground">Settings</DropdownMenuLabel>
+            {SETTINGS_TABS.map(([key, label]) => (
+              <DropdownMenuItem key={key} onSelect={() => navigate(`/p/${id}/settings/${key}`)}>{label}</DropdownMenuItem>
+            ))}
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onSelect={() => toast("Link copied")}><Link2 />Copy link</DropdownMenuItem>
+            <DropdownMenuItem onSelect={() => toast(`${name} archived`)}><Archive />Archive</DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
         <CollapsibleTrigger asChild>
-          <SidebarMenuAction className="data-[state=open]:rotate-90" showOnHover={!live}>
+          <SidebarMenuAction className="data-[state=open]:rotate-90" showOnHover>
             <ChevronRight />
             <span className="sr-only">Toggle</span>
           </SidebarMenuAction>
         </CollapsibleTrigger>
         <CollapsibleContent>
           <SidebarMenuSub>
-            {SECTIONS.map(([key, label]) => {
-              const count = key === "tasks" ? openTasks : key === "decisions" ? toReview : 0
-              return (
-                <SidebarMenuSubItem key={key}>
-                  <SidebarMenuSubButton asChild isActive={section === key}>
-                    <a href={`#/p/${id}/${key}`}>
-                      {label}
-                      {key === "sessions" && live ? (
-                        <span className="ml-auto flex items-center gap-1 text-xs text-muted-foreground"><Radio className="size-3" />Live</span>
-                      ) : (
-                        count > 0 && <span className="ml-auto text-xs tabular-nums text-muted-foreground">{count}</span>
-                      )}
-                    </a>
-                  </SidebarMenuSubButton>
-                </SidebarMenuSubItem>
-              )
-            })}
+            {SECTIONS.map(([key, label]) => (
+              <SidebarMenuSubItem key={key}>
+                <SidebarMenuSubButton asChild isActive={section === key}>
+                  <a href={`#/p/${id}/${key}`}>
+                    {key === "ask" && <Sparkles />}
+                    {label}
+                    {key === "sessions" && live ? (
+                      <span className="ml-auto flex items-center gap-1 text-xs text-muted-foreground"><Radio className="size-3" />Live</span>
+                    ) : (
+                      key === "ask" && waiting > 0 && <span className="ml-auto text-xs tabular-nums text-muted-foreground" title={`${waiting} need you`}>{waiting}</span>
+                    )}
+                  </a>
+                </SidebarMenuSubButton>
+              </SidebarMenuSubItem>
+            ))}
           </SidebarMenuSub>
         </CollapsibleContent>
       </SidebarMenuItem>

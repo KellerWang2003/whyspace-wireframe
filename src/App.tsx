@@ -31,7 +31,7 @@ function Screen() {
   if (first === "decisions") return <Projects selectedId={second} />
   if (first === "projects") return <Projects selectedId={second === "decisions" ? third : undefined} />
   if (first === "p" && (third === "live" || (third === "sessions" && fourth))) return <LiveSession id={second} sessionId={fourth} />
-  if (first === "p") return <Project id={second} section={third ?? "overview"} sub={fourth} />
+  if (first === "p") return <Project id={second} section={third ?? "ask"} sub={fourth} />
   if (first === "playground") return <Playground project={second} view={third} />
   if (first === "settings") return <WorkspaceSettings tab={second ?? "general"} />
   if (first === "account") return <Account tab={second ?? "profile"} />
@@ -39,9 +39,11 @@ function Screen() {
 }
 
 function PersistentAssistant({ desktop }: { desktop: boolean }) {
-  const [page] = useRoute()
+  const [page, , section] = useRoute()
   const { current } = useStore()
   if (desktop || !current || ["signup", "login", "onboarding"].includes(page)) return null
+  // A project's Ask page is already the chat.
+  if (page === "p" && (!section || ["ask", "overview", "catch-up"].includes(section))) return null
   return <AskWhyspace key={current.id} />
 }
 

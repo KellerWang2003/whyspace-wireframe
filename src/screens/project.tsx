@@ -1,36 +1,23 @@
 import { ProjectDecisions } from "@/screens/project-decisions"
-import { OverviewSections } from "@/components/decisions/overview-sections"
-import { ProjectWork } from "@/components/app/project-work"
+import { ProjectAsk } from "@/screens/project-ask"
+import { projectSections } from "@/components/decisions/section-data"
 import { ProjectArtifacts } from "@/screens/project-artifacts"
 import { useState } from "react"
 import { toast } from "sonner"
 import {
-  Archive,
-  ArrowRight,
   CalendarPlus,
   CalendarDays,
   Clock3,
   MonitorPlay,
-  Link2,
-  MoreHorizontal,
   Radio,
-  Settings,
-  Sparkles,
+  UserPlus,
 } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
 import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty"
 import { Field, FieldDescription, FieldGroup, FieldLabel, FieldSet } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { Item, ItemActions, ItemContent, ItemDescription, ItemGroup, ItemMedia, ItemTitle } from "@/components/ui/item"
-import { Progress } from "@/components/ui/progress"
 import { Separator } from "@/components/ui/separator"
 import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -38,17 +25,16 @@ import { Textarea } from "@/components/ui/textarea"
 import { AppShell } from "@/components/app/app-shell"
 import { ProBadge } from "@/components/app/global-dialogs"
 import { AvatarStack, PersonAvatar } from "@/components/app/person"
-import { ProjectMark } from "@/components/app/project-mark"
 import { TasksView } from "@/components/app/tasks"
 import {
+  AI_TOOLS,
+  SETTINGS_TABS,
   DECISIONS,
   PEOPLE,
   PROJECTS,
   SESSIONS,
   TASKS,
   TIMELINE,
-  WEEK_SUMMARY,
-  type Decision,
   type Session,
 } from "@/data"
 import { navigate } from "@/lib/router"
@@ -57,35 +43,27 @@ import { cn } from "@/lib/utils"
 
 type Project = (typeof PROJECTS)[number]
 
-const PAGE: Record<string, string> = { overview: "Overview", tasks: "Tasks", decisions: "Decisions", artifacts: "Artifacts", sessions: "Meetings", settings: "Settings" }
+const PAGE: Record<string, string> = { ask: "Ask", tasks: "Tasks", decisions: "Decisions", artifacts: "Artifacts", sessions: "Meetings", settings: "Settings" }
 
-// Project navigation: Overview, Tasks, Decisions, Artifacts, Meetings.
-// Settings sit behind the project menu. Meetings open a shared canvas.
-export function Project({ id, section, sub }: { id: string; section: string; sub?: string }) {
+// Project navigation: Ask, Tasks, Decisions, Artifacts, Meetings.
+// Settings and Archive sit behind the project's ⋯ in the sidebar. Meetings open a shared canvas.
+export function Project({ id, section: asked, sub }: { id: string; section: string; sub?: string }) {
   const project = PROJECTS.find((p) => p.id === id) ?? PROJECTS[0]
   const { current, setUpgradeOpen } = useStore()
   const free = current?.plan === "Free"
   const decisions = DECISIONS.filter((d) => d.project === project.id)
+  // Overview became Ask; old links still land there.
+  const section = ["overview", "catch-up"].includes(asked) ? "ask" : asked
+  const live = SESSIONS.find((s) => s.project === project.id && s.status === "Live")
 
   return (
     <AppShell
-      crumbs={[{ label: project.name, to: `/p/${project.id}/overview` }, { label: PAGE[section] ?? "Overview" }]}
-      actions={
-        <>
-          <AvatarStack ids={project.members} />
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button size="icon-sm" variant="ghost"><MoreHorizontal /><span className="sr-only">Project menu</span></Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-52">
-              <DropdownMenuItem onSelect={() => navigate(`/p/${project.id}/settings/general`)}><Settings />Project settings</DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onSelect={() => toast("Link copied")}><Link2 />Copy link</DropdownMenuItem>
-              <DropdownMenuItem onSelect={() => toast("Archive project")}><Archive />Archive</DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </>
-      }
+      crumbs={[{ label: project.name, to: `/p/${project.id}/ask` }, { label: PAGE[section] ?? "Ask" }]}
+      actions={live && (
+        <Badge asChild variant="secondary" className="gap-1.5 font-normal">
+          <a href={`#/p/${project.id}/sessions/${live.id}`}><Radio className="size-3" />Live · {live.title}</a>
+        </Badge>
+      )}
     >
       {section === "tasks" ? (
         <div className="flex flex-col gap-6 p-8">
@@ -108,83 +86,9 @@ export function Project({ id, section, sub }: { id: string; section: string; sub
       ) : section === "settings" ? (
         <ProjectSettings project={project} tab={sub ?? "general"} />
       ) : (
-        <Overview decisions={decisions} project={project} />
+        <ProjectAsk key={project.id} project={project} />
       )}
     </AppShell>
-  )
-}
-
-/* ---------------- Overview ---------------- */
-
-// Overview is a calm one-page brief, like Linear's or Asana's project overview: a main
-// column for the AI summary, sections, and key links, with team activity and
-// project properties on the right. Detail lives in Tasks, Decisions and Sessions.
-function Overview({ decisions: ds, project }: { decisions: Decision[]; project: Project }) {
-  const tasks = TASKS.filter((t) => t.project === project.name)
-  const timeline = TIMELINE[project.id] ?? []
-  // A live session already shows as a live icon in the sidebar, so only scheduled ones go here.
-  const session = SESSIONS.find((s) => s.project === project.id && s.status === "Scheduled")
-  const done = tasks.filter((t) => t.status === "done").length
-  const pct = tasks.length ? Math.round((done / tasks.length) * 100) : 0
-  const needsYou = ds.filter((d) => ["chg", "inf", "flag"].includes(d.status))
-
-  return (
-    <div className="min-h-0 flex-1 overflow-y-auto">
-    <div className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 py-8 sm:px-8 sm:py-10 lg:flex-row">
-      <div className="min-w-0 flex-1 space-y-8">
-        <header className="flex items-center gap-3">
-          <ProjectMark project={project.id} className="size-8" />
-          <h1 className="text-2xl font-semibold tracking-tight">{project.name}</h1>
-        </header>
-
-        <section aria-label="AI summary" className="space-y-2 rounded-xl bg-muted/50 p-4">
-          <div className="flex items-center justify-between gap-3 text-xs text-muted-foreground">
-            <span className="flex items-center gap-1.5 font-medium"><Sparkles className="size-3.5" />AI summary</span>
-            <span>Updated since your last visit</span>
-          </div>
-          <p className="leading-relaxed">{WEEK_SUMMARY[project.id]}</p>
-          {needsYou.length > 0 && (
-            <a href={`#/p/${project.id}/decisions`} className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground">
-              {needsYou.length} {needsYou.length === 1 ? "decision needs" : "decisions need"} a look <ArrowRight className="size-3.5" />
-            </a>
-          )}
-        </section>
-
-        <OverviewSections key={project.id} project={project} />
-
-      </div>
-
-      {/* Team activity and project properties */}
-      <aside aria-label="Project activity and properties" className="w-full min-w-0 shrink-0 space-y-6 text-sm lg:w-80 lg:border-l lg:pl-6">
-        <div className="space-y-5">
-        <Prop label="Progress">
-          <div className="flex w-full items-center gap-2">
-            <Progress value={pct} className="h-1.5 flex-1" />
-            <span className="tabular-nums">{pct}%</span>
-          </div>
-        </Prop>
-        <Prop label="Lead"><PersonAvatar id={project.members[0]} />{PEOPLE[project.members[0]].name}</Prop>
-        <Prop label="Members"><AvatarStack ids={project.members} /></Prop>
-        <Prop label="Target date">{timeline.at(-1)?.date ?? "None"}</Prop>
-        {session && (
-          <Prop label="Next meeting">
-            <a href={`#/p/${project.id}/sessions`} className="hover:underline">{session.title}</a>
-          </Prop>
-        )}
-        </div>
-        <div className="border-t pt-5"><ProjectWork project={project} /></div>
-      </aside>
-    </div>
-    </div>
-  )
-}
-
-function Prop({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div className="space-y-1.5">
-      <div className="text-xs text-muted-foreground">{label}</div>
-      <div className="flex items-center gap-2">{children}</div>
-    </div>
   )
 }
 
@@ -320,8 +224,11 @@ function NoDecisions() {
   )
 }
 
-// Project settings, reached from the ⋯ menu.
+// Project settings, reached from the project's ⋯ in the sidebar.
 function ProjectSettings({ project, tab }: { project: Project; tab: string }) {
+  const { setInviteOpen } = useStore()
+  const timeline = TIMELINE[project.id] ?? []
+  const leads = projectSections(project.id).filter((s) => !s.parent)
   return (
     <div className="flex flex-col gap-6 p-8">
       <div className="space-y-1">
@@ -330,8 +237,7 @@ function ProjectSettings({ project, tab }: { project: Project; tab: string }) {
       </div>
       <Tabs value={tab} onValueChange={(v) => navigate(`/p/${project.id}/settings/${v}`)}>
         <TabsList>
-          <TabsTrigger value="general">General</TabsTrigger>
-          <TabsTrigger value="members">Members</TabsTrigger>
+          {SETTINGS_TABS.map(([key, label]) => <TabsTrigger key={key} value={key}>{label}</TabsTrigger>)}
         </TabsList>
       </Tabs>
       {tab === "general" && (
@@ -346,29 +252,84 @@ function ProjectSettings({ project, tab }: { project: Project; tab: string }) {
               <Textarea id="ps-brief" defaultValue={project.brief} rows={3} />
               <FieldDescription>Connected AI tools read this to know what the project is for.</FieldDescription>
             </Field>
+            <Field>
+              <FieldLabel htmlFor="ps-target">Target date</FieldLabel>
+              <Input id="ps-target" defaultValue={timeline.at(-1)?.date ?? ""} className="max-w-48" />
+            </Field>
+            {timeline.length > 0 && (
+              <Field>
+                <FieldLabel>Milestones</FieldLabel>
+                <ul className="divide-y rounded-lg border text-sm">
+                  {timeline.map((m) => (
+                    <li key={m.name} className="flex items-center gap-3 px-3 py-2">
+                      <span className={cn("size-2 shrink-0 rounded-full border border-foreground/40", m.done && "bg-foreground/60")} />
+                      <span className={cn("flex-1", m.done && "text-muted-foreground")}>{m.name}</span>
+                      <span className="text-xs text-muted-foreground">{m.date}</span>
+                    </li>
+                  ))}
+                </ul>
+              </Field>
+            )}
             <Field orientation="horizontal">
               <Button onClick={() => toast("Saved")}>Save changes</Button>
-              <Button variant="outline" onClick={() => toast("Archive project")}>Archive project</Button>
             </Field>
           </FieldGroup>
         </FieldSet>
       )}
-      {tab === "members" && (
-        <ItemGroup className="max-w-2xl rounded-lg border">
-          {project.members.map((m, i) => (
-            <div key={m}>
-              {i > 0 && <Separator />}
-              <Item size="sm">
-                <ItemMedia><PersonAvatar id={m} className="size-8" /></ItemMedia>
-                <ItemContent>
-                  <ItemTitle>{PEOPLE[m].name}</ItemTitle>
-                  <ItemDescription>{PEOPLE[m].email}</ItemDescription>
-                </ItemContent>
-                <ItemActions><span className="text-sm text-muted-foreground">{m === project.members[0] ? "Lead" : "Member"}</span></ItemActions>
-              </Item>
+      {tab === "people" && (
+        <div className="max-w-2xl space-y-6">
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <h2 className="text-sm font-medium">Members</h2>
+              <Button size="sm" variant="outline" onClick={() => setInviteOpen(true)}><UserPlus />Invite</Button>
             </div>
-          ))}
-        </ItemGroup>
+            <ItemGroup className="rounded-lg border">
+              {project.members.map((m, i) => (
+                <div key={m}>
+                  {i > 0 && <Separator />}
+                  <Item size="sm">
+                    <ItemMedia><PersonAvatar id={m} className="size-8" /></ItemMedia>
+                    <ItemContent>
+                      <ItemTitle>{PEOPLE[m].name}</ItemTitle>
+                      <ItemDescription>{PEOPLE[m].email}</ItemDescription>
+                    </ItemContent>
+                    <ItemActions><span className="text-sm text-muted-foreground">{m === project.members[0] ? "Project lead" : "Member"}</span></ItemActions>
+                  </Item>
+                </div>
+              ))}
+            </ItemGroup>
+          </div>
+          {leads.length > 0 && (
+            <div className="space-y-2">
+              <h2 className="text-sm font-medium">Section leads</h2>
+              <ul className="divide-y rounded-lg border text-sm">
+                {leads.map((s) => (
+                  <li key={s.id} className="flex items-center justify-between px-3 py-2">
+                    <span>{s.name}</span>
+                    <span className="text-muted-foreground">{s.owner}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+      )}
+      {tab === "ai-tools" && (
+        <div className="max-w-2xl space-y-2">
+          <p className="text-sm text-muted-foreground">Tools that capture decisions into {project.name}. Connect your own in My AI tools.</p>
+          <ul className="divide-y rounded-lg border text-sm">
+            {AI_TOOLS.map((t) => (
+              <li key={t.id} className="flex items-center gap-3 px-3 py-2.5">
+                <div className="min-w-0 flex-1">
+                  <div className="font-medium">{t.name}</div>
+                  <div className="text-xs text-muted-foreground">{t.desc}</div>
+                </div>
+                <span className="text-xs text-muted-foreground">{t.connected ? "Connected" : "Not connected"}</span>
+              </li>
+            ))}
+          </ul>
+          <Button size="sm" variant="outline" onClick={() => navigate("/account/ai-tools")}>Manage my AI tools</Button>
+        </div>
       )}
     </div>
   )

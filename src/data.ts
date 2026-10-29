@@ -573,7 +573,7 @@ const ALL_INBOX: InboxItem[] = [
     "relatedArtifacts": [{ "id": "w7", "context": "Promo video plan · length not confirmed" }],
     "author": { "kind": "ai", "name": "Whyspace AI" },
     "source": "Weekly digest",
-    "kind": "review",
+    "kind": "change",
     "from": "MC",
     "project": "Whiskr",
     "summary": "This week: red is out, the dot moves, and one decision waits on Keller",
@@ -1085,12 +1085,11 @@ export const PLANS: { name: Plan; price: string; blurb: string; features: string
 
 // Whiskr's summaries at each stage of the week (see lib/stage.ts).
 const WHISKR_SUMMARY = [
-  { project: "A swipe app for cats. The brand is tuna red and the swipe card is static. Nothing open yet.", week: "Kelly ran the first cat test with the prototype. Trevor has the footage to review.", card: "First cat test done. Next up: Trevor and Kelly review the footage together." },
-  { project: "A swipe app for cats. Movement is the new rule: a moving dot leads the swipe, and it purrs.", week: "In the footage review, Luna only reacted to movement. Kelly tried three directions; the moving dot won.", card: "The footage review is live. Movement, the moving dot and the purr are being logged." },
-  { project: "A swipe app for cats, led by a moving, purring dot in blue and yellow. Open: the poster still uses red.", week: "Trevor dropped red from the brand and marked it important. Kelly is recoloring the app; the poster has not caught up.", card: "Red is out of the brand. Next up: Keller updates the poster." },
-  { project: "A swipe app for cats, led by a moving, purring dot in blue and yellow. Open: the 15-second video length needs confirming, and the poster still uses red.", week: "Trevor dropped red from the brand. Kelly recolored the app buttons; the poster has not caught up yet. Keller planned the promo video with Claude.", card: "The app now uses a purring dot in blue and yellow. Next up: update the poster and confirm the promo video length." },
+  { project: "A swipe app for cats. The brand is tuna red and the swipe card is static. Nothing open yet.", week: "Kelly ran the first cat test with the prototype. Trevor has the footage to review." },
+  { project: "A swipe app for cats. Movement is the new rule: a moving dot leads the swipe, and it purrs.", week: "In the footage review, Luna only reacted to movement. Kelly tried three directions; the moving dot won." },
+  { project: "A swipe app for cats, led by a moving, purring dot in blue and yellow. Open: the poster still uses red.", week: "Trevor dropped red from the brand and marked it important. Kelly is recoloring the app; the poster has not caught up." },
+  { project: "A swipe app for cats, led by a moving, purring dot in blue and yellow. Open: the 15-second video length needs confirming, and the poster still uses red.", week: "Trevor dropped red from the brand. Kelly recolored the app buttons; the poster has not caught up yet. Keller planned the promo video with Claude." },
 ][Math.min(STAGE, 4) - 1]
-export const WHISKR_CARD_SUMMARY = WHISKR_SUMMARY.card
 
 // AI summaries shown on the decisions canvas, one per part and one per project.
 // Written by Whyspace from the decisions themselves, refreshed when one changes.
@@ -1208,3 +1207,52 @@ export const ACTIVITY: Activity[] = [
   ...(WHISKR_ACTIVITY[STAGE] ?? ALL_ACTIVITY.filter(inWhiskr)),
   ...ALL_ACTIVITY.filter((a) => !inWhiskr(a)),
 ]
+
+// Everything in a project that waits on the viewer. One rule, used by the Catch up chat,
+// the sidebar badge and the Projects card:
+// - confirm: inferred decisions you own, or that someone asked you to review
+// - apply: misalignment alerts addressed to you, each with a ready prompt for your tool
+// - task: your open tasks
+export type NeedsYou =
+  | { kind: "confirm"; id: string; decision: Decision }
+  | { kind: "apply"; id: string; alert: InboxItem; prompt: string }
+  | { kind: "task"; id: string; task: Task }
+
+export function needsYou(projectId: string): NeedsYou[] {
+  const name = projectName(projectId)
+  const asked = INBOX.filter((i) => i.project === name && i.kind === "review").map((i) => i.decision)
+  const confirm = DECISIONS.filter((d) => d.project === projectId && d.status === "inf" && (d.owner === VIEWER || asked.includes(d.id)))
+  const alerts = INBOX.filter((i) => i.project === name && i.kind === "alert")
+  const tasks = TASKS.filter((t) => t.project === name && t.owner === VIEWER && t.status !== "done")
+  return [
+    ...confirm.map((decision) => ({ kind: "confirm" as const, id: decision.id, decision })),
+    ...alerts.map((alert) => {
+      const d = DECISIONS.find((x) => x.id === alert.decision)
+      const prompt = d ? `${d.title}. ${d.why ?? ""} Update ${alert.relatedArtifacts.at(-1)?.context.split(" · ")[0] ?? "this work"} to match.` : alert.body
+      return { kind: "apply" as const, id: alert.id, alert, prompt }
+    }),
+    ...tasks.map((task) => ({ kind: "task" as const, id: task.id, task })),
+  ]
+}
+
+// What changed since the viewer's last visit: Whiskr items that arrived at this stage or
+// the one before; for other projects, recent decisions and artifacts.
+export function changedSince(projectId: string): { decisions: Decision[]; artifacts: Artifact[] } {
+  if (projectId === "whiskr") {
+    const recent = (id: string) => (FROM[id] ?? 1) >= STAGE - 1 && STAGE > 1
+    return {
+      decisions: DECISIONS.filter((d) => d.project === projectId && recent(d.id)),
+      artifacts: ARTIFACTS.filter((a) => a.project === projectId && recent(a.id)),
+    }
+  }
+  return {
+    decisions: DECISIONS.filter((d) => d.project === projectId && ["Today", "Yesterday"].includes(d.when ?? "")),
+    artifacts: ARTIFACTS.filter((a) => a.project === projectId && /ago|Today|Yesterday/.test(a.updated)),
+  }
+}
+
+// Project settings pages, opened from the project's ⋯ in the sidebar.
+export const SETTINGS_TABS = [["general", "General"], ["people", "People"], ["ai-tools", "AI tools"]] as const
+
+// The next milestone that isn't done yet.
+export const nextMilestone = (projectId: string) => TIMELINE[projectId]?.find((m) => !m.done)
