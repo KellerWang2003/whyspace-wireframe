@@ -11,6 +11,7 @@ import { Separator } from "@/components/ui/separator"
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { PEOPLE, type Artifact, type Decision } from "@/data"
+import { onAskWhyspace } from "@/lib/ask"
 import { cn } from "@/lib/utils"
 import { ArtifactPicture, ArtifactThumb } from "@/playground/artifact"
 import { dayLabel, dayOfDecision, isAI, isNew, type Model } from "@/playground/model"
@@ -217,8 +218,16 @@ function Focus({ m, a, onDecision }: { m: Model; a: Artifact; onDecision: (id: s
 
 // ---------- chat: bottom-right button, floating panel or docked sidebar ----------
 
-export function Chat({ m, onDecision, onArtifact }: { m: ChatContext; onDecision: (decision: Decision) => void; onArtifact: (artifact: Artifact) => void }) {
-  const [mode, setMode] = useState<"closed" | "float" | "dock">("closed")
+// `docked` opens the chat on the side when it turns on (a project's Catch up page);
+// `suggested` replaces the starter questions for the current scope.
+export function Chat({ m, onDecision, onArtifact, docked = false, suggested: scoped }: { m: ChatContext; onDecision: (decision: Decision) => void; onArtifact: (artifact: Artifact) => void; docked?: boolean; suggested?: string[] }) {
+  const [mode, setMode] = useState<"closed" | "float" | "dock">(docked ? "dock" : "closed")
+  // Arriving on a page that wants it docked opens it; leaving leaves it as the person set it.
+  const [wasDocked, setWasDocked] = useState(docked)
+  if (docked !== wasDocked) {
+    setWasDocked(docked)
+    if (docked) setMode("dock")
+  }
   const [msgs, setMsgs] = useState<Msg[]>([])
   const [text, setText] = useState("")
   const messagesRef = useRef<HTMLDivElement>(null)
@@ -234,6 +243,13 @@ export function Chat({ m, onDecision, onArtifact }: { m: ChatContext; onDecision
     setMsgs((ms) => [...ms, { who: "me", text: q }, reply(q, m)])
     setText("")
   }
+  // Questions sent from the page ("Ask about this") open the chat and land in this conversation.
+  const latest = useRef(send)
+  useEffect(() => { latest.current = send })
+  useEffect(() => onAskWhyspace((q) => {
+    setMode((current) => (current === "closed" ? "dock" : current))
+    latest.current(q)
+  }), [])
   if (mode === "closed")
     return (
       <Tooltip>
@@ -245,7 +261,7 @@ export function Chat({ m, onDecision, onArtifact }: { m: ChatContext; onDecision
         <TooltipContent side="left" sideOffset={8}>Ask Whyspace</TooltipContent>
       </Tooltip>
     )
-  const suggested = ["What changed since I was here?", "What's still open?", "Which decisions need confirmation?"]
+  const suggested = scoped?.length ? scoped : ["What changed since I was here?", "What's still open?", "Which decisions need confirmation?"]
   return (
     <div role="region" aria-label="Ask Whyspace" onKeyDown={(event) => { if (event.key === "Escape") setMode("closed") }} className={cn("flex flex-col border bg-background", mode === "float" ? "fixed right-5 bottom-5 z-40 h-[520px] max-h-[calc(100svh-2.5rem)] w-[380px] max-w-[calc(100vw-2.5rem)] rounded-xl shadow-xl" : "relative h-full min-w-0 w-[min(400px,45vw)] shrink-0 border-y-0 border-r-0")}>
       <div className="flex h-14 shrink-0 items-center gap-2 px-4">

@@ -1,11 +1,11 @@
-import { ARTIFACTS, DECISIONS, PROJECTS } from "@/data"
+import { ARTIFACTS, CANVAS_EXTRAS, DECISIONS, PROJECTS } from "@/data"
 import { navigate, useRoute } from "@/lib/router"
 import { useStore } from "@/lib/store"
 import { Chat } from "@/playground/panels"
 
 // Mounted above the routes so navigating never closes the assistant or loses its conversation.
 export function AskWhyspace() {
-  const [first, second] = useRoute()
+  const [first, second, third] = useRoute()
   const { current } = useStore()
   const project = ["p", "playground"].includes(first) ? PROJECTS.find((item) => item.id === second) : undefined
   const context = {
@@ -14,6 +14,9 @@ export function AskWhyspace() {
     artifacts: current?.example ? ARTIFACTS.filter((item) => !project || item.project === project.id) : [],
   }
 
+  // A project's Catch up page opens the assistant docked beside it.
+  const docked = first === "p" && (!third || ["catch-up", "ask", "overview"].includes(third))
+
   // Artifacts open in their project's Artifacts tab, the one place they're viewed.
-  return <Chat m={context} onDecision={(decision) => navigate(`/p/${decision.project}/decisions/${decision.id}`)} onArtifact={(a) => navigate(`/p/${a.project}/artifacts/${a.id}`)} />
+  return <Chat m={context} docked={docked} suggested={project ? CANVAS_EXTRAS[project.id]?.ask : undefined} onDecision={(decision) => navigate(`/p/${decision.project}/decisions/${decision.id}`)} onArtifact={(a) => navigate(`/p/${a.project}/artifacts/${a.id}`)} />
 }

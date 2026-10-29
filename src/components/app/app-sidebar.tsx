@@ -20,7 +20,6 @@ import {
   Radio,
   Search,
   Settings,
-  Sparkles,
   UserPlus,
 } from "lucide-react"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
@@ -229,7 +228,7 @@ export function AppSidebar() {
 
 // 3a. Each project expands in place to its pages. Hovering the project shows ⋯ for its settings.
 const SECTIONS = [
-  ["ask", "Ask"],
+  ["catch-up", "Catch up"],
   ["tasks", "Tasks"],
   ["decisions", "Decisions"],
   ["artifacts", "Artifacts"],
@@ -239,7 +238,7 @@ const SECTIONS = [
 function ProjectNavItem({ id, name, route }: { id: string; name: string; route: string[] }) {
   const inProject = route[0] === "p" && route[1] === id
   const [open, setOpen] = useState(inProject)
-  const section = inProject ? (!route[2] || ["overview", "catch-up"].includes(route[2]) ? "ask" : route[2]) : null
+  const section = inProject ? (!route[2] || ["overview", "ask"].includes(route[2]) ? "catch-up" : route[2]) : null
   const live = SESSIONS.some((s) => s.project === id && s.status === "Live")
   const waiting = needsYou(id).length
 
@@ -247,10 +246,10 @@ function ProjectNavItem({ id, name, route }: { id: string; name: string; route: 
     <Collapsible asChild open={open || inProject} onOpenChange={setOpen}>
       <SidebarMenuItem>
         <SidebarMenuButton
-          isActive={inProject && section === "ask"}
+          isActive={inProject && section === "catch-up"}
           onClick={() => {
             setOpen(true)
-            navigate(`/p/${id}/ask`)
+            navigate(`/p/${id}/catch-up`)
           }}
         >
           <ProjectMark project={id} />
@@ -286,12 +285,11 @@ function ProjectNavItem({ id, name, route }: { id: string; name: string; route: 
               <SidebarMenuSubItem key={key}>
                 <SidebarMenuSubButton asChild isActive={section === key}>
                   <a href={`#/p/${id}/${key}`}>
-                    {key === "ask" && <Sparkles />}
                     {label}
                     {key === "sessions" && live ? (
                       <span className="ml-auto flex items-center gap-1 text-xs text-muted-foreground"><Radio className="size-3" />Live</span>
                     ) : (
-                      key === "ask" && waiting > 0 && <span className="ml-auto text-xs tabular-nums text-muted-foreground" title={`${waiting} need you`}>{waiting}</span>
+                      key === "catch-up" && waiting > 0 && <span className="ml-auto text-xs tabular-nums text-muted-foreground" title={`${waiting} need you`}>{waiting}</span>
                     )}
                   </a>
                 </SidebarMenuSubButton>

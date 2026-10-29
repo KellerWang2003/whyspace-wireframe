@@ -8,7 +8,7 @@ import { DecisionSheet } from "@/screens/decisions"
 import { useStore } from "@/lib/store"
 
 function ProjectCard({ project }: { project: Project }) {
-  const ask = `#/p/${project.id}/ask`
+  const ask = `#/p/${project.id}/catch-up`
   const summary = WEEK_SUMMARY[project.id]?.match(/^.*?[.!?](\s|$)/)?.[0].trim() ?? "Updates will appear here as work gets underway."
   const waiting = needsYou(project.id).length
   const next = nextMilestone(project.id)

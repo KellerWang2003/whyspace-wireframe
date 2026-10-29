@@ -1,5 +1,5 @@
 import { ProjectDecisions } from "@/screens/project-decisions"
-import { ProjectAsk } from "@/screens/project-ask"
+import { CatchUp } from "@/screens/catch-up"
 import { projectSections } from "@/components/decisions/section-data"
 import { ProjectArtifacts } from "@/screens/project-artifacts"
 import { useState } from "react"
@@ -43,22 +43,22 @@ import { cn } from "@/lib/utils"
 
 type Project = (typeof PROJECTS)[number]
 
-const PAGE: Record<string, string> = { ask: "Ask", tasks: "Tasks", decisions: "Decisions", artifacts: "Artifacts", sessions: "Meetings", settings: "Settings" }
+const PAGE: Record<string, string> = { "catch-up": "Catch up", tasks: "Tasks", decisions: "Decisions", artifacts: "Artifacts", sessions: "Meetings", settings: "Settings" }
 
-// Project navigation: Ask, Tasks, Decisions, Artifacts, Meetings.
+// Project navigation: Catch up, Tasks, Decisions, Artifacts, Meetings.
 // Settings and Archive sit behind the project's ⋯ in the sidebar. Meetings open a shared canvas.
 export function Project({ id, section: asked, sub }: { id: string; section: string; sub?: string }) {
   const project = PROJECTS.find((p) => p.id === id) ?? PROJECTS[0]
   const { current, setUpgradeOpen } = useStore()
   const free = current?.plan === "Free"
   const decisions = DECISIONS.filter((d) => d.project === project.id)
-  // Overview became Ask; old links still land there.
-  const section = ["overview", "catch-up"].includes(asked) ? "ask" : asked
+  // Overview and Ask became Catch up; old links still land there.
+  const section = ["overview", "ask"].includes(asked) ? "catch-up" : asked
   const live = SESSIONS.find((s) => s.project === project.id && s.status === "Live")
 
   return (
     <AppShell
-      crumbs={[{ label: project.name, to: `/p/${project.id}/ask` }, { label: PAGE[section] ?? "Ask" }]}
+      crumbs={[{ label: project.name, to: `/p/${project.id}/catch-up` }, { label: PAGE[section] ?? "Catch up" }]}
       actions={live && (
         <Badge asChild variant="secondary" className="gap-1.5 font-normal">
           <a href={`#/p/${project.id}/sessions/${live.id}`}><Radio className="size-3" />Live · {live.title}</a>
@@ -86,7 +86,7 @@ export function Project({ id, section: asked, sub }: { id: string; section: stri
       ) : section === "settings" ? (
         <ProjectSettings project={project} tab={sub ?? "general"} />
       ) : (
-        <ProjectAsk key={project.id} project={project} />
+        <CatchUp key={project.id} project={project} />
       )}
     </AppShell>
   )

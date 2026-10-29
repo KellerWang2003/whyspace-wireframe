@@ -27,7 +27,9 @@ export function reply(q: string, m: ChatContext): Msg {
     return { who: "ai", text: "Here's the design work for this project.", arts: as }
   }
   const words = t.split(/\W+/).filter((w) => w.length > 2 && !STOP.has(w))
-  const hit = m.decisions.filter((d) => words.some((w) => new RegExp(`\\b${w}`).test(`${d.title} ${d.why ?? ""}`.toLowerCase())))
+  // Rank decisions by how many of the question's words they contain.
+  const score = (d: Decision) => words.filter((w) => new RegExp(`\\b${w}`).test(`${d.title} ${d.why ?? ""}`.toLowerCase())).length
+  const hit = m.decisions.filter((d) => score(d) > 0).sort((a, b) => score(b) - score(a))
   if (hit.length) return { who: "ai", text: hit[0].why ? `${hit[0].title}: ${hit[0].why}` : `Here's what I found.`, refs: hit.slice(0, 4) }
   return { who: "ai", text: "I couldn't find a decision about that. Try asking what's open or what changed." }
 }

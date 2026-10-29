@@ -83,7 +83,7 @@ function SearchDialog() {
             <CommandSeparator />
             <CommandGroup heading="Projects">
               {MY_PROJECTS.map((p) => (
-                <CommandItem key={p.id} onSelect={() => go(`/p/${p.id}/ask`)}>
+                <CommandItem key={p.id} onSelect={() => go(`/p/${p.id}/catch-up`)}>
                   <FolderKanban />
                   {p.name}
                 </CommandItem>
@@ -145,7 +145,7 @@ function NewProjectDialog() {
           <Button
             onClick={() => {
               setNewProjectOpen(false)
-              navigate("/p/whiskr/ask")
+              navigate("/p/whiskr/catch-up")
               toast("Project created", { description: "Opening the example project for now." })
             }}
           >

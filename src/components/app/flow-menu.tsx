@@ -27,7 +27,7 @@ import { cn } from "@/lib/utils"
 const SCREENS: [string, [string, string][]][] = [
   ["Getting in", [["Sign up", "/signup"], ["Log in", "/login"], ["Create workspace", "/new"]]],
   ["Workspace", [["All projects", "/projects"], ["Inbox", "/inbox"], ["My tasks", "/my-tasks"]]],
-  ["Project", [["Ask", "/p/whiskr/ask"], ["Tasks", "/p/whiskr/tasks"], ["Decisions", "/p/whiskr/decisions"], ["Decision detail", "/p/whiskr/decisions/nored"], ["Meetings", "/p/whiskr/sessions"], ["Live canvas", "/p/whiskr/sessions/s1"], ["Project settings", "/p/whiskr/settings/general"], ["Project people", "/p/whiskr/settings/people"]]],
+  ["Project", [["Catch up", "/p/whiskr/catch-up"], ["Tasks", "/p/whiskr/tasks"], ["Decisions", "/p/whiskr/decisions"], ["Decision detail", "/p/whiskr/decisions/nored"], ["Meetings", "/p/whiskr/sessions"], ["Live canvas", "/p/whiskr/sessions/s1"], ["Project settings", "/p/whiskr/settings/general"], ["Project people", "/p/whiskr/settings/people"]]],
   ["Playground", [["Decision display states", "/playground/decisions/states"], ["Section map & outline", "/playground/whiskr/canvas"], ["Earlier decision views", "/playground/whiskr/board"]]],
   ["Settings", [["Workspace settings", "/settings/general"], ["Plan and billing", "/settings/billing"], ["Profile", "/account/profile"], ["My AI tools", "/account/ai-tools"], ["Notifications", "/account/notifications"]]],
 ]
