@@ -50,14 +50,14 @@ import {
   SidebarMenuSubButton,
   SidebarMenuSubItem,
 } from "@/components/ui/sidebar"
-import { DECISIONS, INBOX, ME, PROJECTS, SESSIONS, TASKS } from "@/data"
+import { DECISIONS, INBOX, ME, MY_PROJECTS, PROJECTS, SESSIONS, TASKS } from "@/data"
 import { navigate, useRoute } from "@/lib/router"
 import { useStore } from "@/lib/store"
 
 export function AppSidebar() {
   const route = useRoute()
   const { inboxState, workspaces, current, switchWorkspace, setInviteOpen, setNewProjectOpen, setSearchOpen, setWorkspaceOpen } = useStore()
-  const projects = current?.example ? PROJECTS : []
+  const projects = current?.example ? MY_PROJECTS : []
   const unread = current?.example ? INBOX.filter((i) => !inboxState[i.id]?.done && !(inboxState[i.id]?.read ?? !i.unread)).length : 0
   const at = (path: string) => "/" + route.join("/") === path
 
@@ -183,7 +183,7 @@ export function AppSidebar() {
               <DropdownMenuTrigger asChild>
                 <SidebarMenuButton size="lg">
                   <Avatar className="size-8 rounded-md">
-                    <AvatarFallback className="rounded-md">K</AvatarFallback>
+                    <AvatarFallback className="rounded-md">{ME.name[0]}</AvatarFallback>
                   </Avatar>
                   <div className="grid flex-1 text-left text-sm leading-tight">
                     <span className="truncate font-medium">{ME.name}</span>

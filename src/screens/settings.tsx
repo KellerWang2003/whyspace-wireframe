@@ -11,7 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { AppShell, PageHeader } from "@/components/app/app-shell"
 import { PersonAvatar } from "@/components/app/person"
-import { PEOPLE, PLANS } from "@/data"
+import { ME, PEOPLE, PLANS } from "@/data"
 import { navigate } from "@/lib/router"
 import { useStore } from "@/lib/store"
 import { cn } from "@/lib/utils"
@@ -63,7 +63,7 @@ function General() {
 
 function Members() {
   const { current, setInviteOpen } = useStore()
-  const people = current?.example ? Object.values(PEOPLE) : [PEOPLE.MC]
+  const people = current?.example ? Object.values(PEOPLE) : [ME]
   return (
     <div className="space-y-4">
       <div className="flex items-center">

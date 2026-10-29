@@ -5,7 +5,7 @@ import { AppShell } from '@/components/app/app-shell'
 import { PersonAvatar } from '@/components/app/person'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { PEOPLE } from '@/data'
+import { ME, PEOPLE } from '@/data'
 import { cn } from '@/lib/utils'
 import { DECISION_EXAMPLES, type DecisionRecord } from '@/playground/decision-records'
 
@@ -88,7 +88,7 @@ function FullRecord({ decision: d, records, onConfirm, onRelated }: {
 }) {
   return <article className="@container space-y-7" data-display-state="full">
     <header className="space-y-3 border-b pb-6"><Marks decision={d} /><h3 className="text-2xl font-semibold tracking-tight">{d.title}</h3><p className="text-xs text-muted-foreground">Whiskr · Recorded {d.recordedAt}</p></header>
-    {d.review === 'awaiting' && <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-dashed p-4"><div><p className="text-sm font-medium">A person needs to confirm this choice.</p><p className="mt-1 text-xs text-muted-foreground">{firstName(d.capture.onBehalfOf)}’s {d.capture.tool} inferred it from the work.</p></div><Button size="sm" onClick={() => onConfirm(d.id)}>Confirm as Keller</Button></div>}
+    {d.review === 'awaiting' && <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-dashed p-4"><div><p className="text-sm font-medium">A person needs to confirm this choice.</p><p className="mt-1 text-xs text-muted-foreground">{firstName(d.capture.onBehalfOf)}’s {d.capture.tool} inferred it from the work.</p></div><Button size="sm" onClick={() => onConfirm(d.id)}>Confirm as {ME.name}</Button></div>}
     {d.flag && <p className="flex items-start gap-2 rounded-lg border p-3 text-sm"><Flag className="mt-0.5 size-4 shrink-0" />{d.flag}</p>}
     <div className="grid items-start gap-8 @min-[750px]:grid-cols-[minmax(0,1fr)_280px]">
       <div className="min-w-0 space-y-7">

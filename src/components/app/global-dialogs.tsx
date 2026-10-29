@@ -26,7 +26,7 @@ import { Input } from "@/components/ui/input"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
-import { DECISIONS, PLANS, PROJECTS, TASKS, projectName } from "@/data"
+import { DECISIONS, MY_PROJECTS, PLANS, TASKS, projectName } from "@/data"
 import { navigate } from "@/lib/router"
 import { useStore, type Plan } from "@/lib/store"
 import { cn } from "@/lib/utils"
@@ -82,7 +82,7 @@ function SearchDialog() {
             </CommandGroup>
             <CommandSeparator />
             <CommandGroup heading="Projects">
-              {PROJECTS.map((p) => (
+              {MY_PROJECTS.map((p) => (
                 <CommandItem key={p.id} onSelect={() => go(`/p/${p.id}/overview`)}>
                   <FolderKanban />
                   {p.name}

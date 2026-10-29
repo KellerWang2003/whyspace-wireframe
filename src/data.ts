@@ -1,5 +1,6 @@
 import type { Plan } from "@/lib/store"
 import { STAGE } from "@/lib/stage"
+import { VIEWER } from "@/lib/viewer"
 
 // Fictional scenario: Keller markets Whiskr, a swipe app for cats, and builds Recall with one AI Studio teammate.
 
@@ -38,7 +39,8 @@ export const PEOPLE: Record<string, Person> = {
   }
 }
 
-export const ME = PEOPLE.MC
+// Whoever the debug panel is viewing as (see lib/viewer.ts). Keller by default.
+export const ME = PEOPLE[VIEWER]
 
 export const initials = (name: string) =>
   name
@@ -271,7 +273,12 @@ export const PROJECTS: Project[] = [
   {
     "id": "whiskr",
     "name": "Whiskr",
-    "brief": "A swipe app where cats find playdate matches. I lead marketing: the poster campaign and the 15-second promo video.",
+    "brief": {
+      MC: "A swipe app where cats find playdate matches. I lead marketing: the poster campaign and the 15-second promo video.",
+      CH: "A swipe app where cats find playdate matches. I run the company; Trevor leads research and brand, Kelly the app, Keller marketing.",
+      TR: "A swipe app where cats find playdate matches. I lead research and the brand: cat tests, footage reviews and the palette.",
+      KL: "A swipe app where cats find playdate matches. I lead the app: the swipe card prototype and the moving dot.",
+    }[VIEWER] ?? "",
     "members": [
       "MC",
       "CH",
@@ -313,6 +320,17 @@ export const TASK_STATUS_LABEL: Record<TaskStatus, string> = { todo: "To do", pr
 export const PRIORITY_LABEL: Record<Priority, string> = { urgent: "Urgent", high: "High", med: "Medium", low: "Low", none: "No priority" }
 
 const ALL_TASKS: Task[] = [
+  {
+    "id": "t7",
+    "title": "Review the poster and promo video before launch",
+    "project": "Whiskr",
+    "part": "Marketing",
+    "owner": "CH",
+    "due": "Fri Oct 30",
+    "status": "todo",
+    "priority": "med",
+    "decision": "short"
+  },
   {
     "id": "t1",
     "title": "Update the poster for the moving dot and new palette",
@@ -507,10 +525,63 @@ export type InboxItem = {
   time: string; unread: boolean; decision?: string; body: string
   author: { kind: "ai" | "person"; name: string }; source: string
   relatedArtifacts: { id: string; context: string; excerpt?: string }[]
+  // Who gets it. Unset means Keller only.
+  to?: string[]
   meeting?: { sessionId: string; startsAt: string; endsAt: string; timezone: string; agenda?: string }
 }
 
 const ALL_INBOX: InboxItem[] = [
+  {
+    "id": "i4",
+    "to": ["KL"],
+    "relatedArtifacts": [
+      { "id": "w1", "context": "Brand guidelines · new palette" },
+      { "id": "w5", "context": "Swipe card prototype · buttons still red" }
+    ],
+    "author": { "kind": "ai", "name": "Whyspace AI" },
+    "source": "Trevor's brand guidelines update",
+    "kind": "alert",
+    "from": "TR",
+    "project": "Whiskr",
+    "summary": "Trevor changed the brand palette: recolor the app buttons",
+    "time": "2h",
+    "unread": true,
+    "decision": "nored",
+    "body": "Cats see red as a dull gray, so the palette is now blue and yellow. A prompt with the new colors and the reason is ready to copy into Claude Code."
+  },
+  {
+    "id": "i5",
+    "to": ["TR"],
+    "relatedArtifacts": [
+      { "id": "w7", "context": "Promo video plan" },
+      { "id": "w1", "context": "Brand guidelines · palette and the purring dot" }
+    ],
+    "author": { "kind": "ai", "name": "Whyspace AI" },
+    "source": "Keller's chat with Claude",
+    "kind": "mention",
+    "from": "MC",
+    "project": "Whiskr",
+    "summary": "Keller's promo video plan builds on your brand guidelines",
+    "time": "20m",
+    "unread": true,
+    "decision": "short",
+    "body": "The 15-second video opens on Luna's pounce and uses the blue and yellow palette with the purring dot. Check it matches the guidelines."
+  },
+  {
+    "id": "i9",
+    "to": ["CH"],
+    "relatedArtifacts": [{ "id": "w7", "context": "Promo video plan · length not confirmed" }],
+    "author": { "kind": "ai", "name": "Whyspace AI" },
+    "source": "Weekly digest",
+    "kind": "review",
+    "from": "MC",
+    "project": "Whiskr",
+    "summary": "This week: red is out, the dot moves, and one decision waits on Keller",
+    "time": "1h",
+    "unread": true,
+    "decision": "short",
+    "body": "Trevor dropped red, Kelly recolored the app, and Keller planned the promo video. The 15-second length still needs Keller's confirmation; the poster still uses red."
+  },
   {
     "id": "i1",
     "relatedArtifacts": [
@@ -553,6 +624,7 @@ const ALL_INBOX: InboxItem[] = [
       "kind": "ai",
       "name": "Whyspace AI"
     },
+    "to": ["MC", "CH"],
     "source": "Footage review · live session",
     "kind": "change",
     "from": "TR",
@@ -1036,8 +1108,29 @@ export const PROJECT_DECISION_SUMMARY: Record<string, string> = {
   whiskr: WHISKR_SUMMARY.project,
   studio: "Recall turns one course PDF into five practice questions. Our two-person team is building a working flow for Nov 4. Open: citation behavior, unsupported questions, and the critique presentation split.",
 }
+// Each lead's view of the week opens with their own part. Christine sees the whole project.
+const WHISKR_WEEK_FOR: Record<string, string[]> = {
+  MC: [
+    "The poster series is laid out in tuna red. Kelly ran the first cat test; Trevor has the footage.",
+    "The footage review is live: movement is the new rule, which will reach the poster and video.",
+    "Your poster still uses red: Trevor dropped it from the brand and marked it important. Kelly is recoloring the app.",
+    "You planned the 15-second promo video with Claude; confirm the length. The poster still uses red.",
+  ],
+  TR: [
+    "You have Monday's cat-test footage to review. Kelly ran the test with the static card.",
+    "You're reviewing the footage with Kelly: Luna only reacts to movement. Movement, the dot and the purr are logged.",
+    "You dropped red from the brand and marked it important. Kelly is recoloring the app; Keller's poster hasn't caught up.",
+    "Your palette is in the app. Keller's promo video plan builds on your guidelines; the poster still uses red.",
+  ],
+  KL: [
+    "You ran the first cat test with the static swipe card. Trevor has the footage.",
+    "In the footage review, the moving dot won out of your three directions. Next: build it with the purr.",
+    "Red is out of the brand: recolor the app buttons to blue and yellow. The moving dot is in the prototype.",
+    "You recolored the app buttons; the moving dot purrs at about 25 Hz. Keller planned the promo video.",
+  ],
+}
 export const WEEK_SUMMARY: Record<string, string> = {
-  whiskr: WHISKR_SUMMARY.week,
+  whiskr: WHISKR_WEEK_FOR[VIEWER]?.[Math.min(STAGE, 4) - 1] ?? WHISKR_SUMMARY.week,
   studio: "We moved from prewritten prototype questions to a working AI flow. Jordan added source passages; Keller is designing verification and failure states. Two evaluation questions lacked support.",
 }
 export const CANVAS_EXTRAS: Record<string, { notePart?: string; note?: string; suggestion?: { name: string; from: string; moves: string[]; by: string; reason: string }; ask: string[] }> = {
@@ -1055,8 +1148,8 @@ export const CANVAS_EXTRAS: Record<string, { notePart?: string; note?: string; s
 // where it first happens, and until the stage where it is replaced. Unlisted items always show.
 const FROM: Record<string, number> = {
   move: 2, dot: 2, purr: 2, dotbrand: 3, nored: 3, short: 4, pounce: 4,
-  t3: 2, t1: 3, t4: 3, t5: 3, t2: 4,
-  i2: 2, i1: 3, i3: 4,
+  t3: 2, t1: 3, t4: 3, t5: 3, t2: 4, t7: 5,
+  i2: 2, i1: 3, i4: 3, i3: 4, i5: 4, i9: 5,
   s3: 4,
   w2: 2, w7: 4, w8: 4,
 }
@@ -1089,9 +1182,11 @@ function staged<T extends { id: string; project: string }>(items: T[]): T[] {
 
 export const DECISIONS = staged(ALL_DECISIONS)
 export const TASKS = staged(ALL_TASKS)
-export const INBOX = staged(ALL_INBOX)
+export const INBOX = staged(ALL_INBOX).filter((item) => (item.to ?? ["MC"]).includes(VIEWER))
 export const SESSIONS = staged(ALL_SESSIONS)
 export const ARTIFACTS = staged(ALL_ARTIFACTS)
+// The projects the viewer is in. Use PROJECTS for lookups by id or name.
+export const MY_PROJECTS = PROJECTS.filter((p) => p.members.includes(VIEWER))
 
 // What the Whiskr team is doing at each stage.
 const WHISKR_ACTIVITY: Record<number, Activity[]> = {

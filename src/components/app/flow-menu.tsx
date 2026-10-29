@@ -17,6 +17,9 @@ import {
 import { navigate, useRoute } from "@/lib/router"
 import { useStore } from "@/lib/store"
 import { STAGE, STAGES, setStage } from "@/lib/stage"
+import { VIEWER, VIEWERS, setViewer } from "@/lib/viewer"
+import { PEOPLE } from "@/data"
+import { PersonAvatar } from "@/components/app/person"
 import { cn } from "@/lib/utils"
 
 // Prototype helper only, not part of the app: a debug tab that rests on any screen edge
@@ -186,7 +189,7 @@ export function FlowMenu({ desktop, onDesktop }: { desktop: boolean; onDesktop: 
           )}
         >
           <Bug className="size-3.5" />
-          <span className={cn("text-[10px] font-medium tracking-wide", !drag && vertical && "[writing-mode:vertical-rl]")}>Debug · {STAGE}</span>
+          <span className={cn("text-[10px] font-medium tracking-wide", !drag && vertical && "[writing-mode:vertical-rl]")}>Debug · {STAGE} · {PEOPLE[VIEWER].name}</span>
         </button>
       </PopoverAnchor>
 
@@ -205,6 +208,24 @@ export function FlowMenu({ desktop, onDesktop }: { desktop: boolean; onDesktop: 
         </header>
 
         <div className="space-y-3 p-3">
+          <div className="space-y-1.5">
+            <div className="text-[11px] font-medium text-muted-foreground">View as</div>
+            <Select value={VIEWER} onValueChange={setViewer}>
+              <SelectTrigger size="sm" className="w-full text-xs">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="z-[70]">
+                {VIEWERS.map((id) => (
+                  <SelectItem key={id} value={id} className="text-xs">
+                    <PersonAvatar id={id} className="size-5" />
+                    {PEOPLE[id].name}
+                    <span className="text-muted-foreground">· {PEOPLE[id].role}</span>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
           <div className="space-y-1.5">
             <div className="text-[11px] font-medium text-muted-foreground">Whiskr stage</div>
             <Select value={String(STAGE)} onValueChange={(v) => setStage(Number(v))}>

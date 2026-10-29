@@ -38,6 +38,7 @@ import { StatusIcon } from "@/components/app/status-badge"
 import {
   DECISIONS,
   PEOPLE,
+  MY_PROJECTS,
   PRIORITY_LABEL,
   PROJECTS,
   TASK_STATUS_LABEL,
@@ -309,7 +310,7 @@ function TaskSheet({ task: t, onClose, onChange }: { task?: Task; onClose: () =>
 
 function NewTaskDialog({ open, onOpenChange, defaultProject, onCreate }: { open: boolean; onOpenChange: (o: boolean) => void; defaultProject?: string; onCreate: (t: Task) => void }) {
   const [title, setTitle] = useState("")
-  const [project, setProject] = useState(defaultProject ?? PROJECTS[0].name)
+  const [project, setProject] = useState(defaultProject ?? MY_PROJECTS[0].name)
   const [owner, setOwner] = useState("MC")
   const [priority, setPriority] = useState<Priority>("none")
   const [due, setDue] = useState("")
@@ -334,7 +335,7 @@ function NewTaskDialog({ open, onOpenChange, defaultProject, onCreate }: { open:
                 <FieldLabel>Project</FieldLabel>
                 <Select value={project} onValueChange={setProject}>
                   <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
-                  <SelectContent>{PROJECTS.map((p) => <SelectItem key={p.id} value={p.name}>{p.name}</SelectItem>)}</SelectContent>
+                  <SelectContent>{MY_PROJECTS.map((p) => <SelectItem key={p.id} value={p.name}>{p.name}</SelectItem>)}</SelectContent>
                 </Select>
               </Field>
             )}

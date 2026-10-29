@@ -5,7 +5,7 @@ import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTi
 import { AppShell, PageHeader } from "@/components/app/app-shell"
 import { PersonAvatar } from "@/components/app/person"
 import { StatusIcon } from "@/components/app/status-badge"
-import { ACTIVITY, DECISIONS, PEOPLE, PROJECTS, WHISKR_CARD_SUMMARY, type Project } from "@/data"
+import { ACTIVITY, DECISIONS, MY_PROJECTS, PEOPLE, WHISKR_CARD_SUMMARY, type Project } from "@/data"
 import { DecisionSheet } from "@/screens/decisions"
 import { useStore } from "@/lib/store"
 
@@ -76,7 +76,7 @@ function ProjectCard({ project }: { project: Project }) {
 
 export function Projects({ selectedId }: { selectedId?: string }) {
   const { current, setNewProjectOpen } = useStore()
-  const projects = current?.example ? PROJECTS : []
+  const projects = current?.example ? MY_PROJECTS : []
 
   return (
     <AppShell crumbs={[{ label: current?.name ?? "" }, { label: "All projects" }]}>

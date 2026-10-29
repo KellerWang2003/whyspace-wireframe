@@ -37,7 +37,7 @@ function Profile() {
     <FieldSet className="max-w-xl">
       <FieldGroup>
         <div className="flex items-center gap-4">
-          <Avatar className="size-14"><AvatarFallback>K</AvatarFallback></Avatar>
+          <Avatar className="size-14"><AvatarFallback>{ME.name[0]}</AvatarFallback></Avatar>
           <Button variant="outline" size="sm">Change photo</Button>
         </div>
         <Field>

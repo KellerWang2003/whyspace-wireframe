@@ -26,7 +26,7 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { PersonAvatar } from "@/components/app/person"
 import { StatusBadge } from "@/components/app/status-badge"
-import { PEOPLE, PROJECTS, SESSIONS, type Status } from "@/data"
+import { ME, PEOPLE, PROJECTS, SESSIONS, type Status } from "@/data"
 import { navigate } from "@/lib/router"
 import { cn } from "@/lib/utils"
 
@@ -58,10 +58,10 @@ export function LiveSession({ id, sessionId }: { id: string; sessionId?: string 
   const project = PROJECTS.find((p) => p.id === id) ?? PROJECTS[0]
   const session = SESSIONS.find((s) => s.id === sessionId) ?? SESSIONS.find((s) => s.project === project.id && s.status === "Live") ?? {
     title: "New meeting",
-    host: "MC",
-    people: ["MC"],
+    host: ME.id,
+    people: [ME.id],
   }
-  const people = [...new Set(["MC", ...session.people])]
+  const people = [...new Set([ME.id, ...session.people])]
 
   const studio = project.id === "studio"
   const script: Line[] = studio ? [
@@ -248,7 +248,7 @@ export function LiveSession({ id, sessionId }: { id: string; sessionId?: string 
                   aria-label={label as string}
                   onClick={() => {
                     if (v === "sticky") {
-                      setStickies((s) => [...s, { id: `n${Date.now()}`, x: 260 - pan.x, y: 560 - pan.y, text: "New note", by: "MC", shade: 0 }])
+                      setStickies((s) => [...s, { id: `n${Date.now()}`, x: 260 - pan.x, y: 560 - pan.y, text: "New note", by: ME.id, shade: 0 }])
                       setTool("select")
                     }
                   }}
