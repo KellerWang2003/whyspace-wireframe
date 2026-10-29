@@ -1,25 +1,22 @@
-import { useEffect, useRef, useState, type ReactNode } from "react"
-import { ArrowUp, ChevronRight, PanelRight, PictureInPicture2, Quote, Sparkles, X } from "lucide-react"
+import { useState, type ReactNode } from "react"
+import { ChevronRight, Quote, Sparkles } from "lucide-react"
 import { toast } from "sonner"
 import { PersonAvatar } from "@/components/app/person"
 import { StatusBadge, StatusIcon } from "@/components/app/status-badge"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog"
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { Separator } from "@/components/ui/separator"
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { PEOPLE, type Artifact, type Decision } from "@/data"
-import { onAskWhyspace } from "@/lib/ask"
 import { cn } from "@/lib/utils"
 import { ArtifactPicture, ArtifactThumb } from "@/playground/artifact"
 import { dayLabel, dayOfDecision, isAI, isNew, type Model } from "@/playground/model"
-import { reply, type ChatContext, type Msg } from "@/playground/reply"
 
 // Shared by the Decisions page, the Artifacts page and the playground: the decision sheet,
 // the artifact focus view (artifact large, pinned decisions, version scrubber, decisions on the
-// right) and the bottom-right Ask Whyspace chat.
+// right).
 // ---------- decision detail ----------
 
 export function DecisionSheet({ m, id, onClose, onDecision, onArtifact }: { m: Model; id: string | null; onClose: () => void; onDecision: (id: string) => void; onArtifact: (id: string) => void }) {
@@ -217,101 +214,3 @@ function Focus({ m, a, onDecision }: { m: Model; a: Artifact; onDecision: (id: s
 }
 
 // ---------- chat: bottom-right button, floating panel or docked sidebar ----------
-
-// `docked` opens the chat on the side when it turns on (a project's Catch up page);
-// `suggested` replaces the starter questions for the current scope.
-export function Chat({ m, onDecision, onArtifact, docked = false, suggested: scoped }: { m: ChatContext; onDecision: (decision: Decision) => void; onArtifact: (artifact: Artifact) => void; docked?: boolean; suggested?: string[] }) {
-  const [mode, setMode] = useState<"closed" | "float" | "dock">(docked ? "dock" : "closed")
-  // Arriving on a page that wants it docked opens it; leaving leaves it as the person set it.
-  const [wasDocked, setWasDocked] = useState(docked)
-  if (docked !== wasDocked) {
-    setWasDocked(docked)
-    if (docked) setMode("dock")
-  }
-  const [msgs, setMsgs] = useState<Msg[]>([])
-  const [text, setText] = useState("")
-  const messagesRef = useRef<HTMLDivElement>(null)
-  const inputRef = useRef<HTMLTextAreaElement>(null)
-  useEffect(() => {
-    if (mode !== "closed") inputRef.current?.focus()
-  }, [mode])
-  useEffect(() => {
-    messagesRef.current?.scrollTo({ top: messagesRef.current.scrollHeight, behavior: "smooth" })
-  }, [msgs, mode])
-  const send = (q: string) => {
-    if (!q.trim()) return
-    setMsgs((ms) => [...ms, { who: "me", text: q }, reply(q, m)])
-    setText("")
-  }
-  // Questions sent from the page ("Ask about this") open the chat and land in this conversation.
-  const latest = useRef(send)
-  useEffect(() => { latest.current = send })
-  useEffect(() => onAskWhyspace((q) => {
-    setMode((current) => (current === "closed" ? "dock" : current))
-    latest.current(q)
-  }), [])
-  if (mode === "closed")
-    return (
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <Button variant="outline" size="icon" aria-label="Ask Whyspace" onClick={() => setMode("dock")} className="fixed right-5 bottom-5 z-40 size-10 rounded-xl border-border/70 bg-background text-muted-foreground shadow-sm transition-colors hover:text-foreground">
-            <Sparkles className="size-4" />
-          </Button>
-        </TooltipTrigger>
-        <TooltipContent side="left" sideOffset={8}>Ask Whyspace</TooltipContent>
-      </Tooltip>
-    )
-  const suggested = scoped?.length ? scoped : ["What changed since I was here?", "What's still open?", "Which decisions need confirmation?"]
-  return (
-    <div role="region" aria-label="Ask Whyspace" onKeyDown={(event) => { if (event.key === "Escape") setMode("closed") }} className={cn("flex flex-col border bg-background", mode === "float" ? "fixed right-5 bottom-5 z-40 h-[520px] max-h-[calc(100svh-2.5rem)] w-[380px] max-w-[calc(100vw-2.5rem)] rounded-xl shadow-xl" : "relative h-full min-w-0 w-[min(400px,45vw)] shrink-0 border-y-0 border-r-0")}>
-      <div className="flex h-14 shrink-0 items-center gap-2 px-4">
-        <span className="text-sm font-medium">Ask Whyspace</span>
-        <div className="ml-auto flex shrink-0 text-muted-foreground">
-          <Button variant="ghost" size="icon" className="size-7" title={mode === "float" ? "Dock to the side" : "Float"} onClick={() => setMode(mode === "float" ? "dock" : "float")}>
-            {mode === "float" ? <PanelRight /> : <PictureInPicture2 />}
-          </Button>
-          <Button variant="ghost" size="icon" className="size-7" aria-label="Minimize Ask Whyspace" onClick={() => setMode("closed")}><X /></Button>
-        </div>
-      </div>
-      <div ref={messagesRef} className="min-h-0 flex-1 space-y-5 overflow-y-auto px-5 py-6" aria-live="polite">
-        {msgs.length === 0 && (
-          <div className="pt-10">
-            <Sparkles className="mb-4 size-6 text-muted-foreground" strokeWidth={1.5} />
-            <h2 className="text-lg font-medium tracking-tight">Where should we start?</h2>
-            <p className="mt-2 text-sm leading-relaxed text-muted-foreground">Find the thinking behind your team's work.</p>
-            <div className="-mx-2 mt-6 space-y-1">
-              {suggested.map((s) => <button key={s} onClick={() => send(s)} className="group flex w-full items-center gap-3 rounded-md px-2 py-2.5 text-left text-sm text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground"><ChevronRight className="size-3.5 shrink-0 opacity-60" />{s}</button>)}
-            </div>
-          </div>
-        )}
-        {msgs.map((msg, i) => (
-          <div key={i} className={cn("space-y-1.5", msg.who === "me" && "flex justify-end")}>
-            <div className={cn("text-sm", msg.who === "me" ? "max-w-[80%] rounded-2xl bg-muted px-3 py-1.5" : "")}>{msg.text}</div>
-            {msg.refs?.map((d) => {
-              return (
-                <button key={d.id} onClick={() => onDecision(d)} className="flex w-full items-center gap-2 rounded-md border px-2.5 py-1.5 text-left text-xs hover:bg-muted">
-                  <StatusIcon status={d.status} className="size-3.5 text-muted-foreground" />
-                  <span className="flex-1 truncate">{d.title}</span>
-                  <span className="text-muted-foreground">{d.part}</span>
-                </button>
-              )
-            })}
-            {msg.arts && <div className="grid grid-cols-2 gap-2">{msg.arts.map((artifact) => <ArtifactThumb key={artifact.id} artifact={artifact} onOpen={() => onArtifact(artifact)} />)}</div>}
-          </div>
-        ))}
-      </div>
-      <form className="m-3 mt-0 rounded-xl border border-border/80 bg-muted/20 p-3 transition-colors focus-within:border-ring/50" onSubmit={(e) => (e.preventDefault(), send(text))}>
-        <textarea ref={inputRef} rows={2} aria-label="Ask Whyspace" value={text} onChange={(e) => setText(e.target.value)} onKeyDown={(event) => {
-          if (event.key === "Enter" && !event.shiftKey && !event.nativeEvent.isComposing) {
-            event.preventDefault()
-            send(text)
-          }
-        }} placeholder="Ask anything about your work…" className="block w-full resize-none bg-transparent text-sm leading-relaxed outline-none placeholder:text-muted-foreground/70" />
-        <div className="mt-2 flex items-center gap-3">
-          <span className="min-w-0 flex-1 truncate text-xs text-muted-foreground" title={m.scopeName}>{m.scopeName}</span>
-          <Button type="submit" size="icon" className="size-7 shrink-0 rounded-lg shadow-none" disabled={!text.trim()} aria-label="Send message"><ArrowUp className="size-4" /></Button>
-        </div>
-      </form>
-    </div>
-  )
-}

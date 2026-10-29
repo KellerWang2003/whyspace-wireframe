@@ -18,7 +18,7 @@ export function AppShell({ crumbs, actions, children }: { crumbs: Crumb[]; actio
   return (
     <SidebarProvider className="h-svh overflow-hidden">
       <AppSidebar />
-      <SidebarInset className="min-h-0 min-w-0 overflow-hidden">
+      <SidebarInset className="relative min-h-0 min-w-0 overflow-hidden">
         <header className="flex h-14 shrink-0 items-center gap-2 border-b px-4">
           <SidebarTrigger className="-ml-1" />
           <Separator orientation="vertical" className="mr-2 data-[orientation=vertical]:h-4" />
@@ -43,6 +43,8 @@ export function AppShell({ crumbs, actions, children }: { crumbs: Crumb[]; actio
           <div className="ml-auto flex items-center gap-2">{actions}</div>
         </header>
         <div className="relative flex min-h-0 flex-1 flex-col overflow-y-auto">{children}</div>
+        {/* Ask Whyspace draws its chat here, centred over the page's bottom edge. */}
+        <div data-assistant-slot className="pointer-events-none absolute inset-0 top-14 z-30" />
       </SidebarInset>
     </SidebarProvider>
   )

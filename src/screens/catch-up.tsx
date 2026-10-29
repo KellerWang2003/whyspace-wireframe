@@ -13,12 +13,12 @@ import { cn } from "@/lib/utils"
 import { ArtifactPicture } from "@/playground/artifact"
 
 // Catch up is the project's landing page: a briefing written for the viewer at this stage.
-// Ask Whyspace opens docked beside it; "Ask about this" sends a question there.
+// Ask Whyspace's bar sits at the bottom; "Ask about this" sends a question there.
 export function CatchUp({ project }: { project: Project }) {
   const openArtifact = (a: Artifact) => navigate(`/p/${project.id}/artifacts/${a.id}`)
   return (
     <div className="min-h-0 flex-1 overflow-y-auto">
-      <div className="mx-auto w-full max-w-3xl px-4 py-8 sm:px-6">
+      <div className="mx-auto w-full max-w-3xl px-4 pt-8 pb-32 sm:px-6">
         <Briefing project={project} onArtifact={openArtifact} />
       </div>
     </div>
