@@ -128,7 +128,7 @@ export function spanOf(m: Model, a: Artifact) {
 // Mock subsections, to show that sections nest like Figma sections: project > part > subsection > ...
 // Each lists the decisions and artifacts that live in it instead of in its parent.
 export type SectionSeed = { id: string; name: string; parent: string; items: string[]; summary?: string }
-export const SUBSECTIONS: Record<string, SectionSeed[]> = {
+const ALL_SUBSECTIONS: Record<string, SectionSeed[]> = {
   whiskr: [
     { id: "card", name: "Swipe card", parent: "part:App", items: ["d:dot", "d:purr", "a:w5"], summary: "A purring dot moves across the card and leads the swipe." },
     { id: "promo", name: "Promo video", parent: "part:Marketing", items: ["d:short", "d:pounce", "a:w7", "a:w8"], summary: "Fifteen seconds, opening on Luna's real pounce." },
@@ -138,3 +138,12 @@ export const SUBSECTIONS: Record<string, SectionSeed[]> = {
     { id: "react", name: "Generation and evaluation", parent: "part:Prototype", items: ["a:a16"], summary: "Build and evaluate the PDF extraction and question-generation pipeline." },
   ],
 }
+
+// Only what exists at the current Whiskr stage; a subsection with nothing in it yet is hidden.
+const present = new Set([...DECISIONS.map((d) => `d:${d.id}`), ...ARTIFACTS.map((a) => `a:${a.id}`)])
+export const SUBSECTIONS: Record<string, SectionSeed[]> = Object.fromEntries(
+  Object.entries(ALL_SUBSECTIONS).map(([project, seeds]) => [
+    project,
+    seeds.map((s) => ({ ...s, items: s.items.filter((it) => present.has(it)) })).filter((s) => s.items.length > 0),
+  ]),
+)

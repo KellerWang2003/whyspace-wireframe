@@ -8,6 +8,10 @@ export function projectSections(projectId: string): WorkSection[] {
   const model = buildModel(projectId)
   const slug = (name: string) => name.toLowerCase().replace(/\s+/g, '-')
   const sections: WorkSection[] = model.parts.map(p => ({ id: slug(p.name), parent: null, name: p.name, owner: PEOPLE[p.owner]?.name.split(' ')[0] ?? p.owner, summary: PART_SUMMARY[p.name] ?? model.project.brief, artifacts: [], decisions: [] }))
+  // Parts that have work but no decisions yet still get a section, led by the artifact's owner.
+  for (const a of model.artifacts) {
+    if (!sections.some(s => s.id === slug(a.part))) sections.push({ id: slug(a.part), parent: null, name: a.part, owner: PEOPLE[a.owner]?.name.split(' ')[0] ?? a.owner, summary: 'No decisions yet.', artifacts: [], decisions: [] })
+  }
   for (const s of SUBSECTIONS[projectId] ?? []) {
     const parent = s.parent.startsWith('part:') ? slug(s.parent.slice(5)) : s.parent
     sections.push({ id: s.id, parent, name: s.name, owner: sections.find(p => p.id === parent)?.owner ?? 'Keller', summary: s.summary ?? '', artifacts: [], decisions: [] })

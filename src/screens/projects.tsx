@@ -5,12 +5,12 @@ import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTi
 import { AppShell, PageHeader } from "@/components/app/app-shell"
 import { PersonAvatar } from "@/components/app/person"
 import { StatusIcon } from "@/components/app/status-badge"
-import { ACTIVITY, DECISIONS, PEOPLE, PROJECTS, type Project } from "@/data"
+import { ACTIVITY, DECISIONS, PEOPLE, PROJECTS, WHISKR_CARD_SUMMARY, type Project } from "@/data"
 import { DecisionSheet } from "@/screens/decisions"
 import { useStore } from "@/lib/store"
 
 const PROJECT_SUMMARIES: Record<string, string> = {
-  whiskr: "The app now uses a purring dot in blue and yellow. Next up: update the poster and confirm the promo video length.",
+  whiskr: WHISKR_CARD_SUMMARY,
   studio: "The AI practice flow is working. Source verification and unsupported answers are the next focus.",
 }
 

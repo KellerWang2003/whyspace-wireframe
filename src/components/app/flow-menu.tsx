@@ -2,6 +2,7 @@ import { Route } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,6 +13,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { navigate } from "@/lib/router"
 import { useStore } from "@/lib/store"
+import { STAGE, STAGES, setStage } from "@/lib/stage"
 
 // Prototype helper only, not part of the app: jump to any screen while reviewing the flow.
 const SCREENS: [string, [string, string][]][] = [
@@ -26,6 +28,22 @@ export function FlowMenu({ desktop, onDesktop }: { desktop: boolean; onDesktop: 
   const { joinWorkspace, startFresh, setUpgradeOpen } = useStore()
   return (
     <div className="fixed bottom-20 left-4 z-50 flex flex-col items-start gap-2">
+      <div className="w-64 space-y-1.5 rounded-md border bg-background p-2.5 shadow-md">
+        <div className="text-xs font-medium">Whiskr stage</div>
+        <Select value={String(STAGE)} onValueChange={(v) => setStage(Number(v))}>
+          <SelectTrigger size="sm" className="w-full text-xs">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {STAGES.map((stage, i) => (
+              <SelectItem key={stage.name} value={String(i + 1)} className="text-xs">
+                {i + 1}. {stage.name} · {stage.date}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <p className="text-[11px] leading-snug text-muted-foreground">{STAGES[STAGE - 1].what}</p>
+      </div>
       <Label className="flex items-center gap-2 rounded-md border bg-background px-2.5 py-1.5 text-xs font-normal shadow-md">
         <Switch checked={desktop} onCheckedChange={onDesktop} />
         Outside the app (desktop overlay)

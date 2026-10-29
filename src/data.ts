@@ -1,4 +1,5 @@
 import type { Plan } from "@/lib/store"
+import { STAGE } from "@/lib/stage"
 
 // Fictional scenario: Keller markets Whiskr, a swipe app for cats, and builds Recall with one AI Studio teammate.
 
@@ -72,7 +73,7 @@ export type Decision = {
   due?: string
 }
 
-export const DECISIONS: Decision[] = [
+const ALL_DECISIONS: Decision[] = [
   {
     "id": "move",
     "project": "whiskr",
@@ -109,6 +110,18 @@ export const DECISIONS: Decision[] = [
     "when": "Oct 22",
     "tool": "Perplexity",
     "why": "Trevor's research: cats respond to a low buzz around 25 Hz, felt through their paw pads, like a purr."
+  },
+  {
+    "id": "red",
+    "project": "whiskr",
+    "title": "Tuna red as the primary color",
+    "part": "Brand",
+    "status": "conf",
+    "owner": "TR",
+    "by": "Trevor",
+    "when": "Oct 8",
+    "tool": "Figma",
+    "why": "Playful and food-related, and it stands out on a phone screen."
   },
   {
     "id": "dotbrand",
@@ -299,7 +312,7 @@ export type Task = {
 export const TASK_STATUS_LABEL: Record<TaskStatus, string> = { todo: "To do", prog: "In progress", review: "In review", done: "Done" }
 export const PRIORITY_LABEL: Record<Priority, string> = { urgent: "Urgent", high: "High", med: "Medium", low: "Low", none: "No priority" }
 
-export const TASKS: Task[] = [
+const ALL_TASKS: Task[] = [
   {
     "id": "t1",
     "title": "Update the poster for the moving dot and new palette",
@@ -497,7 +510,7 @@ export type InboxItem = {
   meeting?: { sessionId: string; startsAt: string; endsAt: string; timezone: string; agenda?: string }
 }
 
-export const INBOX: InboxItem[] = [
+const ALL_INBOX: InboxItem[] = [
   {
     "id": "i1",
     "relatedArtifacts": [
@@ -629,7 +642,7 @@ export type Session = {
   summary?: string
 }
 
-export const SESSIONS: Session[] = [
+const ALL_SESSIONS: Session[] = [
   {
     "id": "s1",
     "project": "whiskr",
@@ -722,7 +735,7 @@ export type Artifact = {
   pr?: string // repos: the open pull request
 }
 
-export const ARTIFACTS: Artifact[] = [
+const ALL_ARTIFACTS: Artifact[] = [
   {
     "id": "w1",
     "project": "whiskr",
@@ -907,7 +920,7 @@ export const ARTIFACTS: Artifact[] = [
 // What each person, and their AI tool, is working on right now. High level only, never prompts.
 export type Activity = { project: string; who: string; tool?: string; aiDoing?: string; doing: string; part: string; since: string; state: "active" | "idle" }
 
-export const ACTIVITY: Activity[] = [
+const ALL_ACTIVITY: Activity[] = [
   {
     "project": "whiskr",
     "who": "MC",
@@ -998,11 +1011,20 @@ export const PLANS: { name: Plan; price: string; blurb: string; features: string
   { name: "Business", price: "$24", blurb: "Per person, per month", features: ["Everything in Pro", "SSO and audit log", "Admin roles", "Priority support"] },
 ]
 
+// Whiskr's summaries at each stage of the week (see lib/stage.ts).
+const WHISKR_SUMMARY = [
+  { project: "A swipe app for cats. The brand is tuna red and the swipe card is static. Nothing open yet.", week: "Kelly ran the first cat test with the prototype. Trevor has the footage to review.", card: "First cat test done. Next up: Trevor and Kelly review the footage together." },
+  { project: "A swipe app for cats. Movement is the new rule: a moving dot leads the swipe, and it purrs.", week: "In the footage review, Luna only reacted to movement. Kelly tried three directions; the moving dot won.", card: "The footage review is live. Movement, the moving dot and the purr are being logged." },
+  { project: "A swipe app for cats, led by a moving, purring dot in blue and yellow. Open: the poster still uses red.", week: "Trevor dropped red from the brand and marked it important. Kelly is recoloring the app; the poster has not caught up.", card: "Red is out of the brand. Next up: Keller updates the poster." },
+  { project: "A swipe app for cats, led by a moving, purring dot in blue and yellow. Open: the 15-second video length needs confirming, and the poster still uses red.", week: "Trevor dropped red from the brand. Kelly recolored the app buttons; the poster has not caught up yet. Keller planned the promo video with Claude.", card: "The app now uses a purring dot in blue and yellow. Next up: update the poster and confirm the promo video length." },
+][Math.min(STAGE, 4) - 1]
+export const WHISKR_CARD_SUMMARY = WHISKR_SUMMARY.card
+
 // AI summaries shown on the decisions canvas, one per part and one per project.
 // Written by Whyspace from the decisions themselves, refreshed when one changes.
 export const PART_SUMMARY: Record<string, string> = {
   Research: "Cats only react to things that move. Luna ignored the static card and pounced on a sliding notification.",
-  Brand: "The purring dot is now a brand element. Red is out because cats see it as gray; the palette is blue and yellow.",
+  Brand: STAGE < 3 ? "Tuna red is the primary color. It feels playful and stands out on a phone screen." : "The purring dot is now a brand element. Red is out because cats see it as gray; the palette is blue and yellow.",
   App: "A moving dot leads the swipe and purrs at about 25 Hz. Kelly is building it into the prototype.",
   Marketing: "The promo video runs 15 seconds and opens on Luna's real pounce. The poster still needs the new palette.",
   Interviews: "Six classmate interviews support short practice sessions after reviewing one lecture.",
@@ -1011,16 +1033,16 @@ export const PART_SUMMARY: Record<string, string> = {
   "Final crit": "Show the product, the evaluation evidence, and how failures changed the design. Keller and Jordan still need to divide the presentation.",
 }
 export const PROJECT_DECISION_SUMMARY: Record<string, string> = {
-  whiskr: "A swipe app for cats, led by a moving, purring dot in blue and yellow. Open: the 15-second video length needs confirming, and the poster still uses red.",
+  whiskr: WHISKR_SUMMARY.project,
   studio: "Recall turns one course PDF into five practice questions. Our two-person team is building a working flow for Nov 4. Open: citation behavior, unsupported questions, and the critique presentation split.",
 }
 export const WEEK_SUMMARY: Record<string, string> = {
-  whiskr: "Trevor dropped red from the brand. Kelly recolored the app buttons; the poster has not caught up yet. Keller planned the promo video with Claude.",
+  whiskr: WHISKR_SUMMARY.week,
   studio: "We moved from prewritten prototype questions to a working AI flow. Jordan added source passages; Keller is designing verification and failure states. Two evaluation questions lacked support.",
 }
 export const CANVAS_EXTRAS: Record<string, { notePart?: string; note?: string; suggestion?: { name: string; from: string; moves: string[]; by: string; reason: string }; ask: string[] }> = {
   whiskr: {
-    notePart: "Brand", note: "Trevor marked the palette change as important · Oct 23",
+    ...(STAGE >= 3 && { notePart: "Brand", note: "Trevor marked the palette change as important · Oct 23" }),
     ask: ["Why is there a dot everywhere?", "Why no red?", "What needs my review?", "What changed this week?"],
   },
   studio: {
@@ -1028,3 +1050,66 @@ export const CANVAS_EXTRAS: Record<string, { notePart?: string; note?: string; s
     ask: ["Why build a working AI prototype?", "Which questions lacked source support?", "Show me Recall", "What do Jordan and I own?"],
   },
 }
+
+// Whiskr plays out over one week (see lib/stage.ts). Each item shows from the stage
+// where it first happens, and until the stage where it is replaced. Unlisted items always show.
+const FROM: Record<string, number> = {
+  move: 2, dot: 2, purr: 2, dotbrand: 3, nored: 3, short: 4, pounce: 4,
+  t3: 2, t1: 3, t4: 3, t5: 3, t2: 4,
+  i2: 2, i1: 3, i3: 4,
+  s3: 4,
+  w2: 2, w7: 4, w8: 4,
+}
+const UNTIL: Record<string, number> = { red: 2 }
+
+// How an item looked at an earlier stage, before later events changed it.
+const EARLIER: Record<string, { until: number; patch: object }[]> = {
+  t6: [{ until: 1, patch: { status: "todo" } }],
+  s1: [
+    { until: 1, patch: { status: "Scheduled", when: "Thu Oct 22, 3:30 PM", length: undefined, decisions: 0, summary: undefined } },
+    { until: 2, patch: { status: "Live", when: "Now", length: "8 min so far", decisions: 3, summary: undefined } },
+  ],
+  w1: [{ until: 2, patch: { updated: "Oct 8", decisions: 1, meta: "Tuna red palette · 16 frames" } }],
+  w4: [{ until: 2, patch: { updated: "Oct 20", meta: "Static swipe card, matches · 20 frames" } }],
+  w5: [{ until: 1, patch: { updated: "Oct 21", meta: "localhost:5173 · static swipe card" } }],
+  w6: [{ until: 2, patch: { meta: "3 posters in tuna red" } }],
+  t4: [{ until: 3, patch: { status: "prog" } }],
+}
+
+const inWhiskr = (item: { project: string }) => item.project === "whiskr" || item.project === "Whiskr"
+
+function staged<T extends { id: string; project: string }>(items: T[]): T[] {
+  return items
+    .filter((item) => !inWhiskr(item) || ((FROM[item.id] ?? 1) <= STAGE && STAGE <= (UNTIL[item.id] ?? Infinity)))
+    .map((item) => {
+      const earlier = inWhiskr(item) ? EARLIER[item.id]?.find((e) => STAGE <= e.until) : undefined
+      return earlier ? { ...item, ...earlier.patch } : item
+    })
+}
+
+export const DECISIONS = staged(ALL_DECISIONS)
+export const TASKS = staged(ALL_TASKS)
+export const INBOX = staged(ALL_INBOX)
+export const SESSIONS = staged(ALL_SESSIONS)
+export const ARTIFACTS = staged(ALL_ARTIFACTS)
+
+// What the Whiskr team is doing at each stage.
+const WHISKR_ACTIVITY: Record<number, Activity[]> = {
+  1: [
+    { project: "whiskr", who: "TR", doing: "Cat test footage", part: "Research", since: "1 h", state: "active" },
+    { project: "whiskr", who: "KL", tool: "Claude Code", aiDoing: "Tidying the swipe card prototype", doing: "Swipe card", part: "App", since: "2 h", state: "active" },
+    { project: "whiskr", who: "MC", tool: "Figma", aiDoing: "Laying out the poster series", doing: "Poster campaign", part: "Marketing", since: "3 h", state: "active" },
+  ],
+  2: [
+    { project: "whiskr", who: "TR", tool: "Perplexity", aiDoing: "Researching how cats respond to vibration", doing: "Footage review · live", part: "Research", since: "8 min", state: "active" },
+    { project: "whiskr", who: "KL", tool: "Claude Code", aiDoing: "Exploring card motion", doing: "Footage review · live", part: "App", since: "8 min", state: "active" },
+  ],
+  3: [
+    { project: "whiskr", who: "TR", tool: "Perplexity", aiDoing: "Researching what cats see", doing: "Brand guidelines", part: "Brand", since: "1 h", state: "active" },
+    { project: "whiskr", who: "KL", tool: "Claude Code", aiDoing: "Recoloring buttons to blue and yellow", doing: "Swipe card", part: "App", since: "30 min", state: "active" },
+  ],
+}
+export const ACTIVITY: Activity[] = [
+  ...(WHISKR_ACTIVITY[STAGE] ?? ALL_ACTIVITY.filter(inWhiskr)),
+  ...ALL_ACTIVITY.filter((a) => !inWhiskr(a)),
+]
