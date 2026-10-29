@@ -7,20 +7,14 @@ import { toast } from "sonner"
 import {
   Archive,
   ArrowRight,
-  Plus,
   CalendarPlus,
   CalendarDays,
   Clock3,
-  Code,
-  FileText,
-  Film,
   MonitorPlay,
-  PenTool,
   Link2,
   MoreHorizontal,
   Radio,
   Settings,
-  Sheet as SheetIcon,
   Sparkles,
 } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
@@ -47,7 +41,6 @@ import { AvatarStack, PersonAvatar } from "@/components/app/person"
 import { ProjectMark } from "@/components/app/project-mark"
 import { TasksView } from "@/components/app/tasks"
 import {
-  ARTIFACTS,
   DECISIONS,
   PEOPLE,
   PROJECTS,
@@ -134,48 +127,31 @@ function Overview({ decisions: ds, project }: { decisions: Decision[]; project: 
   const done = tasks.filter((t) => t.status === "done").length
   const pct = tasks.length ? Math.round((done / tasks.length) * 100) : 0
   const needsYou = ds.filter((d) => ["chg", "inf", "flag"].includes(d.status))
-  const links = ARTIFACTS.filter((a) => a.project === project.id).slice(0, 4)
 
   return (
     <div className="min-h-0 flex-1 overflow-y-auto">
     <div className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 py-8 sm:px-8 sm:py-10 lg:flex-row">
-      <div className="min-w-0 flex-1 space-y-10">
-        <header className="space-y-2">
+      <div className="min-w-0 flex-1 space-y-8">
+        <header className="flex items-center gap-3">
           <ProjectMark project={project.id} className="size-8" />
-          <h1 className="pt-2 text-2xl font-semibold tracking-tight">{project.name}</h1>
-          <p className="text-muted-foreground">{project.brief}</p>
+          <h1 className="text-2xl font-semibold tracking-tight">{project.name}</h1>
         </header>
 
-        <section className="space-y-3">
-          <SectionTitle><span className="flex items-center gap-1.5"><Sparkles className="size-3.5" />AI summary · this week</span></SectionTitle>
+        <section aria-label="AI summary" className="space-y-2 rounded-xl bg-muted/50 p-4">
+          <div className="flex items-center justify-between gap-3 text-xs text-muted-foreground">
+            <span className="flex items-center gap-1.5 font-medium"><Sparkles className="size-3.5" />AI summary</span>
+            <span>Updated since your last visit</span>
+          </div>
           <p className="leading-relaxed">{WEEK_SUMMARY[project.id]}</p>
           {needsYou.length > 0 && (
             <a href={`#/p/${project.id}/decisions`} className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground">
-              {needsYou.length} decisions need a look <ArrowRight className="size-3.5" />
+              {needsYou.length} {needsYou.length === 1 ? "decision needs" : "decisions need"} a look <ArrowRight className="size-3.5" />
             </a>
           )}
         </section>
 
         <OverviewSections key={project.id} project={project} />
 
-        <section className="space-y-3">
-          <div className="flex items-center justify-between">
-            <SectionTitle>Key links</SectionTitle>
-            <Button variant="ghost" size="sm" className="text-muted-foreground" onClick={() => toast("Share an artifact")}><Plus />Add</Button>
-          </div>
-          <div className="grid gap-2 sm:grid-cols-2">
-            {links.map((a) => {
-              const Icon = KIND_ICON[a.kind]
-              return (
-                <button key={a.id} onClick={() => navigate(`/p/${project.id}/artifacts/${a.id}`)} className="flex items-center gap-3 rounded-lg border px-3 py-2.5 text-left text-sm hover:bg-muted/50">
-                  <Icon className="size-4 shrink-0 text-muted-foreground" />
-                  <span className="min-w-0 flex-1 truncate">{a.name}</span>
-                  <span className="text-xs text-muted-foreground">{a.kind}</span>
-                </button>
-              )
-            })}
-          </div>
-        </section>
       </div>
 
       {/* Team activity and project properties */}
@@ -203,10 +179,6 @@ function Overview({ decisions: ds, project }: { decisions: Decision[]; project: 
   )
 }
 
-function SectionTitle({ children }: { children: React.ReactNode }) {
-  return <h2 className="text-sm font-medium text-muted-foreground">{children}</h2>
-}
-
 function Prop({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="space-y-1.5">
@@ -215,8 +187,6 @@ function Prop({ label, children }: { label: string; children: React.ReactNode })
     </div>
   )
 }
-
-const KIND_ICON = { Prototype: MonitorPlay, Figma: PenTool, Doc: FileText, Repo: Code, "AI output": Sparkles, Sheet: SheetIcon, Video: Film }
 
 /* ---------------- Sessions ---------------- */
 
