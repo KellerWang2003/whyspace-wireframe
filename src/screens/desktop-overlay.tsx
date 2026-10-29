@@ -30,32 +30,15 @@ type Decision = {
 type Session = { id: number; project: string; part: string; state: "active" | "paused" | "ended" }
 
 const PARTS: Record<string, string[]> = {
-  platiful: ["Research", "Design", "Engineering", "Marketing"],
+  whiskr: ["Research", "Brand", "App", "Marketing"],
   studio: ["Interviews", "Concept", "Prototype", "Final crit"],
 }
 
 // Static examples. New decisions only appear after an explicit action.
 const INITIAL_DECISIONS: Decision[] = [
-  { id: "o1", title: "Show three dinners first", inferred: true, project: "platiful", part: "Design" },
-  { id: "o2", title: "Keep meal swaps inline", question: "Why inline?", options: ["Keep the plan in view", "Reduce extra steps"], project: "platiful", part: "Design" },
-  { id: "o3", title: "Use a weekly tray", inferred: true, project: "platiful", part: "Design" },
-  ...[
-    "Start the week on Monday",
-    "Keep recipes editable",
-    "Show prep time",
-    "Save meals with one click",
-    "Group the grocery list",
-    "Allow skipped days",
-    "Keep portions adjustable",
-    "Use a simple week view",
-    "Label suggested meals",
-    "Show dietary tags",
-    "Put search at the top",
-    "Keep recent meals nearby",
-    "Let people reorder dinners",
-    "Confirm before clearing a plan",
-    "Remember the last plan",
-  ].map((title, index) => ({ id: `c${index + 1}`, title, project: "platiful", part: "Design" })),
+  { id: "o1", title: "The promo video runs 15 seconds", inferred: true, why: "Inferred: cats lose interest fast", project: "whiskr", part: "Marketing" },
+  { id: "o2", title: "Open on Luna's real pounce", question: "Why open on the pounce?", options: ["Shows the idea in the first second", "Real footage feels honest"], project: "whiskr", part: "Marketing" },
+  { id: "o3", title: "Pull visuals from our brand guidelines", why: "Blue and yellow, with the purring dot", project: "whiskr", part: "Marketing" },
 ]
 
 // Motion: nothing in the overlay jumps. The box morphs between the pill and the panel
@@ -91,7 +74,7 @@ function foldAway(el: HTMLElement | null, then: () => void) {
 // This wireframe previews the controls; it does not capture or transcribe audio.
 export function DesktopMode() {
   const [decisions, setDecisions] = useState<Decision[]>(INITIAL_DECISIONS)
-  const [where, setWhere] = useState({ project: "platiful", part: "Design" })
+  const [where, setWhere] = useState({ project: "whiskr", part: "Marketing" })
   const [session, setSession] = useState<Session | null>(null)
   const [capturedOpen, setCapturedOpen] = useState(false)
   const [hovered, setHoveredNow] = useState(false)

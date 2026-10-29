@@ -1,10 +1,10 @@
 import { AppShell } from '@/components/app/app-shell'
 import { SectionWorkspace } from '@/components/decisions/section-workspace'
-import { SECTION_SEED } from '@/components/decisions/section-model'
+import { projectSections } from '@/components/decisions/section-data'
 import { PROJECTS } from '@/data'
 
 export function SectionPlayground() {
   return <AppShell crumbs={[{ label: 'Prototype' }, { label: 'Nested sections playground' }]}>
-    <SectionWorkspace project={PROJECTS[0]} initialSections={SECTION_SEED} />
+    <SectionWorkspace project={PROJECTS[0]} initialSections={projectSections(PROJECTS[0].id)} />
   </AppShell>
 }

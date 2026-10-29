@@ -13,6 +13,7 @@ import {
   Clock3,
   Code,
   FileText,
+  Film,
   MonitorPlay,
   PenTool,
   Link2,
@@ -215,7 +216,7 @@ function Prop({ label, children }: { label: string; children: React.ReactNode })
   )
 }
 
-const KIND_ICON = { Prototype: MonitorPlay, Figma: PenTool, Doc: FileText, Repo: Code, "AI output": Sparkles, Sheet: SheetIcon }
+const KIND_ICON = { Prototype: MonitorPlay, Figma: PenTool, Doc: FileText, Repo: Code, "AI output": Sparkles, Sheet: SheetIcon, Video: Film }
 
 /* ---------------- Sessions ---------------- */
 

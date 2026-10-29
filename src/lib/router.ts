@@ -1,6 +1,6 @@
 import { useSyncExternalStore } from "react"
 
-// Tiny hash router so every screen has a link you can paste: #/inbox, #/p/platiful/decisions
+// Tiny hash router so every screen has a link you can paste: #/inbox, #/p/whiskr/decisions
 function getPath() {
   return window.location.hash.replace(/^#/, "") || "/signup"
 }

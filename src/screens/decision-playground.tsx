@@ -87,7 +87,7 @@ function FullRecord({ decision: d, records, onConfirm, onRelated }: {
   decision: DecisionRecord; records: DecisionRecord[]; onConfirm: (id: string) => void; onRelated: (id: string) => void
 }) {
   return <article className="@container space-y-7" data-display-state="full">
-    <header className="space-y-3 border-b pb-6"><Marks decision={d} /><h3 className="text-2xl font-semibold tracking-tight">{d.title}</h3><p className="text-xs text-muted-foreground">Platiful app · Recorded {d.recordedAt}</p></header>
+    <header className="space-y-3 border-b pb-6"><Marks decision={d} /><h3 className="text-2xl font-semibold tracking-tight">{d.title}</h3><p className="text-xs text-muted-foreground">Whiskr · Recorded {d.recordedAt}</p></header>
     {d.review === 'awaiting' && <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-dashed p-4"><div><p className="text-sm font-medium">A person needs to confirm this choice.</p><p className="mt-1 text-xs text-muted-foreground">{firstName(d.capture.onBehalfOf)}’s {d.capture.tool} inferred it from the work.</p></div><Button size="sm" onClick={() => onConfirm(d.id)}>Confirm as Keller</Button></div>}
     {d.flag && <p className="flex items-start gap-2 rounded-lg border p-3 text-sm"><Flag className="mt-0.5 size-4 shrink-0" />{d.flag}</p>}
     <div className="grid items-start gap-8 @min-[750px]:grid-cols-[minmax(0,1fr)_280px]">
@@ -109,7 +109,7 @@ function FullRecord({ decision: d, records, onConfirm, onRelated }: {
 }
 
 const EXAMPLES: Record<string, string> = {
-  photo: 'Human decision', local: 'AI inference · awaiting confirmation', type: 'AI inference · confirmed', ondevice: 'Changed & flagged', cloud: 'Superseded decision',
+  move: 'Human decision', short: 'AI inference · awaiting confirmation', pounce: 'AI capture · confirmed', nored: 'Changed & flagged', red: 'Superseded decision',
 }
 
 function SpecimenHeading({ number, title, context }: { number: string; title: string; context: string }) {
@@ -118,7 +118,7 @@ function SpecimenHeading({ number, title, context }: { number: string; title: st
 
 export function DecisionPlayground() {
   const [records, setRecords] = useState<DecisionRecord[]>(DECISION_EXAMPLES)
-  const [selectedId, setSelectedId] = useState('local')
+  const [selectedId, setSelectedId] = useState('short')
   const [rowExpanded, setRowExpanded] = useState(false)
   const [windowOpen, setWindowOpen] = useState(false)
   const [notice, setNotice] = useState('')
@@ -149,7 +149,7 @@ export function DecisionPlayground() {
           <p className="text-[10px] text-muted-foreground">One shared record across all five display states · Example data only · Reset to undo confirmation experiments</p>
         </div>
       </div>
-      <DialogPrimitive.Root open={windowOpen} modal={false} onOpenChange={setWindowOpen}>{windowOpen && <><div className="absolute inset-0 z-[45] bg-black/20" onPointerDown={() => setWindowOpen(false)} /><DialogPrimitive.Content className="absolute inset-3 z-[46] flex min-h-0 flex-col overflow-hidden rounded-xl border bg-background shadow-2xl outline-none sm:inset-6" onInteractOutside={event => event.preventDefault()}><DialogPrimitive.Title className="sr-only">{selected.title}</DialogPrimitive.Title><DialogPrimitive.Description className="sr-only">Fully expanded decision record</DialogPrimitive.Description><div className="flex items-center justify-between border-b px-5 py-3"><span className="text-xs text-muted-foreground">Decision record · Platiful app</span><DialogPrimitive.Close asChild><Button variant="ghost" size="icon" aria-label="Close decision window"><X /></Button></DialogPrimitive.Close></div><div className="min-h-0 flex-1 overflow-y-auto p-5 sm:p-8"><div className="mx-auto max-w-6xl"><FullRecord decision={selected} records={records} onConfirm={confirm} onRelated={choose} /></div></div></DialogPrimitive.Content></>}</DialogPrimitive.Root>
+      <DialogPrimitive.Root open={windowOpen} modal={false} onOpenChange={setWindowOpen}>{windowOpen && <><div className="absolute inset-0 z-[45] bg-black/20" onPointerDown={() => setWindowOpen(false)} /><DialogPrimitive.Content className="absolute inset-3 z-[46] flex min-h-0 flex-col overflow-hidden rounded-xl border bg-background shadow-2xl outline-none sm:inset-6" onInteractOutside={event => event.preventDefault()}><DialogPrimitive.Title className="sr-only">{selected.title}</DialogPrimitive.Title><DialogPrimitive.Description className="sr-only">Fully expanded decision record</DialogPrimitive.Description><div className="flex items-center justify-between border-b px-5 py-3"><span className="text-xs text-muted-foreground">Decision record · Whiskr</span><DialogPrimitive.Close asChild><Button variant="ghost" size="icon" aria-label="Close decision window"><X /></Button></DialogPrimitive.Close></div><div className="min-h-0 flex-1 overflow-y-auto p-5 sm:p-8"><div className="mx-auto max-w-6xl"><FullRecord decision={selected} records={records} onConfirm={confirm} onRelated={choose} /></div></div></DialogPrimitive.Content></>}</DialogPrimitive.Root>
     </div>
   </AppShell>
 }

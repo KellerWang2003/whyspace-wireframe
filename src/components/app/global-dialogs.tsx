@@ -117,11 +117,11 @@ function NewProjectDialog() {
         <FieldGroup>
           <Field>
             <FieldLabel htmlFor="np-name">Project name</FieldLabel>
-            <Input id="np-name" placeholder="Platiful app" />
+            <Input id="np-name" placeholder="Whiskr" />
           </Field>
           <Field>
             <FieldLabel htmlFor="np-brief">Brief</FieldLabel>
-            <Textarea id="np-brief" rows={3} placeholder="A meal-planning app that turns a few dinners into one grocery list." />
+            <Textarea id="np-brief" rows={3} placeholder="A swipe app where cats find playdate matches." />
             <FieldDescription>You can edit this later in project settings.</FieldDescription>
           </Field>
           <Field>
@@ -145,7 +145,7 @@ function NewProjectDialog() {
           <Button
             onClick={() => {
               setNewProjectOpen(false)
-              navigate("/p/platiful/overview")
+              navigate("/p/whiskr/overview")
               toast("Project created", { description: "Opening the example project for now." })
             }}
           >
@@ -169,7 +169,7 @@ function InviteDialog() {
         <FieldGroup>
           <Field>
             <FieldLabel htmlFor="inv-emails">Emails</FieldLabel>
-            <Textarea id="inv-emails" rows={3} placeholder="priya@platiful.example, sam@platiful.example" />
+            <Textarea id="inv-emails" rows={3} placeholder="trevor@whiskr.example, kelly@whiskr.example" />
           </Field>
           <Field>
             <FieldLabel>Role</FieldLabel>

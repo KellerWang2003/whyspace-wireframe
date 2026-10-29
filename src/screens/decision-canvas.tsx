@@ -17,6 +17,7 @@ import {
   Play,
   Plus,
   Sheet as SheetIcon,
+  Film,
   Sparkles,
   Trash2,
   X,
@@ -76,8 +77,9 @@ const KIND_ICON: Record<ArtifactKind, typeof FileText> = {
   Doc: FileText,
   "AI output": Sparkles,
   Sheet: SheetIcon,
+  Video: Film,
 }
-const OPEN_IN: Record<ArtifactKind, string> = { Prototype: "Open prototype", Figma: "Open in Figma", Repo: "Open on GitHub", Doc: "Open doc", "AI output": "Open in ChatGPT", Sheet: "Open sheet" }
+const OPEN_IN: Record<ArtifactKind, string> = { Prototype: "Open prototype", Figma: "Open in Figma", Repo: "Open on GitHub", Doc: "Open doc", "AI output": "Open in ChatGPT", Sheet: "Open sheet", Video: "Play video" }
 
 // The artifact a node shows big: a prototype first, then a design file, then a repo.
 const heroOf = (items: Artifact[]) => ["Prototype", "Figma", "Repo"].map((k) => items.find((a) => a.kind === k)).find(Boolean)

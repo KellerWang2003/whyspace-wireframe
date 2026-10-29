@@ -1,4 +1,4 @@
-import { Code, FileText, MonitorPlay, PenTool, Sheet as SheetIcon, Sparkles } from "lucide-react"
+import { Code, FileText, Film, MonitorPlay, PenTool, Play, Sheet as SheetIcon, Sparkles } from "lucide-react"
 import type { Artifact, ArtifactKind } from "@/data"
 import { cn } from "@/lib/utils"
 
@@ -9,6 +9,7 @@ export const KIND_ICON: Record<ArtifactKind, typeof FileText> = {
   Doc: FileText,
   "AI output": Sparkles,
   Sheet: SheetIcon,
+  Video: Film,
 }
 
 // Grayscale stand-in for what an artifact looks like. `version` nudges the drawing so
@@ -63,6 +64,15 @@ export function ArtifactPicture({ artifact: a, version: asked = 3, className }: 
     return (
       <div className={cn("grid h-full grid-cols-5 content-center gap-px p-4", className)}>
         {Array.from({ length: 30 }, (_, i) => <div key={i} className={cn("h-3", i < 5 ? "bg-muted-foreground/35" : "bg-muted-foreground/12")} />)}
+      </div>
+    )
+  if (a.kind === "Video")
+    return (
+      <div className={cn("flex h-full flex-col justify-center gap-2 p-4", className)}>
+        <div className="relative flex flex-1 items-center justify-center rounded-md bg-muted-foreground/15">
+          <div className="flex size-8 items-center justify-center rounded-full bg-background"><Play className="size-3.5" /></div>
+        </div>
+        <div className="grid grid-cols-3 gap-1">{[0, 1, 2].map((i) => <div key={i} className="h-3 rounded-sm bg-muted-foreground/20" />)}</div>
       </div>
     )
   if (a.kind === "AI output")

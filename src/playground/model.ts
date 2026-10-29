@@ -34,19 +34,13 @@ export const isAI = (d: Decision) => d.status === "inf"
 
 // Which artifacts each decision shaped. A decision can shape more than one.
 const SHAPES: Record<string, string[]> = {
-  five: ["a3", "a4"],
-  core: ["a3", "a5"],
-  digest: ["a1"],
-  photo: ["a1", "a2"],
-  calendar: ["a2", "a1"],
-  type: ["a2"],
-  empty: ["a2"],
-  swiftui: ["a7", "a6"],
-  ondevice: ["a6", "a7"],
-  local: ["a6"],
-  tuesday: ["a9"],
-  screens: ["a8"],
-  freemium: ["a9"],
+  move: ["w3", "w5"],
+  dot: ["w4", "w5"],
+  purr: ["w5", "w2"],
+  dotbrand: ["w1"],
+  nored: ["w1", "w4", "w6"],
+  short: ["w7"],
+  pounce: ["w7", "w8"],
   cram: ["a11", "a12"],
   slides: ["a13"],
   cite: ["a15"],
@@ -57,7 +51,7 @@ const SHAPES: Record<string, string[]> = {
 
 // Decisions that pull against each other (the misalignment alerts in Inbox).
 export const CONFLICTS: [string, string, string][] = [
-  ["swiftui", "screens", "The beta email still promises a paid trial"],
+  ["nored", "w6", "The poster still uses tuna red"],
   ["figma", "a16", "Two generated questions lack a supporting source passage"],
 ]
 
@@ -133,17 +127,14 @@ export function spanOf(m: Model, a: Artifact) {
 
 // Mock subsections, to show that sections nest like Figma sections: project > part > subsection > ...
 // Each lists the decisions and artifacts that live in it instead of in its parent.
-export type SectionSeed = { id: string; name: string; parent: string; items: string[] }
+export type SectionSeed = { id: string; name: string; parent: string; items: string[]; summary?: string }
 export const SUBSECTIONS: Record<string, SectionSeed[]> = {
-  platiful: [
-    { id: "add", name: "Choose dinners", parent: "part:Design", items: ["d:photo", "a:a1"] },
-    { id: "empty", name: "First run", parent: "add", items: ["d:empty"] },
-    { id: "schedule", name: "Weekly meal plan", parent: "part:Design", items: ["d:calendar", "d:type"] },
-    { id: "plantid", name: "Grocery merging", parent: "part:Engineering", items: ["d:ondevice"] },
-    { id: "reminders", name: "Offline grocery list", parent: "part:Engineering", items: ["d:local"] },
+  whiskr: [
+    { id: "card", name: "Swipe card", parent: "part:App", items: ["d:dot", "d:purr", "a:w5"], summary: "A purring dot moves across the card and leads the swipe." },
+    { id: "promo", name: "Promo video", parent: "part:Marketing", items: ["d:short", "d:pounce", "a:w7", "a:w8"], summary: "Fifteen seconds, opening on Luna's real pounce." },
   ],
   studio: [
-    { id: "quiz", name: "Quiz flow", parent: "part:Prototype", items: ["d:figma", "a:a15"] },
-    { id: "react", name: "Generation and evaluation", parent: "part:Prototype", items: ["a:a16"] },
+    { id: "quiz", name: "Quiz flow", parent: "part:Prototype", items: ["d:figma", "a:a15"], summary: "Generate five practice questions from one PDF, with a supporting passage and source page." },
+    { id: "react", name: "Generation and evaluation", parent: "part:Prototype", items: ["a:a16"], summary: "Build and evaluate the PDF extraction and question-generation pipeline." },
   ],
 }

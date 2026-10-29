@@ -40,17 +40,16 @@ type Line = { who: string; at: string; text: string; decision?: string }
 type Caught = { id: string; title: string; status: Status; who: string; at: string }
 
 const SCRIPT: Line[] = [
-  { who: "PS", at: "12:02", text: "Should planning reminders go out every Sunday, or at a time each person chooses?" },
-  { who: "SO", at: "12:03", text: "Both are possible. We need a timezone and an explicit opt-in before scheduling anything." },
-  { who: "MC", at: "12:04", text: "The fixed Sunday prompt misses people who plan after their grocery trip." },
-  { who: "PS", at: "12:06", text: "Let people choose the day and time after they save their first plan.", decision: "Ask for reminder permission after the first saved plan" },
-  { who: "SO", at: "12:07", text: "I can store the chosen time and keep the reminder off until they opt in." },
-  { who: "MC", at: "12:08", text: "The reminder should open the weekly plan, with the last plan ready to reuse.", decision: "Planning reminders open the weekly meal plan" },
+  { who: "TR", at: "15:32", text: "Watch Luna at 5:55. She ignores the card, then pounces when the notification slides in." },
+  { who: "KL", at: "15:33", text: "So the static card is invisible to her." },
+  { who: "TR", at: "15:34", text: "She only cares when something moves. We need the element to move.", decision: "Every element should move to catch a cat's attention" },
+  { who: "KL", at: "15:36", text: "I'll try a wiggling card and a moving dot, and drop the localhost links here." },
+  { who: "TR", at: "15:38", text: "My research says cats respond to a low buzz around 25 Hz, like a purr.", decision: "The dot purrs when it moves" },
 ]
 const LIVE_LINES: Line[] = [
-  { who: "PS", at: "12:09", text: "I like B. It fits the routines we saw in the diary notes." },
-  { who: "SO", at: "12:10", text: "I’ll add an editable day and time to settings." },
-  { who: "MC", at: "12:11", text: "Let's pick B and park A in the archive." },
+  { who: "KL", at: "15:40", text: "The wiggle is hard to hit. The dot works on the billboard and the video too." },
+  { who: "TR", at: "15:41", text: "Agreed. The feather covered the photo, so that one's out." },
+  { who: "KL", at: "15:42", text: "Let's pick B and park A in the archive." },
 ]
 
 const SHADES = ["bg-neutral-100", "bg-neutral-200", "bg-neutral-300"]
@@ -72,7 +71,7 @@ export function LiveSession({ id, sessionId }: { id: string; sessionId?: string 
     { who: "MC", at: "18:05", text: "Let’s test that state with classmates, alongside a successful upload.", decision: "Include a generation failure in usability testing" },
   ] : SCRIPT
   const [lines, setLines] = useState<Line[]>(script)
-  const [speaking, setSpeaking] = useState(studio ? "JK" : "PS")
+  const [speaking, setSpeaking] = useState(studio ? "JK" : "TR")
   const [muted, setMuted] = useState(false)
   const [tool, setTool] = useState("select")
   const [zoom, setZoom] = useState(1)
@@ -82,9 +81,9 @@ export function LiveSession({ id, sessionId }: { id: string; sessionId?: string 
     { id: "s1", x: 40, y: 120, text: "2 of 15 generated questions lacked a supporting passage", by: "JK", shade: 1 },
     { id: "s2", x: 40, y: 290, text: "Test missing-source and retry states with four classmates", by: "MC", shade: 0 },
   ] : [
-    { id: "s1", x: 40, y: 120, text: "5 of 8 diary participants planned on different days each week", by: "PS", shade: 1 },
-    { id: "s2", x: 40, y: 290, text: "Planning often happened just before a grocery trip", by: "SO", shade: 0 },
-    { id: "s3", x: 40, y: 460, text: "Should someone get a reminder before saving their first plan?", by: "AT", shade: 2 },
+    { id: "s1", x: 40, y: 120, text: "Luna ignored the static card, then pounced at 5:55", by: "TR", shade: 1 },
+    { id: "s2", x: 40, y: 290, text: "Research: cats feel a ~25 Hz buzz through their paw pads · Perplexity, 3 sources", by: "TR", shade: 0 },
+    { id: "s3", x: 40, y: 460, text: "Kelly is exploring card motion in Claude Code · localhost:5173", by: "KL", shade: 2 },
   ])
   const [caught, setCaught] = useState<Caught[]>(
     script.filter((l) => l.decision).map((l, i) => ({ id: `c${i}`, title: l.decision!, status: "inf" as Status, who: l.who, at: l.at })),
@@ -108,7 +107,7 @@ export function LiveSession({ id, sessionId }: { id: string; sessionId?: string 
   const pick = (option: "A" | "B") => {
     setPicked(option)
     setCaught((c) => [
-      { id: "pick", title: studio ? (option === "B" ? "Reject questions without source support" : "Show unverified questions with a warning") : option === "B" ? "A planning reminder at the day and time the person chooses" : "A fixed Sunday planning reminder", status: "conf", who: "MC", at: "now" },
+      { id: "pick", title: studio ? (option === "B" ? "Reject questions without source support" : "Show unverified questions with a warning") : option === "B" ? "A moving dot leads the swipe" : "The card wiggles to invite a swipe", status: "conf", who: studio ? "MC" : "KL", at: "now" },
       ...c,
     ])
     toast(`Option ${option} picked`, { description: "Saved as a confirmed decision. The other option went to the idea archive." })
@@ -211,16 +210,16 @@ export function LiveSession({ id, sessionId }: { id: string; sessionId?: string 
                   <div className="flex items-start gap-3 rounded-lg border p-3 text-sm">
                     <Archive className="mt-0.5 size-4 text-muted-foreground" />
                     <div>
-                      <div className="font-medium">Option {studio ? (picked === "B" ? "A · Unverified questions" : "B · Reject unsupported questions") : picked === "B" ? "A · Sunday reminder" : "B · Choose your time"}</div>
-                      <div className="text-xs text-muted-foreground">Not picked today · {studio ? (picked === "B" ? "Requires students to verify unreliable content" : "Returns fewer questions when evidence is missing") : picked === "B" ? "Fixed timing missed several planning routines" : "Extra setup before the first reminder"}</div>
+                      <div className="font-medium">Option {studio ? (picked === "B" ? "A · Unverified questions" : "B · Reject unsupported questions") : picked === "B" ? "A · Wiggling card" : "B · Moving dot"}</div>
+                      <div className="text-xs text-muted-foreground">Not picked today · {studio ? (picked === "B" ? "Requires students to verify unreliable content" : "Returns fewer questions when evidence is missing") : picked === "B" ? "Hard for a paw to hit" : "Less playful on its own"}</div>
                     </div>
                   </div>
                 )}
                 <div className="flex items-start gap-3 rounded-lg border p-3 text-sm">
                   <Archive className="mt-0.5 size-4 text-muted-foreground" />
                   <div>
-                    <div className="font-medium">{studio ? "Generate questions without citations" : "Remind after every recipe save"}</div>
-                    <div className="text-xs text-muted-foreground">{studio ? "From concept review, Oct 15 · Students could not verify explanations" : "From beta readiness, Oct 23 · Too many notifications"}</div>
+                    <div className="font-medium">{studio ? "Generate questions without citations" : "A dangling feather"}</div>
+                    <div className="text-xs text-muted-foreground">{studio ? "From concept review, Oct 15 · Students could not verify explanations" : "From this review · It covered the cat\u2019s photo"}</div>
                   </div>
                 </div>
               </div>
@@ -353,8 +352,8 @@ function Canvas({ studio, zoom, pan, setPan, tool, stickies, setStickies, picked
       onPointerUp={onUp}
     >
       <div className="absolute top-0 left-0 origin-top-left" style={{ transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})` }}>
-        <div className="absolute top-10 left-10 w-[900px] text-2xl font-semibold">{studio ? "Unsupported question handling" : "Planning reminders"}</div>
-        <div className="absolute top-[72px] left-10 text-sm whitespace-nowrap text-muted-foreground">{studio ? "Part of Prototype · Keller and Jordan Kim" : "Part of Research · owned by Priya Shah"}</div>
+        <div className="absolute top-10 left-10 w-[900px] text-2xl font-semibold">{studio ? "Unsupported question handling" : "Catching a cat\u2019s eye"}</div>
+        <div className="absolute top-[72px] left-10 text-sm whitespace-nowrap text-muted-foreground">{studio ? "Part of Prototype · Keller and Jordan Kim" : "Part of Research · Trevor and Kelly"}</div>
 
         {/* Connectors from the research stickies to the options */}
         <svg className="pointer-events-none absolute top-0 left-0 overflow-visible" width="1" height="1">
@@ -366,9 +365,9 @@ function Canvas({ studio, zoom, pan, setPan, tool, stickies, setStickies, picked
           x={340}
           y={120}
           label="Option A"
-          title={studio ? "Show an unverified question" : "A fixed Sunday reminder"}
+          title={studio ? "Show an unverified question" : "A wiggling card"}
           rows={8}
-          note={studio ? "Keeps five questions, but makes verification harder" : "Easy to configure, but assumes everyone plans on Sunday"}
+          note={studio ? "Keeps five questions, but makes verification harder" : "Playful, but hard for a paw to hit"}
           state={picked === null ? "open" : picked === "A" ? "picked" : "archived"}
           onPick={() => onPick("A")}
         />
@@ -376,9 +375,9 @@ function Canvas({ studio, zoom, pan, setPan, tool, stickies, setStickies, picked
           x={690}
           y={120}
           label="Option B"
-          title={studio ? "Reject and explain the missing source" : "Choose your planning time"}
+          title={studio ? "Reject and explain the missing source" : "A moving dot leads the swipe"}
           rows={4}
-          note={studio ? "Return fewer questions and offer a retry" : "Opt in after saving the first plan"}
+          note={studio ? "Return fewer questions and offer a retry" : "Works across the app, billboard and video"}
           state={picked === null ? "open" : picked === "B" ? "picked" : "archived"}
           onPick={() => onPick("B")}
         />
@@ -401,8 +400,8 @@ function Canvas({ studio, zoom, pan, setPan, tool, stickies, setStickies, picked
         ))}
 
         {/* Other people's cursors */}
-        <Cursor x={700} y={420} name={studio ? "Jordan Kim" : "Priya Shah"} />
-        {!studio && <Cursor x={960} y={430} name="Sam Okafor" />}
+        <Cursor x={700} y={420} name={studio ? "Jordan Kim" : "Trevor"} />
+        {!studio && <Cursor x={960} y={430} name="Kelly" />}
       </div>
     </div>
   )

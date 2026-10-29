@@ -1,11 +1,11 @@
-import { GraduationCap, Utensils, type LucideIcon } from "lucide-react"
+import { Cat, GraduationCap, type LucideIcon } from "lucide-react"
 import { PROJECTS } from "@/data"
 import { cn } from "@/lib/utils"
 
 // Each project gets its own icon and shade, so you can tell at a glance where a task
 // or inbox item comes from without adding color to the grayscale UI.
 const MARKS: Record<string, { icon: LucideIcon; tone: string }> = {
-  platiful: { icon: Utensils, tone: "bg-foreground text-background" },
+  whiskr: { icon: Cat, tone: "bg-foreground text-background" },
   studio: { icon: GraduationCap, tone: "border border-foreground/40 bg-background text-foreground" },
 }
 

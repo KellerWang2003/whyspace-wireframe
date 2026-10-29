@@ -10,7 +10,7 @@ import { DecisionSheet } from "@/screens/decisions"
 import { useStore } from "@/lib/store"
 
 const PROJECT_SUMMARIES: Record<string, string> = {
-  platiful: "Grocery merging is fixed. Next up: confirm recipe details and offline access before the beta.",
+  whiskr: "The app now uses a purring dot in blue and yellow. Next up: update the poster and confirm the promo video length.",
   studio: "The AI practice flow is working. Source verification and unsupported answers are the next focus.",
 }
 
@@ -23,7 +23,7 @@ function ProjectCard({ project }: { project: Project }) {
   ])
   const decisions = DECISIONS.filter((item) => item.project === project.id && (item.status === "open" || item.status === "inf"))
     .sort((a, b) => Number(b.status === "inf") - Number(a.status === "inf"))
-  const cover = { platiful: "platiful", studio: "recall" }[project.id]
+  const cover = { whiskr: "whiskr", studio: "recall" }[project.id]
 
   return (
     <Card className="min-w-0 gap-0 overflow-hidden py-0 shadow-none">

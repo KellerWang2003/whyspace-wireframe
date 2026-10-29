@@ -18,7 +18,7 @@ const VIEWS: [string, string, (p: ViewProps) => ReactNode][] = [
   ["tree", "Decision tree", TreeView],
 ]
 
-export function Playground({ project = "platiful", view = "board" }: { project?: string; view?: string }) {
+export function Playground({ project = "whiskr", view = "board" }: { project?: string; view?: string }) {
   if (project === "decisions") return <DecisionPlayground />
   if (SECTION_LAYOUTS.some(([id]) => id === view) || ["columns", "bands", "expand", "outline"].includes(view)) return <SectionPlayground />
   // Keyed by project so open sheets and chat history reset when you switch.
@@ -42,7 +42,7 @@ function PlaygroundFor({ project, view }: { project: string; view: string }) {
       }
     >
       <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-4 overflow-hidden p-4 [contain:inline-size]">
-        <button className="w-fit text-xs text-muted-foreground underline underline-offset-4" onClick={() => navigate("/playground/platiful/canvas")}>Explore the section map and outline →</button>
+        <button className="w-fit text-xs text-muted-foreground underline underline-offset-4" onClick={() => navigate("/playground/whiskr/canvas")}>Explore the section map and outline →</button>
         <Tabs value={view} onValueChange={(v) => go(m.project.id, v)}>
           <TabsList>
             {VIEWS.map(([id, label], i) => <TabsTrigger key={id} value={id}><span className="text-muted-foreground">{i + 1}</span>{label}</TabsTrigger>)}

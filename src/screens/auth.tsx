@@ -45,7 +45,7 @@ export function SignUp() {
               </Field>
               <Field>
                 <FieldLabel htmlFor="su-email">Work email</FieldLabel>
-                <Input id="su-email" type="email" placeholder="keller@platiful.example" />
+                <Input id="su-email" type="email" placeholder="keller@whiskr.example" />
               </Field>
               <Field>
                 <FieldLabel htmlFor="su-pw">Password</FieldLabel>
@@ -93,7 +93,7 @@ export function LogIn() {
               <FieldSeparator className="*:data-[slot=field-separator-content]:bg-card">Or</FieldSeparator>
               <Field>
                 <FieldLabel htmlFor="li-email">Email</FieldLabel>
-                <Input id="li-email" type="email" placeholder="keller@platiful.example" />
+                <Input id="li-email" type="email" placeholder="keller@whiskr.example" />
               </Field>
               <Field>
                 <div className="flex items-center">

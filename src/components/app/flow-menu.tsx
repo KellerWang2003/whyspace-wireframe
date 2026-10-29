@@ -17,8 +17,8 @@ import { useStore } from "@/lib/store"
 const SCREENS: [string, [string, string][]][] = [
   ["Getting in", [["Sign up", "/signup"], ["Log in", "/login"], ["Create workspace", "/new"]]],
   ["Workspace", [["All projects", "/projects"], ["Inbox", "/inbox"], ["My tasks", "/my-tasks"]]],
-  ["Project", [["Overview", "/p/platiful/overview"], ["Tasks", "/p/platiful/tasks"], ["Decisions", "/p/platiful/decisions"], ["Decision detail", "/p/platiful/decisions/ondevice"], ["Meetings", "/p/platiful/sessions"], ["Live meeting", "/p/platiful/sessions/s1"], ["Project settings", "/p/platiful/settings/general"]]],
-  ["Playground", [["Decision display states", "/playground/decisions/states"], ["Section map & outline", "/playground/platiful/canvas"], ["Earlier decision views", "/playground/platiful/board"]]],
+  ["Project", [["Overview", "/p/whiskr/overview"], ["Tasks", "/p/whiskr/tasks"], ["Decisions", "/p/whiskr/decisions"], ["Decision detail", "/p/whiskr/decisions/nored"], ["Meetings", "/p/whiskr/sessions"], ["Live canvas", "/p/whiskr/sessions/s1"], ["Project settings", "/p/whiskr/settings/general"]]],
+  ["Playground", [["Decision display states", "/playground/decisions/states"], ["Section map & outline", "/playground/whiskr/canvas"], ["Earlier decision views", "/playground/whiskr/board"]]],
   ["Settings", [["Workspace settings", "/settings/general"], ["Plan and billing", "/settings/billing"], ["Profile", "/account/profile"], ["My AI tools", "/account/ai-tools"], ["Notifications", "/account/notifications"]]],
 ]
 

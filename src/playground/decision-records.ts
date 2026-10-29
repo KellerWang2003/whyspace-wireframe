@@ -25,110 +25,110 @@ export type DecisionRecord = {
 // Purpose-built examples, isolated from the app's decisions and confirmation state.
 export const DECISION_EXAMPLES: DecisionRecord[] = [
   {
-    "id": "photo",
-    "title": "Choose dinners before creating an account",
-    "why": "Four of six testers wanted to see useful recipes before sharing an email address.",
-    "owner": "MC",
+    "id": "move",
+    "title": "Every element should move to catch a cat's attention",
+    "why": "Luna ignored the static card for five minutes, then pounced the moment a notification slid in.",
+    "owner": "TR",
     "decidedBy": [
-      "MC"
+      "TR"
     ],
     "capture": {
       "kind": "person",
-      "tool": "Figma",
-      "onBehalfOf": "MC",
+      "tool": "Live session",
+      "onBehalfOf": "TR",
       "basis": "stated"
     },
     "state": "confirmed",
     "review": "clear",
     "activity": "none",
-    "recordedAt": "Oct 22 · 2:15 PM",
+    "recordedAt": "Oct 22 · 3:40 PM",
     "sections": [
-      "Design / Choose dinners"
+      "Research"
     ],
     "artifacts": [
       {
-        "name": "Platiful planning prototype",
-        "kind": "Design",
-        "anchor": "First plan · save dinners"
+        "name": "Cat test footage",
+        "kind": "Video",
+        "anchor": "Luna · 5:55"
       }
     ],
     "source": {
-      "title": "Choose dinners before creating an account · review",
-      "kind": "Design review notes",
-      "author": "MC",
-      "quote": "Let people choose three dinners, then offer an account to save the plan.",
-      "context": "Captured from the team’s review. A person confirms the product decision before implementation."
+      "title": "Footage review",
+      "kind": "Live session",
+      "author": "TR",
+      "quote": "She only cares when something moves. We need the element to move.",
+      "context": "Trevor logged this while the team watched Luna's clip on the live canvas."
     },
     "history": [
       {
-        "at": "Oct 25 · 9:12 AM",
-        "actor": "MC",
-        "event": "Recorded the choice and its supporting context."
+        "at": "Oct 22 · 3:40 PM",
+        "actor": "TR",
+        "event": "Logged the finding and marked it as important."
       }
     ],
     "alternatives": [
       {
-        "title": "Require sign-up first",
-        "tradeoff": "Captures email sooner, but blocks people before they see the value."
+        "title": "Keep the card static and brighter",
+        "tradeoff": "Simpler to build, but Luna ignored the static card entirely."
       }
     ],
     "relationships": [],
-    "confirmedBy": "MC",
-    "confirmedAt": "Oct 25 · 10:04 AM"
+    "confirmedBy": "TR",
+    "confirmedAt": "Oct 22 · 3:41 PM"
   },
   {
-    "id": "local",
-    "title": "Keep the last grocery list available offline",
-    "why": "Supermarket connectivity should not block access to an existing shopping list.",
-    "owner": "SO",
+    "id": "short",
+    "title": "The promo video runs 15 seconds",
+    "why": "Cats lose interest fast.",
+    "reasonInferred": true,
+    "owner": "MC",
     "decidedBy": [],
     "capture": {
       "kind": "ai",
-      "tool": "Cursor",
-      "onBehalfOf": "SO",
+      "tool": "Claude",
+      "onBehalfOf": "MC",
       "basis": "inferred"
     },
     "state": "proposed",
     "review": "awaiting",
     "activity": "new",
-    "recordedAt": "Oct 25 · 9:12 AM",
+    "recordedAt": "Today · 9:12 AM",
     "sections": [
-      "Engineering / Offline grocery list"
+      "Marketing / Promo video"
     ],
     "artifacts": [
       {
-        "name": "platiful/mobile",
-        "kind": "Repository",
-        "anchor": "src/groceries/OfflineList.tsx"
+        "name": "Promo video plan",
+        "kind": "Doc",
+        "anchor": "Length"
       }
     ],
     "source": {
-      "title": "Keep the last grocery list available offline · review",
-      "kind": "AI chat excerpt",
-      "author": "SO",
-      "quote": "Cache the last list locally and sync edits when the connection returns.",
-      "context": "Captured from the team’s review. A person confirms the product decision before implementation."
+      "title": "Promo video planning",
+      "kind": "Claude chat",
+      "author": "MC",
+      "quote": "Let's keep it short, like 15 seconds.",
+      "context": "Claude captured the length from Keller's chat and inferred the reason. Keller confirms or corrects it."
     },
     "history": [
       {
-        "at": "Oct 25 · 9:12 AM",
-        "actor": "SO",
-        "event": "Recorded the choice and its supporting context."
+        "at": "Today · 9:12 AM",
+        "actor": "Claude",
+        "event": "Captured the decision and inferred why."
       }
     ],
     "alternatives": [
       {
-        "title": "Fetch the list on every visit",
-        "tradeoff": "Simpler storage, but leaves shoppers without a list when connectivity drops."
+        "title": "A 30-second cut",
+        "tradeoff": "Room for more features, but cats wander off before the end."
       }
     ],
-    "relationships": [],
-    "reasonInferred": true
+    "relationships": []
   },
   {
-    "id": "type",
-    "title": "Show time and servings on every recipe card",
-    "why": "People need to compare dinners without opening every recipe; long titles must not hide the metadata.",
+    "id": "pounce",
+    "title": "Open the video on Luna's real pounce",
+    "why": "Real footage of a cat catching the dot shows the idea in the first second.",
     "owner": "MC",
     "decidedBy": [
       "MC"
@@ -137,160 +137,165 @@ export const DECISION_EXAMPLES: DecisionRecord[] = [
       "kind": "ai",
       "tool": "Claude",
       "onBehalfOf": "MC",
-      "basis": "inferred"
+      "basis": "stated"
     },
     "state": "confirmed",
     "review": "clear",
     "activity": "new",
-    "recordedAt": "Oct 25 · 9:12 AM",
+    "recordedAt": "Today · 9:20 AM",
     "sections": [
-      "Design / Weekly meal plan"
+      "Marketing / Promo video"
     ],
     "artifacts": [
       {
-        "name": "Platiful product design",
-        "kind": "Design",
-        "anchor": "Recipe card · compact variant"
+        "name": "Promo video",
+        "kind": "Video",
+        "anchor": "0–5 s"
       }
     ],
     "source": {
-      "title": "Show time and servings on every recipe card · review",
-      "kind": "AI chat excerpt",
+      "title": "Promo video planning",
+      "kind": "Claude chat",
       "author": "MC",
-      "quote": "Keep cooking time and servings visible, including when the title wraps.",
-      "context": "Captured from the team’s review. A person confirms the product decision before implementation."
+      "quote": "Start with Luna catching the dot. That's the whole idea.",
+      "context": "Captured from Keller's chat with Claude."
     },
     "history": [
       {
-        "at": "Oct 25 · 9:12 AM",
+        "at": "Today · 9:20 AM",
         "actor": "MC",
-        "event": "Recorded the choice and its supporting context."
+        "event": "Confirmed the opening shot."
       }
     ],
     "alternatives": [
       {
-        "title": "Hide metadata in recipe details",
-        "tradeoff": "Creates smaller cards but makes comparing dinners slower."
+        "title": "Open on the app screen",
+        "tradeoff": "Shows the product, but not why cats care."
       }
     ],
     "relationships": [],
     "confirmedBy": "MC",
-    "confirmedAt": "Oct 25 · 10:04 AM"
+    "confirmedAt": "Today · 9:21 AM"
   },
   {
-    "id": "ondevice",
-    "title": "Combine groceries only when ingredient and unit match",
-    "why": "The prototype added tablespoons to grams. Preserve separate rows until conversion rules are verified.",
-    "owner": "SO",
+    "id": "nored",
+    "title": "Drop red from the brand; use blue and yellow",
+    "why": "Cats see red as a dull gray. Blue and yellow are the colors they see best.",
+    "owner": "TR",
     "decidedBy": [
-      "SO"
+      "TR"
     ],
     "capture": {
       "kind": "person",
       "tool": "Whyspace",
-      "onBehalfOf": "SO",
+      "onBehalfOf": "TR",
       "basis": "stated"
     },
     "state": "confirmed",
     "review": "flagged",
     "activity": "changed",
-    "recordedAt": "Oct 22 · 2:15 PM",
+    "recordedAt": "Oct 23 · 11:05 AM",
     "sections": [
-      "Engineering / Grocery merging"
+      "Brand"
     ],
     "artifacts": [
       {
-        "name": "platiful/mobile",
-        "kind": "Repository",
-        "anchor": "src/groceries/mergeItems.ts"
+        "name": "Brand guidelines",
+        "kind": "Figma",
+        "anchor": "Color"
+      },
+      {
+        "name": "Poster campaign",
+        "kind": "Figma",
+        "anchor": "All three posters"
       }
     ],
     "source": {
-      "title": "Combine groceries only when ingredient and unit match · review",
-      "kind": "Design review notes",
-      "author": "SO",
-      "quote": "Only combine a matching ingredient when the units match too.",
-      "context": "Captured from the team’s review. A person confirms the product decision before implementation."
+      "title": "Cat vision research",
+      "kind": "Perplexity research",
+      "author": "TR",
+      "quote": "Cats are dichromats: red reads as gray, blue and yellow stay vivid.",
+      "context": "Trevor linked the research and marked the change as important for everyone using the palette."
     },
     "history": [
       {
-        "at": "Oct 25 · 9:12 AM",
-        "actor": "SO",
-        "event": "Recorded the choice and its supporting context."
+        "at": "Oct 23 · 11:05 AM",
+        "actor": "TR",
+        "event": "Replaced tuna red with blue and yellow."
       }
     ],
     "alternatives": [
       {
-        "title": "Convert all quantities automatically",
-        "tradeoff": "Produces fewer rows but risks incorrect amounts without verified conversions."
+        "title": "Keep red as an accent",
+        "tradeoff": "Familiar to people, but invisible to the cats we are designing for."
       }
     ],
     "relationships": [
       {
         "label": "Replaces",
-        "target": "cloud"
+        "target": "red"
       }
     ],
-    "confirmedBy": "SO",
-    "confirmedAt": "Oct 25 · 10:04 AM",
-    "was": "Combine all quantities with the same ingredient name",
-    "flag": "The grocery-list prototype still shows one combined quantity for incompatible units."
+    "confirmedBy": "TR",
+    "confirmedAt": "Oct 23 · 11:05 AM",
+    "was": "Tuna red as the primary color",
+    "flag": "The poster campaign still uses tuna red."
   },
   {
-    "id": "cloud",
-    "title": "Combine all quantities with the same ingredient name",
-    "why": "The initial prototype used a single ingredient row to keep the grocery list short.",
-    "owner": "SO",
+    "id": "red",
+    "title": "Tuna red as the primary color",
+    "why": "It felt playful and food-related to the team.",
+    "owner": "TR",
     "decidedBy": [
-      "SO"
+      "TR"
     ],
     "capture": {
       "kind": "person",
       "tool": "Whyspace",
-      "onBehalfOf": "SO",
+      "onBehalfOf": "TR",
       "basis": "stated"
     },
     "state": "superseded",
     "review": "clear",
     "activity": "none",
-    "recordedAt": "Oct 22 · 2:15 PM",
+    "recordedAt": "Oct 8 · 2:00 PM",
     "sections": [
-      "Engineering / Grocery merging"
+      "Brand"
     ],
     "artifacts": [
       {
-        "name": "Grocery-list behavior specification",
-        "kind": "Repository",
-        "anchor": "Initial merge rule"
+        "name": "Brand guidelines",
+        "kind": "Figma",
+        "anchor": "Color · v1"
       }
     ],
     "source": {
-      "title": "Combine all quantities with the same ingredient name · review",
-      "kind": "Design review notes",
-      "author": "SO",
-      "quote": "Group quantities by ingredient name for the first prototype.",
-      "context": "Captured from the team’s review. A person confirms the product decision before implementation."
+      "title": "Brand kickoff",
+      "kind": "Meeting notes",
+      "author": "TR",
+      "quote": "Let's go with tuna red.",
+      "context": "Recorded at the brand kickoff."
     },
     "history": [
       {
-        "at": "Oct 25 · 9:12 AM",
-        "actor": "SO",
-        "event": "Recorded the choice and its supporting context."
-      }
-    ],
-    "alternatives": [
+        "at": "Oct 8 · 2:00 PM",
+        "actor": "TR",
+        "event": "Recorded the first palette."
+      },
       {
-        "title": "Keep every recipe ingredient separate",
-        "tradeoff": "Avoids incorrect sums but creates a repetitive list."
+        "at": "Oct 23 · 11:05 AM",
+        "actor": "TR",
+        "event": "Replaced by blue and yellow."
       }
     ],
+    "alternatives": [],
     "relationships": [
       {
         "label": "Replaced by",
-        "target": "ondevice"
+        "target": "nored"
       }
     ],
-    "confirmedBy": "SO",
-    "confirmedAt": "Oct 25 · 10:04 AM"
+    "confirmedBy": "TR",
+    "confirmedAt": "Oct 8 · 2:00 PM"
   }
 ]
