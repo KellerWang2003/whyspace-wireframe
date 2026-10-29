@@ -131,7 +131,8 @@ export function DesktopMode() {
         aria-hidden="true"
         className="pointer-events-none absolute inset-0"
         style={{
-          background: "repeating-linear-gradient(135deg, #fafafa 0, #fafafa 18vw, #d4d4d4 18vw, #d4d4d4 28vw, #202020 28vw, #202020 46vw, #a3a3a3 46vw, #a3a3a3 56vw)",
+          // A calm stand-in wallpaper: soft gray light, low contrast, so the overlay reads on top.
+          background: "radial-gradient(ellipse 80% 70% at 18% 12%, #f5f5f4 0%, transparent 60%), radial-gradient(ellipse 70% 80% at 85% 90%, #c9cbcf 0%, transparent 65%), linear-gradient(160deg, #e7e7e9 0%, #d9dadd 100%)",
         }}
       />
       <section
