@@ -72,11 +72,13 @@ export function AskWhyspace() {
 }
 
 function Messages({ msgs, onLeave }: { msgs: Msg[]; onLeave: () => void }) {
+  const { openDecision } = useStore()
+  // Citations open the decision sheet over the page you're on.
   return msgs.map((msg, i) => (
     <div key={i} className={cn("space-y-1.5", msg.who === "me" && "flex justify-end")}>
       <div className={cn("text-sm", msg.who === "me" && "max-w-[80%] rounded-2xl bg-muted px-3 py-1.5")}>{msg.text}</div>
       {msg.refs?.map((d) => (
-        <button key={d.id} onClick={() => { onLeave(); navigate(`/p/${d.project}/decisions/${d.id}`) }} className="flex w-full items-center gap-2 rounded-md border px-2.5 py-1.5 text-left text-xs hover:bg-muted">
+        <button key={d.id} onClick={() => { onLeave(); openDecision(d.id) }} className="flex w-full items-center gap-2 rounded-md border px-2.5 py-1.5 text-left text-xs hover:bg-muted">
           <StatusIcon status={d.status} className="size-3.5 text-muted-foreground" />
           <span className="flex-1 truncate">{d.title}</span>
           <span className="text-muted-foreground">{d.part}</span>

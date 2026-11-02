@@ -45,7 +45,7 @@ export function GlobalDialogs() {
 }
 
 function SearchDialog() {
-  const { searchOpen, setSearchOpen, current } = useStore()
+  const { searchOpen, setSearchOpen, current, openDecision } = useStore()
   const example = current?.example ?? false
 
   useEffect(() => {
@@ -73,7 +73,7 @@ function SearchDialog() {
           <>
             <CommandGroup heading="Decisions">
               {DECISIONS.filter((d) => d.status !== "conf").slice(0, 7).map((d) => (
-                <CommandItem key={d.id} onSelect={() => go(`/decisions/${d.id}`)}>
+                <CommandItem key={d.id} onSelect={() => { setSearchOpen(false); openDecision(d.id) }}>
                   <FileText />
                   {d.title}
                   <span className="ml-auto text-xs text-muted-foreground">{projectName(d.project)}</span>

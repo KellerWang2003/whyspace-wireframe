@@ -54,7 +54,8 @@ import {
   SidebarMenuSubButton,
   SidebarMenuSubItem,
 } from "@/components/ui/sidebar"
-import { INBOX, ME, MY_PROJECTS, SESSIONS, SETTINGS_TABS, needsYou } from "@/data"
+import { INBOX, ME, MY_PROJECTS, SESSIONS, SETTINGS_TABS } from "@/data"
+import { useNeedsYou } from "@/lib/work"
 import { navigate, useRoute } from "@/lib/router"
 import { useStore } from "@/lib/store"
 
@@ -240,7 +241,7 @@ function ProjectNavItem({ id, name, route }: { id: string; name: string; route: 
   const [open, setOpen] = useState(inProject)
   const section = inProject ? (!route[2] || ["overview", "ask"].includes(route[2]) ? "catch-up" : route[2]) : null
   const live = SESSIONS.some((s) => s.project === id && s.status === "Live")
-  const waiting = needsYou(id).length
+  const waiting = useNeedsYou(id).length
 
   return (
     <Collapsible asChild open={open || inProject} onOpenChange={setOpen}>

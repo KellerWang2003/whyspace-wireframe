@@ -13,23 +13,26 @@ import { descendants, moveWorkSection, sectionPath, type SectionArtifact, type S
 
 type Preview = { title: string; description: string; body: ReactNode }
 
-export function SectionWorkspace({ project, initialSections, selectedId, onDecisionChange, onArtifact }: {
+export function SectionWorkspace({ project, initialSections, selectedId, onDecisionChange, onArtifact, traceDecision }: {
   project: Project
   initialSections: WorkSection[]
   selectedId?: string
   onDecisionChange?: (id: string | null) => void
   onArtifact?: (id: string) => void
+  // Opened from a decision sheet's "Show full path": start with that decision traced.
+  traceDecision?: string
 }) {
+  const traced = traceDecision ? initialSections.find(s => s.decisions.some(d => d.id === traceDecision)) : undefined
   const [sections, setSections] = useState<WorkSection[]>(initialSections)
   const [outlineOpen, setOutlineOpen] = useState(false)
-  const [navigation, setNavigation] = useState<{ id: string; serial: number } | null>(null)
+  const [navigation, setNavigation] = useState<{ id: string; serial: number } | null>(traced ? { id: traced.id, serial: 0 } : null)
   const navigationSerial = useRef(0)
-  const [showDecisions, setShowDecisions] = useState(false)
-  const [selected, setSelected] = useState(initialSections[0]?.id ?? '')
-  const [expanded, setExpanded] = useState<string[]>([])
+  const [showDecisions, setShowDecisions] = useState(!!traced)
+  const [selected, setSelected] = useState(traced?.id ?? initialSections[0]?.id ?? '')
+  const [expanded, setExpanded] = useState<string[]>(traced ? sectionPath(initialSections, traced.id).slice(0, -1).map(s => s.id) : [])
   const [minimized, setMinimized] = useState<string[]>([])
   const [focused, setFocused] = useState<string | null>(null)
-  const [focusDecision, setFocusDecision] = useState<string | null>(null)
+  const [focusDecision, setFocusDecision] = useState<string | null>(traced ? traceDecision! : null)
   const [preview, setPreview] = useState<Preview | null>(null)
   const [adding, setAdding] = useState(false)
   const [newName, setNewName] = useState('')

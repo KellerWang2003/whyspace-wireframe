@@ -73,7 +73,19 @@ export type Decision = {
   was?: string
   snippet?: string
   due?: string
+  // What backs the why: a clip, a source, a test result. Shown first on the decision sheet.
+  evidence?: Evidence[]
+  // Options the team weighed and didn't pick, with the reason.
+  options?: { title: string; why: string }[]
+  // The decision this one replaced (an id, so the sheet can show who decided it and when).
+  replaces?: string
+  // Visual changes get a before and after on the decision sheet.
+  visual?: { before: string; after: string }
+  replies?: Reply[]
 }
+
+export type Evidence = { kind: "clip" | "research" | "test" | "chat" | "feedback"; label: string; detail?: string; artifact?: string }
+export type Reply = { who: string; text: string; when: string }
 
 const ALL_DECISIONS: Decision[] = [
   {
@@ -87,7 +99,9 @@ const ALL_DECISIONS: Decision[] = [
     "when": "Oct 22",
     "tool": "Live session",
     "why": "In Monday's footage, Luna ignored the static card for 5 minutes, then pounced the moment a notification slid in (5:55).",
-    "snippet": "She only cares when something moves. We need the element to move."
+    "snippet": "She only cares when something moves. We need the element to move.",
+    "evidence": [{ "kind": "clip", "label": "Luna at 5:55", "detail": "Ignores the static card for 5 minutes, then pounces on a sliding notification.", "artifact": "w3" }],
+    "visual": { "before": "Static swipe card", "after": "Every element moves" }
   },
   {
     "id": "dot",
@@ -99,7 +113,13 @@ const ALL_DECISIONS: Decision[] = [
     "by": "Kelly and Trevor",
     "when": "Oct 22",
     "tool": "Claude Code",
-    "why": "We compared a wiggling card, a moving dot and a dangling feather on the canvas. The dot works across the app, billboard and video; the wiggle was hard to hit and the feather covered the photo."
+    "why": "We compared a wiggling card, a moving dot and a dangling feather on the canvas. The dot works across the app, billboard and video; the wiggle was hard to hit and the feather covered the photo.",
+    "evidence": [{ "kind": "clip", "label": "Canvas comparison · footage review", "detail": "Three directions side by side on the live canvas.", "artifact": "w5" }],
+    "options": [
+      { "title": "A wiggling card", "why": "Hard for a paw to hit" },
+      { "title": "A dangling feather", "why": "Covered the cat's photo" }
+    ],
+    "visual": { "before": "Static swipe card", "after": "A moving dot leads the swipe" }
   },
   {
     "id": "purr",
@@ -111,7 +131,9 @@ const ALL_DECISIONS: Decision[] = [
     "by": "Trevor",
     "when": "Oct 22",
     "tool": "Perplexity",
-    "why": "Trevor's research: cats respond to a low buzz around 25 Hz, felt through their paw pads, like a purr."
+    "why": "Trevor's research: cats respond to a low buzz around 25 Hz, felt through their paw pads, like a purr.",
+    "evidence": [{ "kind": "research", "label": "Perplexity · 3 sources", "detail": "Cats feel a buzz around 25 Hz through their paw pads.", "artifact": "w2" }],
+    "options": [{ "title": "A chirp sound", "why": "Lost when the phone is on mute" }]
   },
   {
     "id": "red",
@@ -135,7 +157,8 @@ const ALL_DECISIONS: Decision[] = [
     "by": "Trevor",
     "when": "Oct 22",
     "tool": "Figma",
-    "why": "If the dot leads the swipe, the poster and video should use it too, so cats recognize it everywhere."
+    "why": "If the dot leads the swipe, the poster and video should use it too, so cats recognize it everywhere.",
+    "options": [{ "title": "Keep the dot in the app only", "why": "Cats wouldn't recognize it on the poster or video" }]
   },
   {
     "id": "nored",
@@ -148,7 +171,15 @@ const ALL_DECISIONS: Decision[] = [
     "when": "Oct 23",
     "tool": "Claude",
     "was": "Tuna red as the primary color",
-    "why": "Cats see red as a dull gray. Blue and yellow are the colors they see best."
+    "why": "Cats see red as a dull gray. Blue and yellow are the colors they see best.",
+    "replaces": "red",
+    "evidence": [{ "kind": "research", "label": "Cat vision research · Perplexity", "detail": "Cats see red as a dull gray. Blue and yellow stand out most.", "artifact": "w2" }],
+    "options": [{ "title": "Keep red as an accent", "why": "Still reads as gray to cats" }],
+    "visual": { "before": "Tuna red", "after": "Blue and yellow" },
+    "replies": [
+      { "who": "MC", "text": "Does this cover the posters too? They're mostly for owners.", "when": "Oct 23" },
+      { "who": "TR", "text": "Yes. The dot and palette should match everywhere cats might see them.", "when": "Oct 23" }
+    ]
   },
   {
     "id": "short",
@@ -161,7 +192,9 @@ const ALL_DECISIONS: Decision[] = [
     "when": "Today",
     "tool": "Claude",
     "snippet": "Let's keep it short, like 15 seconds.",
-    "why": "Inferred: cats lose interest fast."
+    "why": "Inferred: cats lose interest fast.",
+    "evidence": [{ "kind": "chat", "label": "Keller's chat with Claude", "detail": "\"Let's keep it short, like 15 seconds.\"" }],
+    "options": [{ "title": "30 seconds", "why": "Cats lose interest fast (inferred)" }]
   },
   {
     "id": "pounce",
@@ -173,7 +206,9 @@ const ALL_DECISIONS: Decision[] = [
     "by": "Keller",
     "when": "Today",
     "tool": "Claude",
-    "why": "Real footage of a cat catching the dot shows the idea in the first second."
+    "why": "Real footage of a cat catching the dot shows the idea in the first second.",
+    "evidence": [{ "kind": "clip", "label": "Luna's pounce", "detail": "The catch at 5:55 is the opening shot.", "artifact": "w3" }],
+    "options": [{ "title": "Open on the logo", "why": "Doesn't show the idea in the first second" }]
   },
   {
       "id": "cram",
@@ -185,7 +220,8 @@ const ALL_DECISIONS: Decision[] = [
       "by": "Jordan Kim",
       "tool": "Claude",
       "when": "Oct 13",
-      "why": "In six classmate interviews, students struggled to tell which concepts they understood after rereading a lecture."
+      "why": "In six classmate interviews, students struggled to tell which concepts they understood after rereading a lecture.",
+      "evidence": [{ "kind": "research", "label": "Six classmate interviews", "detail": "Students couldn't tell what they understood after rereading.", "artifact": "a11" }]
     },
   {
       "id": "slides",
@@ -198,7 +234,8 @@ const ALL_DECISIONS: Decision[] = [
       "tool": "Claude",
       "when": "Oct 15",
       "why": "One PDF and five questions give our two-person team a complete loop we can build and test before Nov 4.",
-      "snippet": "Upload, practice, check the explanation, and return to the source."
+      "snippet": "Upload, practice, check the explanation, and return to the source.",
+      "options": [{ "title": "Summaries of whole courses", "why": "Too big to build and test by Nov 4" }]
     },
   {
       "id": "cite",
@@ -209,7 +246,8 @@ const ALL_DECISIONS: Decision[] = [
       "owner": "JK",
       "tool": "Cursor",
       "when": "Yesterday",
-      "snippet": "Only return questions with a supporting passage and a page number we can link back to."
+      "snippet": "Only return questions with a supporting passage and a page number we can link back to.",
+      "evidence": [{ "kind": "test", "label": "First evaluation · 15 questions", "detail": "2 questions had no supporting passage.", "artifact": "a16" }]
     },
   {
       "id": "figma",
@@ -221,7 +259,8 @@ const ALL_DECISIONS: Decision[] = [
       "by": "Keller and Jordan Kim",
       "when": "Oct 21",
       "was": "Use a clickable prototype with prewritten questions",
-      "why": "The studio feedback asked us to test actual model mistakes. Keller owns the interaction design; Jordan owns PDF extraction and question generation."
+      "why": "The studio feedback asked us to test actual model mistakes. Keller owns the interaction design; Jordan owns PDF extraction and question generation.",
+      "evidence": [{ "kind": "feedback", "label": "Studio feedback · Oct 20", "detail": "Test actual model mistakes, not prewritten questions." }]
     },
   {
       "id": "deck",
@@ -232,7 +271,8 @@ const ALL_DECISIONS: Decision[] = [
       "owner": "JK",
       "by": "Jordan Kim",
       "when": "Oct 23",
-      "why": "The critique needs evidence of iteration. Include unsupported questions, our rejection rules, and what changed after testing."
+      "why": "The critique needs evidence of iteration. Include unsupported questions, our rejection rules, and what changed after testing.",
+      "evidence": [{ "kind": "test", "label": "First evaluation · 15 questions", "artifact": "a16" }]
     },
   {
       "id": "presenter",
@@ -314,6 +354,10 @@ export type Task = {
   description?: string
   subtasks?: { title: string; done: boolean }[]
   comments?: { who: string; text: string; when: string }[]
+  // Update tasks: Whyspace adds one when a decision changes something you own.
+  // The prompt is ready to paste into the tool; finishing the task marks the work updated.
+  prompt?: string
+  tool?: string
 }
 
 export const TASK_STATUS_LABEL: Record<TaskStatus, string> = { todo: "To do", prog: "In progress", review: "In review", done: "Done" }
@@ -341,7 +385,9 @@ const ALL_TASKS: Task[] = [
     "status": "todo",
     "priority": "high",
     "decision": "nored",
-    "description": "The poster still uses tuna red. Swap to blue and yellow and add the purring dot."
+    "description": "The poster still uses tuna red. Swap to blue and yellow and add the purring dot.",
+    "tool": "Figma",
+    "prompt": "Brand drops red: cats see it as a dull gray. Recolor the 3 posters to the blue and yellow palette from the brand guidelines v3 and add the purring dot. Keep the layouts."
   },
   {
     "id": "t2",
@@ -381,14 +427,17 @@ const ALL_TASKS: Task[] = [
   },
   {
     "id": "t4",
-    "title": "Recolor app buttons to blue and yellow",
+    "title": "Recolor the app to blue and yellow",
     "project": "Whiskr",
     "part": "App",
     "owner": "KL",
     "due": "Thu Oct 29",
-    "status": "review",
+    "status": "done",
     "priority": "med",
-    "decision": "nored"
+    "decision": "nored",
+    "description": "Buttons in the app design and the prototype still use tuna red.",
+    "tool": "Claude Code",
+    "prompt": "Brand drops red: cats see it as a dull gray. Replace every tuna red in the swipe card prototype with the blue and yellow tokens from the brand guidelines v3. The purring dot stays as is."
   },
   {
     "id": "t5",
@@ -528,11 +577,17 @@ export type InboxItem = {
   // Who gets it. Unset means Keller only.
   to?: string[]
   meeting?: { sessionId: string; startsAt: string; endsAt: string; timezone: string; agenda?: string }
+  // Needs you: decide (confirm, review, sign off) or do (a task). Unset means FYI.
+  need?: "decide" | "do"
+  // Do items point at the update task Whyspace made; finishing it clears the item.
+  task?: string
+  // Which of your things it touches. The Inbox only gets items that touch your work.
+  touches?: string
 }
 
 const ALL_INBOX: InboxItem[] = [
   {
-    "id": "i4",
+    "need": "do", "task": "t4", "touches": "Your app design and prototype", "id": "i4",
     "to": ["KL"],
     "relatedArtifacts": [
       { "id": "w1", "context": "Brand guidelines · new palette" },
@@ -543,14 +598,14 @@ const ALL_INBOX: InboxItem[] = [
     "kind": "alert",
     "from": "TR",
     "project": "Whiskr",
-    "summary": "Trevor changed the brand palette: recolor the app buttons",
+    "summary": "Recolor the app: Trevor dropped red from the brand",
     "time": "2h",
     "unread": true,
     "decision": "nored",
-    "body": "Cats see red as a dull gray, so the palette is now blue and yellow. A prompt with the new colors and the reason is ready to copy into Claude Code."
+    "body": "Cats see red as a dull gray, so the palette is now blue and yellow. Whyspace added a task for you with a prompt ready for Claude Code."
   },
   {
-    "id": "i5",
+    "need": "decide", "touches": "Your brand guidelines", "id": "i5",
     "to": ["TR"],
     "relatedArtifacts": [
       { "id": "w7", "context": "Promo video plan" },
@@ -568,7 +623,7 @@ const ALL_INBOX: InboxItem[] = [
     "body": "The 15-second video opens on Luna's pounce and uses the blue and yellow palette with the purring dot. Check it matches the guidelines."
   },
   {
-    "id": "i9",
+    "touches": "Marketing, which you follow", "id": "i9",
     "to": ["CH"],
     "relatedArtifacts": [{ "id": "w7", "context": "Promo video plan · length not confirmed" }],
     "author": { "kind": "ai", "name": "Whyspace AI" },
@@ -583,7 +638,7 @@ const ALL_INBOX: InboxItem[] = [
     "body": "Trevor dropped red, Kelly recolored the app, and Keller planned the promo video. The 15-second length still needs Keller's confirmation; the poster still uses red."
   },
   {
-    "id": "i1",
+    "need": "do", "task": "t1", "touches": "Your poster campaign", "id": "i1",
     "relatedArtifacts": [
       {
         "id": "w1",
@@ -602,14 +657,14 @@ const ALL_INBOX: InboxItem[] = [
     "kind": "alert",
     "from": "TR",
     "project": "Whiskr",
-    "summary": "Possible misalignment: Trevor changed the brand palette to blue and yellow",
+    "summary": "Update your poster: Trevor dropped red from the brand",
     "time": "1d",
     "unread": true,
     "decision": "nored",
-    "body": "Cats see red as a dull gray, so Trevor dropped tuna red. Your poster still uses it. A prompt is ready to copy into Figma with the new palette and the reason."
+    "body": "Cats see red as a dull gray, so Trevor dropped tuna red. Your poster still uses it. Whyspace added a task for you with a prompt ready for Figma."
   },
   {
-    "id": "i2",
+    "touches": "Your poster and promo video", "id": "i2",
     "relatedArtifacts": [
       {
         "id": "w3",
@@ -636,7 +691,7 @@ const ALL_INBOX: InboxItem[] = [
     "body": "Trevor marked this as important at the end of the footage review. It affects the poster and the promo video."
   },
   {
-    "id": "i3",
+    "need": "decide", "touches": "Your promo video plan", "id": "i3",
     "relatedArtifacts": [
       {
         "id": "w7",
@@ -658,7 +713,7 @@ const ALL_INBOX: InboxItem[] = [
     "body": "Claude captured the length from your chat and inferred the reason: cats lose interest fast. Confirm or correct it."
   },
   {
-      "id": "i8",
+      "need": "decide", "touches": "Your feedback screen", "id": "i8",
       "relatedArtifacts": [{"id": "a16", "context": "Endpoint changes · verified source passages"}, {"id": "a15", "context": "Feedback screen and source preview"}],
       "author": {"kind": "ai", "name": "Whyspace AI"},
       "source": "Jordan\u2019s source-citation implementation update",
@@ -672,7 +727,7 @@ const ALL_INBOX: InboxItem[] = [
       "body": "The endpoint now includes page numbers and supporting passages. Review how the citation fits your feedback screen."
     },
   {
-      "id": "i7",
+      "need": "decide", "touches": "Your working prototype", "id": "i7",
       "relatedArtifacts": [{"id": "a16", "context": "Evaluation cases and source-support results"}, {"id": "a15", "context": "Current behavior for unsupported answers"}],
       "author": {"kind": "ai", "name": "Whyspace AI"},
       "source": "Jordan\u2019s first question evaluation \u00b7 15 questions",
@@ -686,7 +741,7 @@ const ALL_INBOX: InboxItem[] = [
       "body": "Jordan flagged two of the 15 questions in the first evaluation. Decide whether to reject them or show an unavailable state before the classmate tests."
     },
   {
-      "id": "i6",
+      "touches": "Your part of the critique", "id": "i6",
       "relatedArtifacts": [{"id": "a17", "context": "The critique outline where Jordan mentioned you"}, {"id": "a15", "context": "Interaction changes for the demo"}],
       "author": {"kind": "person", "name": "Jordan Kim"},
       "source": "Comment in Recall \u00b7 critique outline",
@@ -712,6 +767,10 @@ export type Session = {
   length?: string
   decisions: number
   summary?: string
+  // A past meeting leads with what it decided, its outcomes and each person's next steps.
+  decisionIds?: string[]
+  outcomes?: string[]
+  nextSteps?: { who: string; text: string }[]
 }
 
 const ALL_SESSIONS: Session[] = [
@@ -728,7 +787,13 @@ const ALL_SESSIONS: Session[] = [
     "when": "Oct 22",
     "length": "16 min",
     "decisions": 3,
-    "summary": "Luna only reacted to movement. Kelly tried three interface directions; the moving dot won. Trevor's research added a 25 Hz purr. Trevor marked the movement finding as important."
+    "summary": "Luna only reacted to movement. Kelly tried three interface directions; the moving dot won. Trevor's research added a 25 Hz purr. Trevor marked the movement finding as important.",
+    "decisionIds": ["move", "dot", "purr"],
+    "outcomes": ["Luna only reacts to movement", "The moving dot beat the wiggle and the feather", "Movement marked as important for the whole team"],
+    "nextSteps": [
+      { "who": "KL", "text": "Build the purring dot into the swipe card" },
+      { "who": "TR", "text": "Add the purring dot to the brand guidelines" }
+    ]
   },
   {
     "id": "s2",
@@ -742,7 +807,9 @@ const ALL_SESSIONS: Session[] = [
     "status": "Ended",
     "when": "Oct 21",
     "length": "40 min",
-    "decisions": 0
+    "decisions": 0,
+    "outcomes": ["Luna ignored the static card", "Footage saved for review"],
+    "nextSteps": [{ "who": "TR", "text": "Review the footage before Thursday" }]
   },
   {
     "id": "s3",
@@ -785,7 +852,13 @@ const ALL_SESSIONS: Session[] = [
       "when": "Oct 21",
       "length": "45 min",
       "decisions": 1,
-      "summary": "Build one real PDF-to-practice loop. Keller owns interaction design and testing; Jordan owns extraction, generation, and evaluation."
+      "summary": "Build one real PDF-to-practice loop. Keller owns interaction design and testing; Jordan owns extraction, generation, and evaluation.",
+      "decisionIds": ["figma"],
+      "outcomes": ["One real loop instead of a clickable mock", "Roles split by interaction and generation"],
+      "nextSteps": [
+        { "who": "MC", "text": "Connect the upload, quiz and feedback screens" },
+        { "who": "JK", "text": "Evaluate questions on three course PDFs" }
+      ]
     }
 ]
 
@@ -805,6 +878,9 @@ export type Artifact = {
   content?: { heading: string; paragraphs: string[] }
   files?: string[] // repos: recently changed files
   pr?: string // repos: the open pull request
+  // Evidence backs a why (research, tests, recordings); everything else is the work itself.
+  evidence?: boolean
+  version?: string
 }
 
 const ALL_ARTIFACTS: Artifact[] = [
@@ -817,6 +893,8 @@ const ALL_ARTIFACTS: Artifact[] = [
     "owner": "TR",
     "updated": "Oct 23",
     "decisions": 2,
+    "version": "v3",
+    "evidence": true,
     "meta": "Blue and yellow palette, purring dot · 18 frames"
   },
   {
@@ -828,6 +906,7 @@ const ALL_ARTIFACTS: Artifact[] = [
     "owner": "TR",
     "updated": "Oct 23",
     "decisions": 1,
+    "evidence": true,
     "meta": "Perplexity · 3 sources on cat vision and vibration"
   },
   {
@@ -913,7 +992,8 @@ const ALL_ARTIFACTS: Artifact[] = [
       "owner": "JK",
       "updated": "Today",
       "decisions": 1,
-      "meta": "6 interviews · lecture-review habits"
+      "evidence": true,
+    "meta": "6 interviews · lecture-review habits"
     },
   {
       "id": "a12",
@@ -924,7 +1004,8 @@ const ALL_ARTIFACTS: Artifact[] = [
       "owner": "JK",
       "updated": "Yesterday",
       "decisions": 1,
-      "meta": "Claude synthesis · linked to interview quotes"
+      "evidence": true,
+    "meta": "Claude synthesis · linked to interview quotes"
     },
   {
       "id": "a13",
@@ -990,7 +1071,7 @@ const ALL_ARTIFACTS: Artifact[] = [
 ]
 
 // What each person, and their AI tool, is working on right now. High level only, never prompts.
-export type Activity = { project: string; who: string; tool?: string; aiDoing?: string; doing: string; part: string; since: string; state: "active" | "idle" }
+export type Activity = { project: string; who: string; tool?: string; aiDoing?: string; doing: string; part: string; since: string; state: "active" | "idle"; artifact?: string }
 
 const ALL_ACTIVITY: Activity[] = [
   {
@@ -998,6 +1079,7 @@ const ALL_ACTIVITY: Activity[] = [
     "who": "MC",
     "tool": "Claude",
     "aiDoing": "Drafting the promo video plan",
+    "artifact": "w7",
     "doing": "Promo video",
     "part": "Marketing",
     "since": "25 min",
@@ -1008,6 +1090,7 @@ const ALL_ACTIVITY: Activity[] = [
     "who": "KL",
     "tool": "Claude Code",
     "aiDoing": "Adding the purr buzz to the dot",
+    "artifact": "w5",
     "doing": "Swipe card",
     "part": "App",
     "since": "40 min",
@@ -1018,6 +1101,7 @@ const ALL_ACTIVITY: Activity[] = [
     "who": "TR",
     "tool": "Perplexity",
     "aiDoing": "Researching what cats see",
+    "artifact": "w2",
     "doing": "Cat vision research",
     "part": "Research",
     "since": "1 h",
@@ -1036,6 +1120,7 @@ const ALL_ACTIVITY: Activity[] = [
       "who": "MC",
       "tool": "Claude",
       "aiDoing": "Exploring citation and missing-source states",
+      "artifact": "a15",
       "doing": "Recall feedback and source preview",
       "part": "Prototype",
       "since": "1 h",
@@ -1046,6 +1131,7 @@ const ALL_ACTIVITY: Activity[] = [
       "who": "JK",
       "tool": "Cursor",
       "aiDoing": "Scoring question support against source passages",
+      "artifact": "a16",
       "doing": "Recall evaluation on three course PDFs",
       "part": "Prototype",
       "since": "45 min",
@@ -1161,7 +1247,7 @@ const EARLIER: Record<string, { until: number; patch: object }[]> = {
     { until: 1, patch: { status: "Scheduled", when: "Thu Oct 22, 3:30 PM", length: undefined, decisions: 0, summary: undefined } },
     { until: 2, patch: { status: "Live", when: "Now", length: "8 min so far", decisions: 3, summary: undefined } },
   ],
-  w1: [{ until: 2, patch: { updated: "Oct 8", decisions: 1, meta: "Tuna red palette · 16 frames" } }],
+  w1: [{ until: 2, patch: { updated: "Oct 8", decisions: 1, version: "v2", meta: "Tuna red palette · 16 frames" } }],
   w4: [{ until: 2, patch: { updated: "Oct 20", meta: "Static swipe card, matches · 20 frames" } }],
   w5: [{ until: 1, patch: { updated: "Oct 21", meta: "localhost:5173 · static swipe card" } }],
   w6: [{ until: 2, patch: { meta: "3 posters in tuna red" } }],
@@ -1190,17 +1276,17 @@ export const MY_PROJECTS = PROJECTS.filter((p) => p.members.includes(VIEWER))
 // What the Whiskr team is doing at each stage.
 const WHISKR_ACTIVITY: Record<number, Activity[]> = {
   1: [
-    { project: "whiskr", who: "TR", doing: "Cat test footage", part: "Research", since: "1 h", state: "active" },
-    { project: "whiskr", who: "KL", tool: "Claude Code", aiDoing: "Tidying the swipe card prototype", doing: "Swipe card", part: "App", since: "2 h", state: "active" },
-    { project: "whiskr", who: "MC", tool: "Figma", aiDoing: "Laying out the poster series", doing: "Poster campaign", part: "Marketing", since: "3 h", state: "active" },
+    { project: "whiskr", who: "TR", doing: "Cat test footage", part: "Research", since: "1 h", state: "active", artifact: "w3" },
+    { project: "whiskr", who: "KL", tool: "Claude Code", aiDoing: "Tidying the swipe card prototype", doing: "Swipe card", part: "App", since: "2 h", state: "active", artifact: "w5" },
+    { project: "whiskr", who: "MC", tool: "Figma", aiDoing: "Laying out the poster series", doing: "Poster campaign", part: "Marketing", since: "3 h", state: "active", artifact: "w6" },
   ],
   2: [
-    { project: "whiskr", who: "TR", tool: "Perplexity", aiDoing: "Researching how cats respond to vibration", doing: "Footage review · live", part: "Research", since: "8 min", state: "active" },
-    { project: "whiskr", who: "KL", tool: "Claude Code", aiDoing: "Exploring card motion", doing: "Footage review · live", part: "App", since: "8 min", state: "active" },
+    { project: "whiskr", who: "TR", tool: "Perplexity", aiDoing: "Researching how cats respond to vibration", doing: "Footage review · live", part: "Research", since: "8 min", state: "active", artifact: "w2" },
+    { project: "whiskr", who: "KL", tool: "Claude Code", aiDoing: "Exploring card motion", doing: "Footage review · live", part: "App", since: "8 min", state: "active", artifact: "w5" },
   ],
   3: [
-    { project: "whiskr", who: "TR", tool: "Perplexity", aiDoing: "Researching what cats see", doing: "Brand guidelines", part: "Brand", since: "1 h", state: "active" },
-    { project: "whiskr", who: "KL", tool: "Claude Code", aiDoing: "Recoloring buttons to blue and yellow", doing: "Swipe card", part: "App", since: "30 min", state: "active" },
+    { project: "whiskr", who: "TR", tool: "Perplexity", aiDoing: "Researching what cats see", doing: "Brand guidelines", part: "Brand", since: "1 h", state: "active", artifact: "w1" },
+    { project: "whiskr", who: "KL", tool: "Claude Code", aiDoing: "Recoloring buttons to blue and yellow", doing: "Swipe card", part: "App", since: "30 min", state: "active", artifact: "w5" },
   ],
 }
 export const ACTIVITY: Activity[] = [
@@ -1208,30 +1294,92 @@ export const ACTIVITY: Activity[] = [
   ...ALL_ACTIVITY.filter((a) => !inWhiskr(a)),
 ]
 
-// Everything in a project that waits on the viewer. One rule, used by the Catch up chat,
-// the sidebar badge and the Projects card:
-// - confirm: inferred decisions you own, or that someone asked you to review
-// - apply: misalignment alerts addressed to you, each with a ready prompt for your tool
-// - task: your open tasks
-export type NeedsYou =
-  | { kind: "confirm"; id: string; decision: Decision }
-  | { kind: "apply"; id: string; alert: InboxItem; prompt: string }
-  | { kind: "task"; id: string; task: Task }
+// Where each decision reaches: the artifacts it affects. An entry with a task needs an update
+// until that task is done; without one, the artifact already follows the decision.
+// `seen` is who has opened the decision since it changed.
+const ALL_REACH: Record<string, { artifact: string; task?: string; seen: string[] }[]> = {
+  move: [{ artifact: "w5", seen: ["KL", "TR", "MC"] }, { artifact: "w4", seen: ["KL"] }],
+  dot: [{ artifact: "w4", seen: ["KL", "TR"] }, { artifact: "w5", task: "t3", seen: ["KL", "TR"] }],
+  purr: [{ artifact: "w5", task: "t3", seen: ["KL", "TR"] }],
+  red: [{ artifact: "w1", seen: ["TR"] }, { artifact: "w6", seen: ["MC"] }],
+  dotbrand: [{ artifact: "w1", task: "t5", seen: ["TR", "KL"] }, { artifact: "w6", task: "t1", seen: ["TR"] }, { artifact: "w8", seen: ["MC"] }],
+  nored: [{ artifact: "w1", seen: ["TR", "CH"] }, { artifact: "w4", task: "t4", seen: ["KL"] }, { artifact: "w5", task: "t4", seen: ["KL"] }, { artifact: "w6", task: "t1", seen: ["TR"] }],
+  short: [{ artifact: "w7", seen: ["MC"] }, { artifact: "w8", task: "t2", seen: ["MC"] }],
+  pounce: [{ artifact: "w7", seen: ["MC"] }, { artifact: "w8", task: "t2", seen: ["MC", "TR"] }],
+  cram: [{ artifact: "a12", seen: ["JK", "MC"] }],
+  slides: [{ artifact: "a13", seen: ["MC", "JK"] }, { artifact: "a15", seen: ["MC", "JK"] }],
+  cite: [{ artifact: "a15", task: "t12", seen: ["JK"] }, { artifact: "a16", seen: ["JK"] }],
+  figma: [{ artifact: "a15", task: "t11", seen: ["MC", "JK"] }, { artifact: "a16", seen: ["JK", "MC"] }],
+  deck: [{ artifact: "a17", task: "t15", seen: ["JK"] }],
+  presenter: [{ artifact: "a17", seen: ["JK", "MC"] }],
+}
 
-export function needsYou(projectId: string): NeedsYou[] {
+// Reach as it stands at this stage: only artifacts and tasks that exist yet.
+export function reachOf(decisionId: string, tasks: Task[] = TASKS) {
+  return (ALL_REACH[decisionId] ?? []).flatMap((entry) => {
+    const artifact = ARTIFACTS.find((a) => a.id === entry.artifact)
+    if (!artifact) return []
+    const task = tasks.find((t) => t.id === entry.task)
+    return [{ artifact, task, seen: entry.seen, needsUpdate: !!task && task.status !== "done" }]
+  })
+}
+
+// Every decision, including ones a later decision replaced (for "What it replaced").
+export const decisionById = (id?: string) => ALL_DECISIONS.find((d) => d.id === id)
+
+// Decisions each viewer follows without leading the part or owning the work.
+const FOLLOWING: Record<string, string[]> = { CH: ["nored", "short", "dotbrand"], MC: ["dotbrand"], KL: ["nored"], TR: ["pounce"] }
+
+// Parts the viewer leads: the owner of a part's first decision leads it.
+export const ledBy = (projectId: string, who = VIEWER) =>
+  partsOf(ALL_DECISIONS.filter((d) => d.project === projectId)).filter((p) => p.owner === who).map((p) => p.name)
+
+// The Inbox rule, also used to split Catch up: a decision touches your work when you
+// lead its part, own an artifact it reaches, or follow it.
+export function touchesMe(d: Decision) {
+  return ledBy(d.project).includes(d.part) || (ALL_REACH[d.id] ?? []).some((r) => ARTIFACTS.find((a) => a.id === r.artifact)?.owner === VIEWER) || (FOLLOWING[VIEWER] ?? []).includes(d.id)
+}
+
+// One line per day for the Catch up week strip.
+export const DAY_INSIGHT: Record<string, Record<number, string>> = {
+  whiskr: {
+    21: "First cat test: Luna ignored the static card",
+    22: "Movement is the rule; the dot leads and purrs",
+    23: "Red is out; blue and yellow are in",
+    25: "Promo video planned around Luna's pounce",
+  },
+  studio: {
+    21: "A real AI loop instead of a clickable mock",
+    23: "Show failures, not just the happy path",
+    24: "Every explanation should cite its page",
+  },
+}
+
+// The decisions that shaped each project, for someone who just joined.
+export const SHAPED: Record<string, string[]> = {
+  whiskr: ["move", "dot", "purr", "dotbrand", "nored", "pounce"],
+  studio: ["cram", "slides", "figma", "cite", "deck"],
+}
+
+// Everything in a project that waits on the viewer, in two kinds. One rule, used by
+// Catch up, the Inbox and the sidebar badge:
+// - decide: inferred decisions you own or were asked to review, and open questions you own
+// - do: your open tasks, including the update tasks Whyspace adds when a decision changes your work
+export type NeedsYou =
+  | { kind: "decide"; id: string; decision: Decision; ask: "confirm" | "review" | "answer" }
+  | { kind: "do"; id: string; task: Task }
+
+export function needsYou(projectId: string, tasks: Task[] = TASKS, confirmed: Record<string, boolean> = {}): NeedsYou[] {
   const name = projectName(projectId)
-  const asked = INBOX.filter((i) => i.project === name && i.kind === "review").map((i) => i.decision)
-  const confirm = DECISIONS.filter((d) => d.project === projectId && d.status === "inf" && (d.owner === VIEWER || asked.includes(d.id)))
-  const alerts = INBOX.filter((i) => i.project === name && i.kind === "alert")
-  const tasks = TASKS.filter((t) => t.project === name && t.owner === VIEWER && t.status !== "done")
+  const asked = INBOX.filter((i) => i.project === name && i.need === "decide").map((i) => i.decision)
+  const decide = DECISIONS.filter((d) => d.project === projectId && !confirmed[d.id] && (
+    (d.status === "inf" && (d.owner === VIEWER || asked.includes(d.id))) || (d.status === "open" && d.owner === VIEWER) || (d.status !== "open" && d.status !== "inf" && asked.includes(d.id))
+  ))
+  const day = (t: Task) => Number(t.due.match(/\d+/)?.[0] ?? 99) + (t.due.includes("Nov") ? 31 : 0)
+  const mine = tasks.filter((t) => t.project === name && t.owner === VIEWER && t.status !== "done").sort((a, b) => day(a) - day(b))
   return [
-    ...confirm.map((decision) => ({ kind: "confirm" as const, id: decision.id, decision })),
-    ...alerts.map((alert) => {
-      const d = DECISIONS.find((x) => x.id === alert.decision)
-      const prompt = d ? `${d.title}. ${d.why ?? ""} Update ${alert.relatedArtifacts.at(-1)?.context.split(" · ")[0] ?? "this work"} to match.` : alert.body
-      return { kind: "apply" as const, id: alert.id, alert, prompt }
-    }),
-    ...tasks.map((task) => ({ kind: "task" as const, id: task.id, task })),
+    ...decide.map((decision) => ({ kind: "decide" as const, id: decision.id, decision, ask: decision.status === "open" ? "answer" as const : decision.status === "inf" && decision.owner === VIEWER ? "confirm" as const : "review" as const })),
+    ...mine.map((task) => ({ kind: "do" as const, id: task.id, task })),
   ]
 }
 

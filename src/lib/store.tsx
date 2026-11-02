@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, type ReactNode } from "react"
+import type { Reply, Task } from "@/data"
 
 export type Plan = "Free" | "Pro" | "Business"
 export type Workspace = { id: string; name: string; plan: Plan; example: boolean }
@@ -6,6 +7,20 @@ export type Workspace = { id: string; name: string; plan: Plan; example: boolean
 type InboxState = Record<string, { read?: boolean; done?: boolean; response?: "accepted" | "declined" }>
 
 type Store = {
+  // Work state shared by every screen, so finishing a task in My tasks clears it from
+  // Catch up and the Inbox and marks the artifact updated on the decision sheet.
+  taskPatches: Record<string, Partial<Task>>
+  patchTask: (id: string, patch: Partial<Task>) => void
+  confirmed: Record<string, boolean>
+  confirmDecision: (id: string) => void
+  replies: Record<string, Reply[]>
+  addReply: (decisionId: string, reply: Reply) => void
+  // Inbox items to bring back in the overlay when you open the file they touch.
+  reminders: Record<string, boolean>
+  setReminder: (id: string, on: boolean) => void
+  // The decision sheet, opened from any touch point (the Decisions tab uses its route instead).
+  sheet: string | null
+  openDecision: (id: string | null) => void
   inboxState: InboxState
   setInboxRead: (id: string, read: boolean) => void
   setInboxDone: (id: string, done: boolean) => void
@@ -44,6 +59,11 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [workspaceOpen, setWorkspaceOpen] = useState<"create" | "join" | null>(null)
 
   const [workspaceInbox, setWorkspaceInbox] = useState<Record<string, InboxState>>({})
+  const [taskPatches, setTaskPatches] = useState<Record<string, Partial<Task>>>({})
+  const [confirmed, setConfirmed] = useState<Record<string, boolean>>({})
+  const [replies, setReplies] = useState<Record<string, Reply[]>>({})
+  const [reminders, setReminders] = useState<Record<string, boolean>>({})
+  const [sheet, setSheet] = useState<string | null>(null)
 
   function updateInbox(id: string, patch: { read?: boolean; done?: boolean; response?: "accepted" | "declined" }) {
     if (!currentId) return
@@ -53,6 +73,16 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const current = workspaces.find((w) => w.id === currentId) ?? null
 
   const store: Store = {
+    taskPatches,
+    patchTask: (id, patch) => setTaskPatches((all) => ({ ...all, [id]: { ...all[id], ...patch } })),
+    confirmed,
+    confirmDecision: (id) => setConfirmed((all) => ({ ...all, [id]: true })),
+    replies,
+    addReply: (id, reply) => setReplies((all) => ({ ...all, [id]: [...(all[id] ?? []), reply] })),
+    reminders,
+    setReminder: (id, on) => setReminders((all) => ({ ...all, [id]: on })),
+    sheet,
+    openDecision: setSheet,
     inboxState: workspaceInbox[currentId ?? ""] ?? {},
     setInboxRead: (id, read) => updateInbox(id, { read }),
     setInboxDone: (id, done) => updateInbox(id, { done }),

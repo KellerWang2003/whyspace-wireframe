@@ -3,14 +3,14 @@ import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty"
 import { AppShell, PageHeader } from "@/components/app/app-shell"
-import { MY_PROJECTS, WEEK_SUMMARY, needsYou, nextMilestone, type Project } from "@/data"
-import { DecisionSheet } from "@/screens/decisions"
+import { MY_PROJECTS, WEEK_SUMMARY, nextMilestone, type Project } from "@/data"
+import { useNeedsYou } from "@/lib/work"
 import { useStore } from "@/lib/store"
 
 function ProjectCard({ project }: { project: Project }) {
   const ask = `#/p/${project.id}/catch-up`
   const summary = WEEK_SUMMARY[project.id]?.match(/^.*?[.!?](\s|$)/)?.[0].trim() ?? "Updates will appear here as work gets underway."
-  const waiting = needsYou(project.id).length
+  const waiting = useNeedsYou(project.id).length
   const next = nextMilestone(project.id)
   const cover = { whiskr: "whiskr", studio: "recall" }[project.id]
 
@@ -34,7 +34,7 @@ function ProjectCard({ project }: { project: Project }) {
   )
 }
 
-export function Projects({ selectedId }: { selectedId?: string }) {
+export function Projects() {
   const { current, setNewProjectOpen } = useStore()
   const projects = current?.example ? MY_PROJECTS : []
 
@@ -57,7 +57,6 @@ export function Projects({ selectedId }: { selectedId?: string }) {
           </div>
         )}
       </div>
-      {projects.length > 0 && <DecisionSheet basePath="/projects" id={selectedId} />}
     </AppShell>
   )
 }

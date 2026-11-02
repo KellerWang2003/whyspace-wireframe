@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip"
 import { FlowMenu } from "@/components/app/flow-menu"
 import { GlobalDialogs } from "@/components/app/global-dialogs"
 import { AskWhyspace } from "@/components/app/ask-whyspace"
+import { DecisionSheetHost } from "@/components/decisions/decision-sheet"
 import { useRoute } from "@/lib/router"
 import { StoreProvider, useStore } from "@/lib/store"
 import { Account } from "@/screens/account"
@@ -28,8 +29,9 @@ function Screen() {
   if (first === "onboarding" || !current) return <CreateWorkspaceStep />
   if (first === "inbox") return <Inbox />
   if (first === "my-tasks") return <MyTasks />
-  if (first === "decisions") return <Projects selectedId={second} />
-  if (first === "projects") return <Projects selectedId={second === "decisions" ? third : undefined} />
+  // Old decision links open the decision sheet over All projects.
+  if (first === "decisions") return <Projects />
+  if (first === "projects") return <Projects />
   if (first === "p" && (third === "live" || (third === "sessions" && fourth))) return <LiveSession id={second} sessionId={fourth} />
   if (first === "p") return <Project id={second} section={third ?? "catch-up"} sub={fourth} />
   if (first === "playground") return <Playground project={second} view={third} />
@@ -56,6 +58,7 @@ export default function App() {
           <PersistentAssistant desktop={desktop} />
         </div>
         <div hidden={!desktop}><DesktopMode /></div>
+        {!desktop && <DecisionSheetHost />}
         <GlobalDialogs />
         <WorkspaceDialog />
         <FlowMenu desktop={desktop} onDesktop={setDesktop} />

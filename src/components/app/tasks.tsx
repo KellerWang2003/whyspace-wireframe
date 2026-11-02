@@ -2,6 +2,7 @@ import { useState } from "react"
 import { toast } from "sonner"
 import {
   CircleCheckBig,
+  Copy,
   CircleDotDashed,
   CircleEllipsis,
   Circle,
@@ -46,7 +47,7 @@ import {
   type Task,
   type TaskStatus,
 } from "@/data"
-import { navigate } from "@/lib/router"
+import { useStore } from "@/lib/store"
 import { cn } from "@/lib/utils"
 
 // The project-management core: tasks with status, assignee, priority, due date,
@@ -71,8 +72,11 @@ export function PriorityIcon({ priority }: { priority: Priority }) {
 type Props = { tasks: Task[]; showProject?: boolean; defaultProject?: string }
 
 export function TasksView({ tasks: initial, showProject = false, defaultProject }: Props) {
-  // Local copy so status changes and new tasks stick while you click around.
-  const [tasks, setTasks] = useState(initial)
+  // Status changes go to the shared store, so finishing a task here clears it from Catch up and
+  // the Inbox and marks the artifact updated on its decision. New tasks stay local to this view.
+  const { taskPatches, patchTask } = useStore()
+  const [created, setCreated] = useState<Task[]>([])
+  const tasks = [...created, ...initial].map((t) => (taskPatches[t.id] ? { ...t, ...taskPatches[t.id] } : t))
   const [view, setView] = useState<"list" | "board">("list")
   const [owner, setOwner] = useState("all")
   const [priority, setPriority] = useState("all")
@@ -80,7 +84,7 @@ export function TasksView({ tasks: initial, showProject = false, defaultProject 
   const [creating, setCreating] = useState(false)
 
   const shown = tasks.filter((t) => (owner === "all" || t.owner === owner) && (priority === "all" || t.priority === priority))
-  const update = (id: string, patch: Partial<Task>) => setTasks((all) => all.map((t) => (t.id === id ? { ...t, ...patch } : t)))
+  const update = (id: string, patch: Partial<Task>) => patchTask(id, patch)
   const owners = [...new Set(tasks.map((t) => t.owner))]
   const open = tasks.find((t) => t.id === openId)
 
@@ -166,7 +170,7 @@ export function TasksView({ tasks: initial, showProject = false, defaultProject 
         onOpenChange={setCreating}
         defaultProject={defaultProject}
         onCreate={(t) => {
-          setTasks((all) => [t, ...all])
+          setCreated((all) => [t, ...all])
           toast("Task created")
         }}
       />
@@ -184,6 +188,7 @@ function TaskRow({ task: t, showProject, onOpen, onToggle }: { task: Task; showP
       <button onClick={onOpen} className={cn("min-w-0 flex-1 truncate text-left", done ? "text-muted-foreground line-through" : "font-medium")}>
         {t.title}
       </button>
+      {t.prompt && <span className="rounded border px-1.5 text-[11px] text-muted-foreground">Update · {t.tool}</span>}
       {t.subtasks && <span className="text-xs text-muted-foreground tabular-nums">{subDone}/{t.subtasks.length}</span>}
       {t.decision && (
         <span className="flex items-center gap-1 text-xs text-muted-foreground" title="Linked decision">
@@ -199,6 +204,7 @@ function TaskRow({ task: t, showProject, onOpen, onToggle }: { task: Task; showP
 }
 
 function TaskSheet({ task: t, onClose, onChange }: { task?: Task; onClose: () => void; onChange: (patch: Partial<Task>) => void }) {
+  const { openDecision } = useStore()
   const [comment, setComment] = useState("")
   const decision = DECISIONS.find((d) => d.id === t?.decision)
   return (
@@ -241,7 +247,7 @@ function TaskSheet({ task: t, onClose, onChange }: { task?: Task; onClose: () =>
 
               {decision && (
                 <button
-                  onClick={() => navigate(`/decisions/${decision.id}`)}
+                  onClick={() => { onClose(); openDecision(decision.id) }}
                   className="flex items-center gap-3 rounded-lg border p-3 text-left text-sm hover:bg-accent/50"
                 >
                   <StatusIcon status={decision.status} />
@@ -250,6 +256,20 @@ function TaskSheet({ task: t, onClose, onChange }: { task?: Task; onClose: () =>
                     <div className="truncate font-medium">{decision.title}</div>
                   </div>
                 </button>
+              )}
+
+              {t.prompt && (
+                <div className="space-y-2 rounded-lg border bg-muted/30 p-3">
+                  <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
+                    Ready prompt for {t.tool}
+                    <Button size="sm" variant="outline" className="ml-auto h-7" onClick={() => {
+                      try { void navigator.clipboard?.writeText(t.prompt!) } catch { /* clipboard blocked: the toast still explains */ }
+                      toast(`Prompt copied. Paste it into ${t.tool}.`)
+                    }}><Copy />Copy</Button>
+                  </div>
+                  <p className="text-sm leading-relaxed">{t.prompt}</p>
+                  <p className="text-xs text-muted-foreground">Marking this done marks the work updated on the decision.</p>
+                </div>
               )}
 
               <div className="space-y-2">

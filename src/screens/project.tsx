@@ -86,7 +86,7 @@ export function Project({ id, section: asked, sub }: { id: string; section: stri
       ) : section === "settings" ? (
         <ProjectSettings project={project} tab={sub ?? "general"} />
       ) : (
-        <CatchUp key={project.id} project={project} />
+        <CatchUp key={project.id} project={project} variant={sub} />
       )}
     </AppShell>
   )
