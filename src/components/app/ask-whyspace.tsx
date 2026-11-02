@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { StatusIcon } from "@/components/app/status-badge"
 import { ARTIFACTS, CANVAS_EXTRAS, DECISIONS, PROJECTS } from "@/data"
-import { onAskWhyspace } from "@/lib/ask"
+import { filterDecisions, onAskWhyspace } from "@/lib/ask"
 import { navigate, useRoute } from "@/lib/router"
 import { useStore } from "@/lib/store"
 import { cn } from "@/lib/utils"
@@ -35,6 +35,7 @@ export function AskWhyspace() {
     artifacts: current?.example ? ARTIFACTS.filter((item) => !project || item.project === project.id) : [],
   }
   const catchUp = first === "p" && (!third || ["catch-up", "ask", "overview"].includes(third))
+  const decisionsTab = first === "p" && third === "decisions"
   const suggested = (project && CANVAS_EXTRAS[project.id]?.ask) || ["What changed since I was here?", "What's still open?", "Which decisions need confirmation?"]
 
   const [msgs, setMsgs] = useState<Msg[]>([])
@@ -46,12 +47,20 @@ export function AskWhyspace() {
     setWasCatchUp(catchUp)
     setExpanded(false)
   }
+  // On the Decisions tab Ask docks on the right by default; its answers filter the table.
+  const [wasDecisions, setWasDecisions] = useState(false)
+  if (decisionsTab !== wasDecisions) {
+    setWasDecisions(decisionsTab)
+    if (decisionsTab && mode === "closed") setMode("dock")
+  }
   // The current page's slot for the centre chat; pages replace it as you move around.
   const slot = useSyncExternalStore(watchDom, findSlot)
 
   function send(q: string) {
     if (!q.trim()) return
-    setMsgs((ms) => [...ms, { who: "me", text: q }, reply(q, context)])
+    const answer = reply(q, context)
+    setMsgs((ms) => [...ms, { who: "me", text: q }, answer])
+    if (decisionsTab && answer.refs?.length) filterDecisions(answer.refs.map((d) => d.id), q)
     if (catchUp) setExpanded(true)
     else setMode((m) => (m === "closed" ? "dock" : m))
   }

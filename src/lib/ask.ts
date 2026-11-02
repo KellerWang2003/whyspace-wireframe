@@ -11,3 +11,19 @@ export function onAskWhyspace(handler: (question: string) => void) {
   window.addEventListener(EVENT, listener)
   return () => window.removeEventListener(EVENT, listener)
 }
+
+// On the Decisions tab, Ask's answers filter the table to the decisions it cited.
+const FILTER = "ask-whyspace-filter"
+
+export function filterDecisions(ids: string[], question: string) {
+  window.dispatchEvent(new CustomEvent(FILTER, { detail: { ids, question } }))
+}
+
+export function onFilterDecisions(handler: (ids: string[], question: string) => void) {
+  const listener = (e: Event) => {
+    const { ids, question } = (e as CustomEvent<{ ids: string[]; question: string }>).detail
+    handler(ids, question)
+  }
+  window.addEventListener(FILTER, listener)
+  return () => window.removeEventListener(FILTER, listener)
+}
