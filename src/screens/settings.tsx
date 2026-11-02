@@ -22,7 +22,7 @@ export function WorkspaceSettings({ tab }: { tab: string }) {
   return (
     <AppShell crumbs={[{ label: current?.name ?? "" }, { label: "Workspace settings" }]}>
       <div className="flex flex-col gap-6 p-8">
-        <PageHeader title="Workspace settings" description={`Settings for everyone in ${current?.name}.`} />
+        <PageHeader title="Workspace settings" />
         <Tabs value={tab} onValueChange={(v) => navigate(`/settings/${v}`)}>
           <TabsList>
             <TabsTrigger value="general">General</TabsTrigger>
@@ -111,7 +111,7 @@ function Billing() {
       <Card>
         <CardHeader>
           <CardTitle>Current plan: {current?.plan}</CardTitle>
-          <CardDescription>{current?.plan === "Free" ? "Every new workspace starts here." : "Billed monthly."}</CardDescription>
+          {current?.plan !== "Free" && <CardDescription>Billed monthly</CardDescription>}
         </CardHeader>
         <CardContent className="grid gap-6 md:grid-cols-2">
           <div className="space-y-2">
@@ -145,7 +145,7 @@ function Billing() {
       <Card>
         <CardHeader>
           <CardTitle>Payment</CardTitle>
-          <CardDescription>{current?.plan === "Free" ? "No card on file. You'll add one when you upgrade." : "Visa ending 4242 · next bill Nov 24"}</CardDescription>
+          <CardDescription>{current?.plan === "Free" ? "No card on file" : "Visa ending 4242 · next bill Nov 24"}</CardDescription>
         </CardHeader>
       </Card>
     </div>

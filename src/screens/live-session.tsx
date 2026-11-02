@@ -42,15 +42,15 @@ type Line = { who: string; at: string; text: string; decision?: string }
 type Caught = { id: string; title: string; status: Status; who: string; at: string }
 
 const SCRIPT: Line[] = [
-  { who: "TR", at: "15:32", text: "Watch Luna at 5:55. She ignores the card, then pounces when the notification slides in." },
+  { who: "TR", at: "15:32", text: "Watch Luna at 5:55. She pounces on the notification." },
   { who: "KL", at: "15:33", text: "So the static card is invisible to her." },
   { who: "TR", at: "15:34", text: "She only cares when something moves. We need the element to move.", decision: "Every element should move to catch a cat's attention" },
-  { who: "KL", at: "15:36", text: "I'll try a wiggling card and a moving dot, and drop the localhost links here." },
-  { who: "TR", at: "15:38", text: "My research says cats respond to a low buzz around 25 Hz, like a purr.", decision: "The dot purrs when it moves" },
+  { who: "KL", at: "15:36", text: "I'll try a wiggling card and a moving dot." },
+  { who: "TR", at: "15:38", text: "Cats respond to a 25 Hz buzz, like a purr.", decision: "The dot purrs when it moves" },
 ]
 const LIVE_LINES: Line[] = [
-  { who: "KL", at: "15:40", text: "The wiggle is hard to hit. The dot works on the billboard and the video too." },
-  { who: "TR", at: "15:41", text: "Agreed. The feather covered the photo, so that one's out." },
+  { who: "KL", at: "15:40", text: "The wiggle is hard to hit. The dot works everywhere." },
+  { who: "TR", at: "15:41", text: "Agreed. The feather covered the photo." },
   { who: "KL", at: "15:42", text: "Let's pick B and park A in the archive." },
 ]
 
@@ -78,10 +78,10 @@ export function LiveSession({ id, sessionId }: { id: string; sessionId?: string 
 
   const studio = project.id === "studio"
   const script: Line[] = studio ? [
-    { who: "JK", at: "18:02", text: "Two of the fifteen generated questions have no supporting passage." },
-    { who: "MC", at: "18:03", text: "Then we should reject those questions and explain why we returned fewer than five.", decision: "Reject questions without a supporting source passage" },
-    { who: "JK", at: "18:04", text: "I’ll return a reason code so the interface can show a useful retry." },
-    { who: "MC", at: "18:05", text: "Let’s test that state with classmates, alongside a successful upload.", decision: "Include a generation failure in usability testing" },
+    { who: "JK", at: "18:02", text: "Two of fifteen questions have no source." },
+    { who: "MC", at: "18:03", text: "Then reject them and say why.", decision: "Reject questions without a supporting source passage" },
+    { who: "JK", at: "18:04", text: "I’ll return a reason code for the retry." },
+    { who: "MC", at: "18:05", text: "Let’s test that state with classmates.", decision: "Include a generation failure in usability testing" },
   ] : SCRIPT
   const [lines, setLines] = useState<Line[]>(script)
   const [speaking, setSpeaking] = useState(studio ? "JK" : "TR")
@@ -92,12 +92,12 @@ export function LiveSession({ id, sessionId }: { id: string; sessionId?: string 
   const [pan, setPan] = useState({ x: 20, y: 10 })
   const [picked, setPicked] = useState<"A" | "B" | null>(null)
   const [stickies, setStickies] = useState<Sticky[]>(studio ? [
-    { id: "s1", x: 40, y: 120, text: "2 of 15 generated questions lacked a supporting passage", by: "JK", shade: 1 },
-    { id: "s2", x: 40, y: 290, text: "Test missing-source and retry states with four classmates", by: "MC", shade: 0 },
+    { id: "s1", x: 40, y: 120, text: "2 of 15 questions lack a source", by: "JK", shade: 1 },
+    { id: "s2", x: 40, y: 290, text: "Test retry states with classmates", by: "MC", shade: 0 },
   ] : [
     { id: "s1", x: 40, y: 120, text: "Luna ignored the static card, then pounced at 5:55", by: "TR", shade: 1 },
-    { id: "s2", x: 40, y: 290, text: "Research: cats feel a ~25 Hz buzz through their paw pads · Perplexity, 3 sources", by: "TR", shade: 0 },
-    { id: "s3", x: 40, y: 460, text: "Kelly is exploring card motion in Claude Code · localhost:5173", by: "KL", shade: 2 },
+    { id: "s2", x: 40, y: 290, text: "Cats feel a 25 Hz buzz · Perplexity", by: "TR", shade: 0 },
+    { id: "s3", x: 40, y: 460, text: "Card motion · Claude Code", by: "KL", shade: 2 },
   ])
   const [caught, setCaught] = useState<Caught[]>(
     script.filter((l) => l.decision).map((l, i) => ({ id: `c${i}`, title: l.decision!, status: "inf" as Status, who: l.who, at: l.at })),
@@ -124,7 +124,7 @@ export function LiveSession({ id, sessionId }: { id: string; sessionId?: string 
       { id: "pick", title: studio ? (option === "B" ? "Reject questions without source support" : "Show unverified questions with a warning") : option === "B" ? "A moving dot leads the swipe" : "The card wiggles to invite a swipe", status: "conf", who: studio ? "MC" : "KL", at: "now" },
       ...c,
     ])
-    toast(`Option ${option} picked`, { description: "Saved as a confirmed decision. The other option went to the idea archive." })
+    toast(`Option ${option} picked`, { description: "The other went to Ideas." })
   }
 
   return (
@@ -140,7 +140,7 @@ export function LiveSession({ id, sessionId }: { id: string; sessionId?: string 
         <Badge className="gap-1.5"><span className="size-1.5 animate-pulse rounded-full bg-primary-foreground" />Live · 11:24</Badge>
         <span className="hidden items-center gap-1.5 rounded-md border px-2 py-1 text-xs text-muted-foreground lg:flex">
           <ShieldCheck className="size-3.5" />
-          Everyone agreed to save decisions from this meeting
+          Everyone agreed to capture
         </span>
         <div className="ml-auto flex items-center gap-2">
           <div className="flex -space-x-1">
@@ -167,7 +167,7 @@ export function LiveSession({ id, sessionId }: { id: string; sessionId?: string 
       </header>
 
       <div className="relative flex min-h-0 flex-1">
-        <Captions lines={lines} speaking={speaking} />
+        <Captions lines={lines} />
         <Canvas
           studio={studio}
           zoom={zoom}
@@ -192,7 +192,6 @@ export function LiveSession({ id, sessionId }: { id: string; sessionId?: string 
             <TabsContent value="decisions" className="min-h-0 flex-1">
               <div className="h-full overflow-y-auto">
                 <div className="flex flex-col gap-3 p-4">
-                  <p className="text-xs text-muted-foreground">Caught from the conversation. Nothing counts until someone confirms it.</p>
                   {caught.map((c) => (
                     <div key={c.id} className="space-y-2 rounded-lg border p-3">
                       <div className="flex items-center gap-2">
@@ -216,13 +215,12 @@ export function LiveSession({ id, sessionId }: { id: string; sessionId?: string 
             </TabsContent>
             <TabsContent value="ideas" className="min-h-0 flex-1">
               <div className="flex flex-col gap-3 p-4">
-                <p className="text-xs text-muted-foreground">Options the group didn't pick. Kept so nobody has to argue them again from scratch.</p>
                 {picked && (
                   <div className="flex items-start gap-3 rounded-lg border p-3 text-sm">
                     <Archive className="mt-0.5 size-4 text-muted-foreground" />
                     <div>
                       <div className="font-medium">Option {studio ? (picked === "B" ? "A · Unverified questions" : "B · Reject unsupported questions") : picked === "B" ? "A · Wiggling card" : "B · Moving dot"}</div>
-                      <div className="text-xs text-muted-foreground">Not picked today · {studio ? (picked === "B" ? "Requires students to verify unreliable content" : "Returns fewer questions when evidence is missing") : picked === "B" ? "Hard for a paw to hit" : "Less playful on its own"}</div>
+                      <div className="text-xs text-muted-foreground">Not picked today · {studio ? (picked === "B" ? "Unreliable content" : "Fewer questions") : picked === "B" ? "Hard for a paw to hit" : "Less playful on its own"}</div>
                     </div>
                   </div>
                 )}
@@ -230,7 +228,7 @@ export function LiveSession({ id, sessionId }: { id: string; sessionId?: string 
                   <Archive className="mt-0.5 size-4 text-muted-foreground" />
                   <div>
                     <div className="font-medium">{studio ? "Generate questions without citations" : "A dangling feather"}</div>
-                    <div className="text-xs text-muted-foreground">{studio ? "From concept review, Oct 15 · Students could not verify explanations" : "From this review · It covered the cat\u2019s photo"}</div>
+                    <div className="text-xs text-muted-foreground">{studio ? "Oct 15 · Couldn\u2019t be verified" : "Covered the cat\u2019s photo"}</div>
                   </div>
                 </div>
               </div>
@@ -244,7 +242,7 @@ export function LiveSession({ id, sessionId }: { id: string; sessionId?: string 
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Wrap up {session.title}</DialogTitle>
-            <DialogDescription>Saved to {project.name}: the decisions and the next steps. No transcript is kept.</DialogDescription>
+            <DialogDescription>No transcript is kept.</DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-1.5">
@@ -252,19 +250,17 @@ export function LiveSession({ id, sessionId }: { id: string; sessionId?: string 
               {caught.map((c) => (
                 <div key={c.id} className="flex items-center gap-2 text-sm"><StatusBadge status={c.status} /><span className="truncate">{c.title}</span></div>
               ))}
-              {caught.some((c) => c.status === "inf") && <p className="text-xs text-muted-foreground">Unconfirmed ones stay inferred until someone confirms them.</p>}
             </div>
             <div className="space-y-2">
               <p className="text-xs font-medium text-muted-foreground">Next steps</p>
               {(NEXT_STEPS[project.id] ?? []).map((n) => (
                 <div key={n.who} className="flex items-center gap-2.5 text-sm"><PersonAvatar id={n.who} /><span className="w-16 shrink-0 font-medium">{PEOPLE[n.who].name.split(" ")[0]}</span><span>{n.text}</span></div>
               ))}
-              <p className="text-xs text-muted-foreground">Each one lands in that person's tasks.</p>
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setWrapping(false)}>Keep going</Button>
-            <Button onClick={() => { toast("Meeting ended", { description: "Decisions and next steps saved to the project." }); navigate(`/p/${project.id}/sessions`) }}>End and save</Button>
+            <Button onClick={() => { toast("Meeting saved"); navigate(`/p/${project.id}/sessions`) }}>End and save</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -312,7 +308,7 @@ export function LiveSession({ id, sessionId }: { id: string; sessionId?: string 
 }
 
 // Live captions over the canvas: the last couple of lines, gone once they scroll off. Never saved.
-function Captions({ lines, speaking }: { lines: Line[]; speaking: string }) {
+function Captions({ lines }: { lines: Line[] }) {
   const recent = lines.slice(-2)
   return (
     <div aria-live="polite" className="pointer-events-none absolute inset-x-0 bottom-20 z-10 flex justify-center px-4" style={{ right: 360 }}>
@@ -328,7 +324,7 @@ function Captions({ lines, speaking }: { lines: Line[]; speaking: string }) {
               <span key={b} className="w-0.5 animate-pulse rounded-full bg-background/60 motion-reduce:animate-none" style={{ height: 5 + b * 2, animationDelay: `${b * 150}ms` }} />
             ))}
           </span>
-          {PEOPLE[speaking].name.split(" ")[0]} speaking · live captions, not saved
+          Live captions · not saved
         </p>
       </div>
     </div>
@@ -395,7 +391,7 @@ function Canvas({ studio, zoom, pan, setPan, tool, stickies, setStickies, picked
           label="Option A"
           title={studio ? "Show an unverified question" : "A wiggling card"}
           rows={8}
-          note={studio ? "Keeps five questions, but makes verification harder" : "Playful, but hard for a paw to hit"}
+          note={studio ? "Harder to verify" : "Hard for a paw to hit"}
           state={picked === null ? "open" : picked === "A" ? "picked" : "archived"}
           onPick={() => onPick("A")}
         />
@@ -405,7 +401,7 @@ function Canvas({ studio, zoom, pan, setPan, tool, stickies, setStickies, picked
           label="Option B"
           title={studio ? "Reject and explain the missing source" : "A moving dot leads the swipe"}
           rows={4}
-          note={studio ? "Return fewer questions and offer a retry" : "Works across the app, billboard and video"}
+          note={studio ? "Fewer questions, with a retry" : "Works everywhere"}
           state={picked === null ? "open" : picked === "B" ? "picked" : "archived"}
           onPick={() => onPick("B")}
         />

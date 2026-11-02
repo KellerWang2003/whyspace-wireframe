@@ -16,7 +16,7 @@ export function Account({ tab }: { tab: string }) {
   return (
     <AppShell crumbs={[{ label: "Account" }]}>
       <div className="flex flex-col gap-6 p-8">
-        <PageHeader title="Account" description="Settings that follow you across workspaces." />
+        <PageHeader title="Account" />
         <Tabs value={tab} onValueChange={(v) => navigate(`/account/${v}`)}>
           <TabsList>
             <TabsTrigger value="profile">Profile</TabsTrigger>
@@ -59,7 +59,6 @@ function Profile() {
 function AiTools() {
   return (
     <div className="max-w-2xl space-y-4">
-      <p className="text-sm text-muted-foreground">Connected tools log decisions as inferred. Nothing counts until a person confirms it.</p>
       <ItemGroup className="gap-3">
         {AI_TOOLS.map((t) => (
           <Item key={t.id} variant="outline">
@@ -82,11 +81,11 @@ function AiTools() {
 
 function Notifications() {
   const rows = [
-    ["Decisions to review", "When your AI tool logs a decision you need to confirm.", true],
-    ["Changes for you", "When a decision you build on changes.", true],
-    ["Misalignment alerts", "When someone's work may conflict with a decision.", true],
-    ["Live session invites", "When someone asks you to join a session.", true],
-    ["Mentions", "When someone mentions you.", false],
+    ["Decisions to confirm", "Your AI tool logged one", true],
+    ["Updates to make", "A decision changed your work", true],
+    ["Conflicts", "Work breaks a decision", true],
+    ["Meeting invites", "Someone invites you", true],
+    ["Mentions", "Someone mentions you", false],
   ] as const
   return (
     <FieldSet className="max-w-2xl">

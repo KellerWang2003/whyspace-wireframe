@@ -30,7 +30,7 @@ export function SignUp() {
       <Card>
         <CardHeader className="text-center">
           <CardTitle className="text-xl">Create your account</CardTitle>
-          <CardDescription>Keep track of why your team decided what it did.</CardDescription>
+          <CardDescription>Keep the why behind your team’s work.</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={submit}>
@@ -82,7 +82,6 @@ export function LogIn() {
       <Card>
         <CardHeader className="text-center">
           <CardTitle className="text-xl">Welcome back</CardTitle>
-          <CardDescription>Log in to your workspace.</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={submit}>

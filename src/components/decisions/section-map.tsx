@@ -317,6 +317,6 @@ export function SectionMap({ project, sections, expanded, toggleExpanded, render
         >{(id === PROJECT ? projectOpen : expanded.includes(id)) ? <Minus className="size-3.5" /> : <Plus className="size-3.5" />}<span className="absolute left-9 whitespace-nowrap text-[10px] text-muted-foreground">{id === PROJECT ? '' : sections.filter(s => s.parent === id).length}</span></button>}
       </div>)}
     </div>
-    <div style={{ left: insets.left }} className="pointer-events-none absolute bottom-3 flex flex-wrap gap-3 rounded-md border bg-background/95 px-3 py-2 text-[10px] text-muted-foreground"><span>Drag background to pan · pinch to zoom · drag grips to nest · double-click to fit</span><span className="flex items-center gap-1"><span className="h-px w-4 bg-foreground/40" />Subsection</span>{showDecisions && <span className="flex items-center gap-1"><span className="w-4 border-t border-dashed border-foreground" /><ChevronRight className="size-3" />Decision influence</span>}</div>
+    <div style={{ left: insets.left }} className="pointer-events-none absolute bottom-3 flex flex-wrap gap-3 rounded-md border bg-background/95 px-3 py-2 text-[10px] text-muted-foreground"><span className="flex items-center gap-1"><span className="h-px w-4 bg-foreground/40" />Subsection</span>{showDecisions && <span className="flex items-center gap-1"><span className="w-4 border-t border-dashed border-foreground" /><ChevronRight className="size-3" />Decision influence</span>}</div>
   </div>
 }

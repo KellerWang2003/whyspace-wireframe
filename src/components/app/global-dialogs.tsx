@@ -21,7 +21,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field"
+import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -112,7 +112,7 @@ function NewProjectDialog() {
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>New project</DialogTitle>
-          <DialogDescription>Give it a name and a short brief. Your team's AI tools read the brief, so say what you're trying to do.</DialogDescription>
+          <DialogDescription>Your team’s AI tools read the brief.</DialogDescription>
         </DialogHeader>
         <FieldGroup>
           <Field>
@@ -122,7 +122,6 @@ function NewProjectDialog() {
           <Field>
             <FieldLabel htmlFor="np-brief">Brief</FieldLabel>
             <Textarea id="np-brief" rows={3} placeholder="A swipe app where cats find playdate matches." />
-            <FieldDescription>You can edit this later in project settings.</FieldDescription>
           </Field>
           <Field>
             <FieldLabel>Start from</FieldLabel>
@@ -146,7 +145,7 @@ function NewProjectDialog() {
             onClick={() => {
               setNewProjectOpen(false)
               navigate("/p/whiskr/catch-up")
-              toast("Project created", { description: "Opening the example project for now." })
+              toast("Project created")
             }}
           >
             Create project
@@ -161,10 +160,9 @@ function InviteDialog() {
   const { inviteOpen, setInviteOpen, current } = useStore()
   return (
     <Dialog open={inviteOpen} onOpenChange={setInviteOpen}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="sm:max-w-lg" aria-describedby={undefined}>
         <DialogHeader>
           <DialogTitle>Invite people to {current?.name}</DialogTitle>
-          <DialogDescription>They'll join the workspace and can be added to any project.</DialogDescription>
         </DialogHeader>
         <FieldGroup>
           <Field>
@@ -207,7 +205,7 @@ function UpgradeDialog() {
       <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>Upgrade {current?.name}</DialogTitle>
-          <DialogDescription>This feature needs a paid plan. You can change plans any time in Workspace settings.</DialogDescription>
+          <DialogDescription>This needs a paid plan.</DialogDescription>
         </DialogHeader>
         <RadioGroup value={choice} onValueChange={(v) => setChoice(v as Plan)} className="grid grid-cols-2 gap-3">
           {PLANS.slice(1).map((p) => (

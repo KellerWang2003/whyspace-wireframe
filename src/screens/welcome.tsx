@@ -30,7 +30,7 @@ export function CreateWorkspaceStep() {
       <Card>
         <CardHeader className="text-center">
           <CardTitle className="text-xl">Create your workspace</CardTitle>
-          <CardDescription>This is where your team's projects and decisions live. It starts on the free plan.</CardDescription>
+          <CardDescription>Starts on the free plan.</CardDescription>
         </CardHeader>
         <CardContent>
           <form
@@ -81,13 +81,12 @@ export function WorkspaceDialog() {
           <>
             <DialogHeader>
               <DialogTitle>Create a workspace</DialogTitle>
-              <DialogDescription>New workspaces start free. You can upgrade later in Workspace settings.</DialogDescription>
+              <DialogDescription>Starts on the free plan.</DialogDescription>
             </DialogHeader>
             <FieldGroup>
               <Field>
                 <FieldLabel htmlFor="ws-name">Workspace name</FieldLabel>
                 <Input id="ws-name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Your team or company" />
-                <FieldDescription>Usually your company or team name.</FieldDescription>
               </Field>
             </FieldGroup>
             <DialogFooter>
@@ -109,7 +108,7 @@ export function WorkspaceDialog() {
           <>
             <DialogHeader>
               <DialogTitle>Join a workspace</DialogTitle>
-              <DialogDescription>Accept an invite, or paste a join link from a teammate.</DialogDescription>
+              <DialogDescription>Accept an invite or paste a link.</DialogDescription>
             </DialogHeader>
             <FieldGroup>
               <Item variant="outline">

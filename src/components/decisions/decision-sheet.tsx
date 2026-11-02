@@ -50,7 +50,7 @@ export function DecisionSheetHost() {
             <>
               <div className="border-b px-5 py-3 pr-12">
                 <DialogTitle className="text-sm">Full path · {pathFor.title}</DialogTitle>
-                <DialogDescription className="text-xs">Every section and the decisions that connect them. The traced decision is highlighted.</DialogDescription>
+                <DialogDescription className="sr-only">The section map, traced to this decision.</DialogDescription>
               </div>
               <div className="relative flex min-h-0 flex-1">
                 <SectionWorkspace
@@ -113,19 +113,18 @@ function DecisionBody({ decision: d, onDecision, onLeave, onPath }: { decision: 
         <SheetTitle className="text-lg leading-snug">{d.title}</SheetTitle>
         <div className="flex flex-wrap items-center gap-1.5">
           <StatusBadge status={status} />
-          <Badge variant="outline" className="font-normal">{d.status === "inf" ? "Inferred" : d.status === "open" ? "Not decided" : "Stated"}</Badge>
           <span className="text-xs text-muted-foreground">{source}{d.when ? ` · ${d.when}` : d.due ? ` · due ${d.due}` : ""}</span>
         </div>
         {d.status === "inf" && status === "inf" && (
           <div className="flex items-center gap-2 rounded-lg border border-dashed p-3 text-sm">
-            <span className="flex-1">Nobody has confirmed this yet. {d.owner === ME.id ? "It's yours to confirm." : `${PEOPLE[d.owner]?.name} confirms it.`}</span>
-            {d.owner === ME.id && <Button size="sm" onClick={() => { confirmDecision(d.id); toast("Decision confirmed", { description: "Everyone it reaches will see it as confirmed." }) }}><Check />Confirm</Button>}
+            <span className="flex-1">{d.owner === ME.id ? "Not confirmed yet." : `Waiting on ${PEOPLE[d.owner]?.name.split(" ")[0]}.`}</span>
+            {d.owner === ME.id && <Button size="sm" onClick={() => { confirmDecision(d.id); toast("Decision confirmed") }}><Check />Confirm</Button>}
           </div>
         )}
       </SheetHeader>
 
       <Section title="Why">
-        <p className="text-sm leading-relaxed">{d.why ?? (d.status === "open" ? "Still open. Nobody has decided yet." : "No reason recorded yet.")}</p>
+        <p className="text-sm leading-relaxed">{d.why ?? (d.status === "open" ? "Not decided yet." : "No reason yet.")}</p>
         {d.evidence?.map((e) => {
           const Icon = EVIDENCE_ICON[e.kind]
           return (
@@ -176,9 +175,9 @@ function DecisionBody({ decision: d, onDecision, onLeave, onPath }: { decision: 
                 <ArrowRight className="size-3.5 shrink-0 text-muted-foreground" />
               </span>
             ))}
-            <span className="rounded-md bg-muted px-2 py-1 text-xs font-medium">This decision</span>
+            <span className="rounded-md bg-muted px-2 py-1 text-xs font-medium">This one</span>
           </div>
-        ) : <p className="text-sm text-muted-foreground">Nothing led here. This decision starts its own path.</p>}
+        ) : <p className="text-sm text-muted-foreground">Starts here.</p>}
       </Section>
 
       {d.visual && (
@@ -227,9 +226,9 @@ function DecisionBody({ decision: d, onDecision, onLeave, onPath }: { decision: 
           if (!reply.trim()) return
           addReply(d.id, { who: ME.id, text: reply.trim(), when: "Just now" })
           setReply("")
-          toast(`${PEOPLE[d.owner]?.name.split(" ")[0]} will see your reply`)
+          toast("Reply sent")
         }}>
-          <Textarea rows={2} value={reply} onChange={(e) => setReply(e.target.value)} placeholder={d.owner === ME.id ? "Add context…" : `Push back or add context for ${PEOPLE[d.owner]?.name.split(" ")[0]}…`} />
+          <Textarea rows={2} value={reply} onChange={(e) => setReply(e.target.value)} placeholder={d.owner === ME.id ? "Add context…" : `Reply to ${PEOPLE[d.owner]?.name.split(" ")[0]}…`} />
           <div className="flex items-center gap-2">
             <Button type="submit" size="sm" variant="outline" disabled={!reply.trim()}>Reply</Button>
             <Button type="button" size="sm" variant="ghost" className="ml-auto text-muted-foreground" onClick={() => askWhyspace(`Why ${d.title.charAt(0).toLowerCase()}${d.title.slice(1)}?`)}><Sparkles />Ask about this</Button>

@@ -237,7 +237,6 @@ function SidePanel({ suggested, hasMsgs, mode, setMode, onSend, children }: {
           <div className="pt-10">
             <Sparkles className="mb-4 size-6 text-muted-foreground" strokeWidth={1.5} />
             <h2 className="text-lg font-medium tracking-tight">Where should we start?</h2>
-            <p className="mt-2 text-sm leading-relaxed text-muted-foreground">Find the thinking behind your team's work.</p>
             <div className="-mx-2 mt-6 space-y-1">
               {suggested.map((s) => <button key={s} onClick={() => onSend(s)} className="group flex w-full items-center gap-3 rounded-md px-2 py-2.5 text-left text-sm text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground"><ChevronRight className="size-3.5 shrink-0 opacity-60" />{s}</button>)}
             </div>

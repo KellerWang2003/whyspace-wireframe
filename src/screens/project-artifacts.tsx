@@ -34,7 +34,7 @@ function stateOf(a: Artifact, tasks: Task[]) {
 
 function copy(text: string, tool: string) {
   try { void navigator.clipboard?.writeText(text) } catch { /* clipboard blocked: the toast still explains */ }
-  toast(`Prompt copied. Paste it into ${tool}.`)
+  toast(`Prompt copied for ${tool}`)
 }
 
 export function ProjectArtifacts({ project, selectedId }: { project: Project; selectedId?: string }) {
@@ -52,7 +52,7 @@ export function ProjectArtifacts({ project, selectedId }: { project: Project; se
 
   return <div className="relative min-h-0 min-w-0 flex-1">
     <div className="h-full space-y-6 overflow-y-auto p-6 sm:p-8">
-      <header><h1 className="text-2xl font-semibold tracking-tight">Artifacts</h1><p className="mt-2 text-sm text-muted-foreground">The work in {project.name}, whether it follows the latest decisions, and who's in it now.</p></header>
+      <h1 className="text-2xl font-semibold tracking-tight">Artifacts</h1>
       <div className="flex flex-wrap items-center gap-3">
         <Tabs value={tab} onValueChange={v => setTab(v as typeof tab)}>
           <TabsList>
@@ -62,7 +62,7 @@ export function ProjectArtifacts({ project, selectedId }: { project: Project; se
         </Tabs>
         <label className="relative"><Search className="absolute top-2.5 left-3 size-4 text-muted-foreground" /><Input aria-label="Find an artifact" placeholder="Search artifacts or people…" value={search} onChange={e => setSearch(e.target.value)} className="w-64 max-w-full pl-9" /></label>
         <select aria-label="Part" value={part} onChange={e => setPart(e.target.value)} className="h-9 rounded-md border bg-background px-3 text-sm"><option value="all">All parts</option>{[...new Set(all.map(a => a.part))].map(p => <option key={p}>{p}</option>)}</select>
-        <p className="ml-auto text-xs text-muted-foreground">{tab === 'evidence' ? 'Research, tests and recordings that back the whys' : `${matches.length} ${matches.length === 1 ? 'artifact' : 'artifacts'}`}</p>
+        <p className="ml-auto text-xs text-muted-foreground">{matches.length} of {inTab.length}</p>
       </div>
       <div className="rounded-lg border"><Table><TableHeader><TableRow>
         <TableHead className="w-[30%] pl-4">Artifact</TableHead>
@@ -88,7 +88,7 @@ export function ProjectArtifacts({ project, selectedId }: { project: Project; se
             <TableCell className="pr-4 text-xs text-muted-foreground">{a.updated}</TableCell>
           </TableRow>
         })}
-        {!matches.length && <TableRow><TableCell colSpan={5} className="py-12 text-center text-sm text-muted-foreground">{inTab.length ? 'No artifacts match your search.' : tab === 'evidence' ? 'No evidence in this project yet.' : 'No artifacts in this project yet.'}</TableCell></TableRow>}
+        {!matches.length && <TableRow><TableCell colSpan={5} className="py-12 text-center text-sm text-muted-foreground">{inTab.length ? 'No matches.' : tab === 'evidence' ? 'No evidence yet.' : 'No artifacts yet.'}</TableCell></TableRow>}
       </TableBody></Table></div>
     </div>
     <DialogPrimitive.Root open={!!selected} modal={false} onOpenChange={o => { if (!o) close() }}>
@@ -119,13 +119,12 @@ function ArtifactViewer({ artifact: a, tasks }: { artifact: Artifact; tasks: Tas
       <div className="space-y-3 p-6 lg:overflow-y-auto">
         <div className="h-[min(55vh,520px)] min-h-64 overflow-hidden rounded-lg border bg-muted/40 p-5"><ArtifactPicture artifact={a} /></div>
         <p className="text-sm text-muted-foreground">{a.meta}</p>
-        <p className="text-xs text-muted-foreground">Wireframe preview</p>
       </div>
       <aside className="space-y-6 border-t p-5 lg:overflow-y-auto lg:border-t-0 lg:border-l">
         {s.pending.map(({ decision, task }) => <div key={decision.id} className="space-y-2 rounded-lg border border-dashed p-3">
           <p className="text-xs font-medium">Needs update</p>
           <button className="text-left text-sm hover:underline" onClick={() => openDecision(decision.id)}>{decision.title}</button>
-          <p className="text-xs text-muted-foreground">Task for {PEOPLE[task.owner]?.name.split(' ')[0]} · due {task.due}</p>
+          <p className="text-xs text-muted-foreground">{PEOPLE[task.owner]?.name.split(' ')[0]} · due {task.due}</p>
           <div className="flex gap-2">
             {task.prompt && <Button size="sm" variant="outline" onClick={() => copy(task.prompt!, task.tool ?? tool)}><Copy />Copy prompt</Button>}
             <Button size="sm" variant="ghost" onClick={() => { patchTask(task.id, { status: 'done' }); toast('Marked updated', { action: { label: 'Undo', onClick: () => patchTask(task.id, { status: task.status }) } }) }}><Check />Mark updated</Button>
@@ -133,17 +132,16 @@ function ArtifactViewer({ artifact: a, tasks }: { artifact: Artifact; tasks: Tas
         </div>)}
         <div className="space-y-2">
           <p className="text-xs font-medium text-muted-foreground">Working now</p>
-          {s.working ? <div className="flex items-center gap-2 text-sm"><PersonAvatar id={s.working.who} /><span className="font-medium">{PEOPLE[s.working.who]?.name}</span><span className="truncate text-muted-foreground">· {s.working.tool} · {s.working.since}</span></div> : <p className="text-sm text-muted-foreground">Nobody right now.</p>}
+          {s.working ? <div className="flex items-center gap-2 text-sm"><PersonAvatar id={s.working.who} /><span className="font-medium">{PEOPLE[s.working.who]?.name}</span><span className="truncate text-muted-foreground">· {s.working.tool} · {s.working.since}</span></div> : <p className="text-sm text-muted-foreground">Nobody</p>}
           {s.working?.aiDoing && <p className="text-xs text-muted-foreground">{s.working.aiDoing}</p>}
         </div>
         {a.evidence ? <div className="space-y-2">
-          <p className="text-xs font-medium text-muted-foreground">Backs these decisions</p>
-          {s.backs.length ? s.backs.map(decisionRow) : <p className="text-sm text-muted-foreground">Not linked to a decision yet.</p>}
+          <p className="text-xs font-medium text-muted-foreground">Backs</p>
+          {s.backs.length ? s.backs.map(decisionRow) : <p className="text-sm text-muted-foreground">None yet</p>}
         </div> : <>
           <div className="space-y-2">
             <p className="text-xs font-medium text-muted-foreground">Decisions it follows</p>
-            {s.follows.length ? s.follows.map(decisionRow) : <p className="text-sm text-muted-foreground">No decisions shape this yet.</p>}
-            <p className="text-[11px] text-muted-foreground">Connected AI tools pull these through MCP when someone works on it.</p>
+            {s.follows.length ? s.follows.map(decisionRow) : <p className="text-sm text-muted-foreground">None yet</p>}
           </div>
           {s.follows.length > 0 && <div className="space-y-2">
             <p className="text-xs font-medium text-muted-foreground">Continue in {tool}</p>

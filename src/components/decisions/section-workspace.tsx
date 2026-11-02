@@ -127,7 +127,7 @@ export function SectionWorkspace({ project, initialSections, selectedId, onDecis
 
   const decisionPreview = (d: SectionDecision, s: WorkSection): Preview => ({
     title: d.title,
-    description: `${pathLabel(s.id)} · ${s.owner} · ${d.source ? STATUS_LABEL[d.source.status] : d.inferred ? 'Inferred by AI · awaiting human confirmation' : 'Confirmed by a person'}`,
+    description: `${pathLabel(s.id)} · ${s.owner} · ${d.source ? STATUS_LABEL[d.source.status] : d.inferred ? 'Inferred · not confirmed' : 'Confirmed by a person'}`,
     body: <div className="space-y-5">
       <div><p className="mb-2 text-xs text-muted-foreground">Why</p><p className="text-sm leading-relaxed">{d.why}</p></div>
       {d.source?.was && <div><p className="mb-2 text-xs text-muted-foreground">Replaced</p><p className="text-sm line-through">{d.source.was}</p></div>}
@@ -158,7 +158,7 @@ export function SectionWorkspace({ project, initialSections, selectedId, onDecis
 
   function decisionList(s: WorkSection) {
     return <div className="space-y-2">
-      {s.decisions.length === 0 && <p className="text-xs text-muted-foreground">No decisions recorded here.</p>}
+      {s.decisions.length === 0 && <p className="text-xs text-muted-foreground">No decisions</p>}
       {s.decisions.map(d => <div key={d.id} className={cn('rounded-md border p-2.5', d.inferred && 'border-dashed', focusDecision === d.id && 'ring-2 ring-foreground/30')}>
         <button className="text-left text-xs font-medium hover:underline" onClick={() => openDecision(d, s)}>{d.inferred && <Sparkles className="mr-1 inline size-3" />}{d.title}</button>
         {showDecisions && <><button className="mt-2 block text-[10px] underline underline-offset-2" onClick={() => setFocusDecision(focusDecision === d.id ? null : d.id)}>Trace relationships</button><div className="mt-2 space-y-1">{d.drives.map(id => <button key={id} onClick={() => { reveal(id); setFocusDecision(d.id) }} className="flex items-start gap-1 text-left text-[10px] text-muted-foreground hover:text-foreground"><ArrowRight className="mt-0.5 size-3 shrink-0" /><span>Drives {pathLabel(id)}</span></button>)}</div></>}
@@ -202,7 +202,6 @@ export function SectionWorkspace({ project, initialSections, selectedId, onDecis
       {outlineOpen && <aside id="section-outline" aria-label="Section outline" className="flex h-full w-68 max-w-[45%] shrink-0 flex-col overflow-hidden border-r bg-background">
         <div className="flex items-center justify-between gap-3 border-b px-4 py-4"><div><p className="text-[10px] text-muted-foreground">{project.name}</p><h2 className="mt-0.5 text-sm font-semibold">Decisions</h2></div><Button variant="ghost" size="icon" className="size-7" aria-label="Close outline" onClick={() => setOutlineOpen(false)}><PanelLeft /></Button></div>
         <div className="min-h-0 flex-1 overflow-auto p-3"><p className="mb-2 px-2 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Outline</p><button data-section-drop="__project__" className="mb-2 w-full rounded-md px-2 py-2 text-left text-xs font-medium hover:bg-muted" onDragOver={event => { if (dragged) event.preventDefault() }} onDrop={event => drop(event, null)} onClick={() => navigateSection('__project__')}>{project.name}</button>{treeNav(null)}</div>
-        <p className="border-t px-4 py-3 text-[10px] text-muted-foreground">Select a section to go to it on the canvas.</p>
       </aside>}
       <div className="relative min-h-0 min-w-0 flex-1 overflow-hidden">
       <SectionMap project={project} sections={sections} expanded={expanded} toggleExpanded={toggleExpanded} renderSection={frame} selected={selected} onSelect={setSelected} showDecisions={showDecisions} focusDecision={focusDecision} onTrace={setFocusDecision} focused={null} minimized={sections.filter(s => isMinimized(s.id)).map(s => s.id)} dragged={dragged} hovered={dropTarget} canMove={canMove} onDropSection={drop} onExitFocus={() => setFocused(null)} navigation={navigation} insets={{ left: 24, right: 24, top: 100, bottom: 56 }} />
@@ -226,14 +225,14 @@ export function SectionWorkspace({ project, initialSections, selectedId, onDecis
     </div>
     {dragPosition && dragged && <div className="pointer-events-none fixed z-[100] rounded-lg border bg-background px-4 py-2 text-xs font-medium shadow-lg" style={{ left: dragPosition.x + 14, top: dragPosition.y + 14 }}>Move {sections.find(s => s.id === dragged)?.name}</div>}
     <Dialog open={!!visiblePreview} onOpenChange={open => !open && closePreview()}><DialogContent className="max-h-[85vh] overflow-auto sm:max-w-2xl"><DialogHeader><DialogTitle>{visiblePreview?.title}</DialogTitle><DialogDescription>{visiblePreview?.description}</DialogDescription></DialogHeader>{visiblePreview?.body}</DialogContent></Dialog>
-    <Dialog open={adding} onOpenChange={setAdding}><DialogContent><DialogHeader><DialogTitle>Add a section</DialogTitle><DialogDescription>Create a section at any depth.</DialogDescription></DialogHeader><form className="space-y-4" onSubmit={e => {
+    <Dialog open={adding} onOpenChange={setAdding}><DialogContent><DialogHeader><DialogTitle>Add a section</DialogTitle><DialogDescription className="sr-only">Create a section.</DialogDescription></DialogHeader><form className="space-y-4" onSubmit={e => {
       e.preventDefault()
       const data = new FormData(e.currentTarget), id = `section-${Date.now()}`, parent = String(data.get('parent')) || null
       if (!newName.trim()) return
-      setSections(old => [...old, { id, parent, name: newName.trim(), owner: 'Keller', summary: 'A new area of work. Add artifacts and capture the reasons behind your choices here.', artifacts: [], decisions: [] }])
+      setSections(old => [...old, { id, parent, name: newName.trim(), owner: 'Keller', summary: 'A new area of work.', artifacts: [], decisions: [] }])
       if (parent) setExpanded(old => [...new Set([...old, ...sectionPath(sections, parent).map(s => s.id)])])
       setSelected(id); setFocused(id); setNewName(''); setAdding(false)
     }}><label className="block space-y-2 text-xs"><span>Name</span><Input required autoFocus value={newName} onChange={e => setNewName(e.target.value)} placeholder="e.g. Sound design" /></label><label className="block space-y-2 text-xs"><span>Inside</span><select name="parent" defaultValue={current.id} className="w-full rounded-md border bg-background p-2"><option value="">{project.name} · top level</option>{sections.map(s => <option key={s.id} value={s.id}>{pathLabel(s.id)}</option>)}</select></label><Button type="submit">Create section</Button></form></DialogContent></Dialog>
-    <Dialog open={!!moving} onOpenChange={open => !open && setMoving(null)}><DialogContent><DialogHeader><DialogTitle>Move {sections.find(s => s.id === moving)?.name}</DialogTitle><DialogDescription>Move this section and all its subsections. You can also drag its grip onto another section.</DialogDescription></DialogHeader><form className="space-y-4" onSubmit={e => { e.preventDefault(); const parent = String(new FormData(e.currentTarget).get('parent')) || null; if (moving) move(moving, parent); setMoving(null) }}><label className="block space-y-2 text-xs"><span>New parent</span><select name="parent" defaultValue={sections.find(s => s.id === moving)?.parent ?? ''} className="w-full rounded-md border bg-background p-2"><option value="">{project.name} · top level</option>{sections.filter(s => moving && canMove(moving, s.id)).map(s => <option key={s.id} value={s.id}>{pathLabel(s.id)}</option>)}</select></label><Button type="submit">Move section</Button></form></DialogContent></Dialog>
+    <Dialog open={!!moving} onOpenChange={open => !open && setMoving(null)}><DialogContent><DialogHeader><DialogTitle>Move {sections.find(s => s.id === moving)?.name}</DialogTitle><DialogDescription>Subsections move with it.</DialogDescription></DialogHeader><form className="space-y-4" onSubmit={e => { e.preventDefault(); const parent = String(new FormData(e.currentTarget).get('parent')) || null; if (moving) move(moving, parent); setMoving(null) }}><label className="block space-y-2 text-xs"><span>New parent</span><select name="parent" defaultValue={sections.find(s => s.id === moving)?.parent ?? ''} className="w-full rounded-md border bg-background p-2"><option value="">{project.name} · top level</option>{sections.filter(s => moving && canMove(moving, s.id)).map(s => <option key={s.id} value={s.id}>{pathLabel(s.id)}</option>)}</select></label><Button type="submit">Move section</Button></form></DialogContent></Dialog>
   </>
 }

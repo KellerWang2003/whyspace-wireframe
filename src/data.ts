@@ -98,9 +98,9 @@ const ALL_DECISIONS: Decision[] = [
     "by": "Trevor",
     "when": "Oct 22",
     "tool": "Live session",
-    "why": "In Monday's footage, Luna ignored the static card for 5 minutes, then pounced the moment a notification slid in (5:55).",
+    "why": "Luna ignored the static card, then pounced on a moving notification.",
     "snippet": "She only cares when something moves. We need the element to move.",
-    "evidence": [{ "kind": "clip", "label": "Luna at 5:55", "detail": "Ignores the static card for 5 minutes, then pounces on a sliding notification.", "artifact": "w3" }],
+    "evidence": [{ "kind": "clip", "label": "Luna at 5:55", "artifact": "w3" }],
     "visual": { "before": "Static swipe card", "after": "Every element moves" }
   },
   {
@@ -113,8 +113,8 @@ const ALL_DECISIONS: Decision[] = [
     "by": "Kelly and Trevor",
     "when": "Oct 22",
     "tool": "Claude Code",
-    "why": "We compared a wiggling card, a moving dot and a dangling feather on the canvas. The dot works across the app, billboard and video; the wiggle was hard to hit and the feather covered the photo.",
-    "evidence": [{ "kind": "clip", "label": "Canvas comparison · footage review", "detail": "Three directions side by side on the live canvas.", "artifact": "w5" }],
+    "why": "The dot works on the app, billboard and video.",
+    "evidence": [{ "kind": "clip", "label": "Canvas comparison · footage review", "detail": "Three directions compared live.", "artifact": "w5" }],
     "options": [
       { "title": "A wiggling card", "why": "Hard for a paw to hit" },
       { "title": "A dangling feather", "why": "Covered the cat's photo" }
@@ -131,8 +131,8 @@ const ALL_DECISIONS: Decision[] = [
     "by": "Trevor",
     "when": "Oct 22",
     "tool": "Perplexity",
-    "why": "Trevor's research: cats respond to a low buzz around 25 Hz, felt through their paw pads, like a purr.",
-    "evidence": [{ "kind": "research", "label": "Perplexity · 3 sources", "detail": "Cats feel a buzz around 25 Hz through their paw pads.", "artifact": "w2" }],
+    "why": "Cats feel a 25 Hz buzz through their paws, like a purr.",
+    "evidence": [{ "kind": "research", "label": "Perplexity · 3 sources", "artifact": "w2" }],
     "options": [{ "title": "A chirp sound", "why": "Lost when the phone is on mute" }]
   },
   {
@@ -145,7 +145,7 @@ const ALL_DECISIONS: Decision[] = [
     "by": "Trevor",
     "when": "Oct 8",
     "tool": "Figma",
-    "why": "Playful and food-related, and it stands out on a phone screen."
+    "why": "Playful, food-related and bright on a phone."
   },
   {
     "id": "dotbrand",
@@ -157,8 +157,8 @@ const ALL_DECISIONS: Decision[] = [
     "by": "Trevor",
     "when": "Oct 22",
     "tool": "Figma",
-    "why": "If the dot leads the swipe, the poster and video should use it too, so cats recognize it everywhere.",
-    "options": [{ "title": "Keep the dot in the app only", "why": "Cats wouldn't recognize it on the poster or video" }]
+    "why": "Cats should recognize the dot everywhere, not just in the app.",
+    "options": [{ "title": "Keep the dot in the app only", "why": "Cats wouldn't know it elsewhere" }]
   },
   {
     "id": "nored",
@@ -171,14 +171,14 @@ const ALL_DECISIONS: Decision[] = [
     "when": "Oct 23",
     "tool": "Claude",
     "was": "Tuna red as the primary color",
-    "why": "Cats see red as a dull gray. Blue and yellow are the colors they see best.",
+    "why": "Cats see red as gray; blue and yellow stand out.",
     "replaces": "red",
-    "evidence": [{ "kind": "research", "label": "Cat vision research · Perplexity", "detail": "Cats see red as a dull gray. Blue and yellow stand out most.", "artifact": "w2" }],
+    "evidence": [{ "kind": "research", "label": "Cat vision research · Perplexity", "artifact": "w2" }],
     "options": [{ "title": "Keep red as an accent", "why": "Still reads as gray to cats" }],
     "visual": { "before": "Tuna red", "after": "Blue and yellow" },
     "replies": [
-      { "who": "MC", "text": "Does this cover the posters too? They're mostly for owners.", "when": "Oct 23" },
-      { "who": "TR", "text": "Yes. The dot and palette should match everywhere cats might see them.", "when": "Oct 23" }
+      { "who": "MC", "text": "Posters too? They're mostly for owners.", "when": "Oct 23" },
+      { "who": "TR", "text": "Yes, anything cats might see.", "when": "Oct 23" }
     ]
   },
   {
@@ -194,7 +194,7 @@ const ALL_DECISIONS: Decision[] = [
     "snippet": "Let's keep it short, like 15 seconds.",
     "why": "Inferred: cats lose interest fast.",
     "evidence": [{ "kind": "chat", "label": "Keller's chat with Claude", "detail": "\"Let's keep it short, like 15 seconds.\"" }],
-    "options": [{ "title": "30 seconds", "why": "Cats lose interest fast (inferred)" }]
+    "options": [{ "title": "30 seconds", "why": "Too long for cats" }]
   },
   {
     "id": "pounce",
@@ -206,9 +206,9 @@ const ALL_DECISIONS: Decision[] = [
     "by": "Keller",
     "when": "Today",
     "tool": "Claude",
-    "why": "Real footage of a cat catching the dot shows the idea in the first second.",
+    "why": "A real catch shows the idea in one second.",
     "evidence": [{ "kind": "clip", "label": "Luna's pounce", "detail": "The catch at 5:55 is the opening shot.", "artifact": "w3" }],
-    "options": [{ "title": "Open on the logo", "why": "Doesn't show the idea in the first second" }]
+    "options": [{ "title": "Open on the logo", "why": "Doesn't show the idea" }]
   },
   {
       "id": "cram",
@@ -220,8 +220,8 @@ const ALL_DECISIONS: Decision[] = [
       "by": "Jordan Kim",
       "tool": "Claude",
       "when": "Oct 13",
-      "why": "In six classmate interviews, students struggled to tell which concepts they understood after rereading a lecture.",
-      "evidence": [{ "kind": "research", "label": "Six classmate interviews", "detail": "Students couldn't tell what they understood after rereading.", "artifact": "a11" }]
+      "why": "Students couldn't tell what they understood after rereading.",
+      "evidence": [{ "kind": "research", "label": "Six classmate interviews", "artifact": "a11" }]
     },
   {
       "id": "slides",
@@ -233,9 +233,9 @@ const ALL_DECISIONS: Decision[] = [
       "by": "Keller and Jordan Kim",
       "tool": "Claude",
       "when": "Oct 15",
-      "why": "One PDF and five questions give our two-person team a complete loop we can build and test before Nov 4.",
+      "why": "A full loop two people can build and test by Nov 4.",
       "snippet": "Upload, practice, check the explanation, and return to the source.",
-      "options": [{ "title": "Summaries of whole courses", "why": "Too big to build and test by Nov 4" }]
+      "options": [{ "title": "Summaries of whole courses", "why": "Too big for Nov 4" }]
     },
   {
       "id": "cite",
@@ -258,9 +258,9 @@ const ALL_DECISIONS: Decision[] = [
       "owner": "MC",
       "by": "Keller and Jordan Kim",
       "when": "Oct 21",
-      "was": "Use a clickable prototype with prewritten questions",
-      "why": "The studio feedback asked us to test actual model mistakes. Keller owns the interaction design; Jordan owns PDF extraction and question generation.",
-      "evidence": [{ "kind": "feedback", "label": "Studio feedback · Oct 20", "detail": "Test actual model mistakes, not prewritten questions." }]
+      "was": "A clickable mock with prewritten questions",
+      "why": "Studio feedback: test real model mistakes, not a mock.",
+      "evidence": [{ "kind": "feedback", "label": "Studio feedback · Oct 20" }]
     },
   {
       "id": "deck",
@@ -271,7 +271,7 @@ const ALL_DECISIONS: Decision[] = [
       "owner": "JK",
       "by": "Jordan Kim",
       "when": "Oct 23",
-      "why": "The critique needs evidence of iteration. Include unsupported questions, our rejection rules, and what changed after testing.",
+      "why": "The critique needs proof we iterated.",
       "evidence": [{ "kind": "test", "label": "First evaluation · 15 questions", "artifact": "a16" }]
     },
   {
@@ -314,10 +314,10 @@ export const PROJECTS: Project[] = [
     "id": "whiskr",
     "name": "Whiskr",
     "brief": {
-      MC: "A swipe app where cats find playdate matches. I lead marketing: the poster campaign and the 15-second promo video.",
-      CH: "A swipe app where cats find playdate matches. I run the company; Trevor leads research and brand, Kelly the app, Keller marketing.",
-      TR: "A swipe app where cats find playdate matches. I lead research and the brand: cat tests, footage reviews and the palette.",
-      KL: "A swipe app where cats find playdate matches. I lead the app: the swipe card prototype and the moving dot.",
+      MC: "A swipe app for cat playdates. I lead marketing.",
+      CH: "A swipe app for cat playdates. I run the company.",
+      TR: "A swipe app for cat playdates. I lead research and brand.",
+      KL: "A swipe app for cat playdates. I lead the app.",
     }[VIEWER] ?? "",
     "members": [
       "MC",
@@ -330,7 +330,7 @@ export const PROJECTS: Project[] = [
   {
       "id": "studio",
       "name": "AI Studio · Recall",
-      "brief": "Jordan and I are building Recall: an AI study tool that turns course PDFs into practice questions with source citations. Working prototype due Nov 4; final critique Dec 10.",
+      "brief": "Recall turns course PDFs into cited practice questions. Prototype due Nov 4.",
       "members": [
         "MC",
         "JK"
@@ -385,9 +385,9 @@ const ALL_TASKS: Task[] = [
     "status": "todo",
     "priority": "high",
     "decision": "nored",
-    "description": "The poster still uses tuna red. Swap to blue and yellow and add the purring dot.",
+    "description": "Swap tuna red for blue and yellow; add the dot.",
     "tool": "Figma",
-    "prompt": "Brand drops red: cats see it as a dull gray. Recolor the 3 posters to the blue and yellow palette from the brand guidelines v3 and add the purring dot. Keep the layouts."
+    "prompt": "Recolor the 3 posters to the blue and yellow in brand guidelines v3 and add the purring dot. Cats see red as gray."
   },
   {
     "id": "t2",
@@ -435,9 +435,9 @@ const ALL_TASKS: Task[] = [
     "status": "done",
     "priority": "med",
     "decision": "nored",
-    "description": "Buttons in the app design and the prototype still use tuna red.",
+    "description": "App buttons still use tuna red.",
     "tool": "Claude Code",
-    "prompt": "Brand drops red: cats see it as a dull gray. Replace every tuna red in the swipe card prototype with the blue and yellow tokens from the brand guidelines v3. The purring dot stays as is."
+    "prompt": "Replace tuna red in the swipe card with the blue and yellow tokens from brand guidelines v3. Cats see red as gray."
   },
   {
     "id": "t5",
@@ -471,7 +471,7 @@ const ALL_TASKS: Task[] = [
       "status": "prog",
       "priority": "high",
       "decision": "figma",
-      "description": "Use Jordan’s generation endpoint. Design loading, scanned-PDF failure, and retry states before our studio check-in.",
+      "description": "Use Jordan’s endpoint. Design loading, failure and retry states.",
       "subtasks": [
         {
           "title": "Upload and processing states",
@@ -497,7 +497,7 @@ const ALL_TASKS: Task[] = [
       "status": "todo",
       "priority": "high",
       "decision": "cite",
-      "description": "Make it possible to verify an explanation without losing the current question. Include missing-source behavior."
+      "description": "Verify an answer without losing the question."
     },
   {
       "id": "t13",
@@ -509,7 +509,7 @@ const ALL_TASKS: Task[] = [
       "status": "prog",
       "priority": "high",
       "decision": "slides",
-      "description": "Score 15 questions for source support, answer correctness, and clarity. Log failures instead of silently regenerating."
+      "description": "Score 15 questions for support, correctness and clarity."
     },
   {
       "id": "t14",
@@ -520,7 +520,7 @@ const ALL_TASKS: Task[] = [
       "due": "Fri Oct 30",
       "status": "todo",
       "priority": "med",
-      "description": "Jordan and I will alternate facilitation and notes. Ask participants to bring one non-sensitive course PDF."
+      "description": "Each brings one course PDF."
     },
   {
       "id": "t15",
@@ -535,7 +535,7 @@ const ALL_TASKS: Task[] = [
       "comments": [
         {
           "who": "JK",
-          "text": "Can you walk through the interaction changes? I’ll cover the evaluation results and model failures.",
+          "text": "Can you cover the interaction changes? I’ll take evaluation.",
           "when": "Yesterday"
         }
       ]
@@ -602,7 +602,7 @@ const ALL_INBOX: InboxItem[] = [
     "time": "2h",
     "unread": true,
     "decision": "nored",
-    "body": "Cats see red as a dull gray, so the palette is now blue and yellow. Whyspace added a task for you with a prompt ready for Claude Code."
+    "body": "Red is out. Your task and Claude Code prompt are ready."
   },
   {
     "need": "decide", "touches": "Your brand guidelines", "id": "i5",
@@ -620,7 +620,7 @@ const ALL_INBOX: InboxItem[] = [
     "time": "20m",
     "unread": true,
     "decision": "short",
-    "body": "The 15-second video opens on Luna's pounce and uses the blue and yellow palette with the purring dot. Check it matches the guidelines."
+    "body": "Check the video plan matches your guidelines."
   },
   {
     "touches": "Marketing, which you follow", "id": "i9",
@@ -631,11 +631,11 @@ const ALL_INBOX: InboxItem[] = [
     "kind": "change",
     "from": "MC",
     "project": "Whiskr",
-    "summary": "This week: red is out, the dot moves, and one decision waits on Keller",
+    "summary": "This week: red is out, the dot moves",
     "time": "1h",
     "unread": true,
     "decision": "short",
-    "body": "Trevor dropped red, Kelly recolored the app, and Keller planned the promo video. The 15-second length still needs Keller's confirmation; the poster still uses red."
+    "body": "The video length waits on Keller; the poster still uses red."
   },
   {
     "need": "do", "task": "t1", "touches": "Your poster campaign", "id": "i1",
@@ -661,7 +661,7 @@ const ALL_INBOX: InboxItem[] = [
     "time": "1d",
     "unread": true,
     "decision": "nored",
-    "body": "Cats see red as a dull gray, so Trevor dropped tuna red. Your poster still uses it. Whyspace added a task for you with a prompt ready for Figma."
+    "body": "Your poster still uses red. Your task and Figma prompt are ready."
   },
   {
     "touches": "Your poster and promo video", "id": "i2",
@@ -688,7 +688,7 @@ const ALL_INBOX: InboxItem[] = [
     "time": "2d",
     "unread": false,
     "decision": "move",
-    "body": "Trevor marked this as important at the end of the footage review. It affects the poster and the promo video."
+    "body": "Trevor marked this important. It affects the poster and video."
   },
   {
     "need": "decide", "touches": "Your promo video plan", "id": "i3",
@@ -710,7 +710,7 @@ const ALL_INBOX: InboxItem[] = [
     "time": "10m",
     "unread": true,
     "decision": "short",
-    "body": "Claude captured the length from your chat and inferred the reason: cats lose interest fast. Confirm or correct it."
+    "body": "Claude inferred the reason from your chat. Confirm or correct it."
   },
   {
       "need": "decide", "touches": "Your feedback screen", "id": "i8",
@@ -720,11 +720,11 @@ const ALL_INBOX: InboxItem[] = [
       "kind": "review",
       "from": "JK",
       "project": "AI Studio · Recall",
-      "summary": "Jordan proposed source pages on every answer explanation",
+      "summary": "Jordan proposed a source page on every answer",
       "time": "1h",
       "unread": true,
       "decision": "cite",
-      "body": "The endpoint now includes page numbers and supporting passages. Review how the citation fits your feedback screen."
+      "body": "Check how citations fit your feedback screen."
     },
   {
       "need": "decide", "touches": "Your working prototype", "id": "i7",
@@ -734,11 +734,11 @@ const ALL_INBOX: InboxItem[] = [
       "kind": "alert",
       "from": "JK",
       "project": "AI Studio · Recall",
-      "summary": "Two evaluation questions have no supporting source passage",
+      "summary": "Two questions have no source passage",
       "time": "4h",
       "unread": true,
       "decision": "slides",
-      "body": "Jordan flagged two of the 15 questions in the first evaluation. Decide whether to reject them or show an unavailable state before the classmate tests."
+      "body": "Reject them, or show an unavailable state?"
     },
   {
       "touches": "Your part of the critique", "id": "i6",
@@ -752,7 +752,7 @@ const ALL_INBOX: InboxItem[] = [
       "time": "1d",
       "unread": false,
       "decision": "presenter",
-      "body": "“Keller, can you show the interaction changes? I’ll explain how we evaluated the questions.”"
+      "body": "“Can you show the interaction changes? I’ll cover evaluation.”"
     }
 ]
 
@@ -1119,7 +1119,7 @@ const ALL_ACTIVITY: Activity[] = [
       "project": "studio",
       "who": "MC",
       "tool": "Claude",
-      "aiDoing": "Exploring citation and missing-source states",
+      "aiDoing": "Exploring citation states",
       "artifact": "a15",
       "doing": "Recall feedback and source preview",
       "part": "Prototype",
@@ -1130,7 +1130,7 @@ const ALL_ACTIVITY: Activity[] = [
       "project": "studio",
       "who": "JK",
       "tool": "Cursor",
-      "aiDoing": "Scoring question support against source passages",
+      "aiDoing": "Scoring questions against sources",
       "artifact": "a16",
       "doing": "Recall evaluation on three course PDFs",
       "part": "Prototype",
@@ -1171,52 +1171,52 @@ export const PLANS: { name: Plan; price: string; blurb: string; features: string
 
 // Whiskr's summaries at each stage of the week (see lib/stage.ts).
 const WHISKR_SUMMARY = [
-  { project: "A swipe app for cats. The brand is tuna red and the swipe card is static. Nothing open yet.", week: "Kelly ran the first cat test with the prototype. Trevor has the footage to review." },
-  { project: "A swipe app for cats. Movement is the new rule: a moving dot leads the swipe, and it purrs.", week: "In the footage review, Luna only reacted to movement. Kelly tried three directions; the moving dot won." },
-  { project: "A swipe app for cats, led by a moving, purring dot in blue and yellow. Open: the poster still uses red.", week: "Trevor dropped red from the brand and marked it important. Kelly is recoloring the app; the poster has not caught up." },
-  { project: "A swipe app for cats, led by a moving, purring dot in blue and yellow. Open: the 15-second video length needs confirming, and the poster still uses red.", week: "Trevor dropped red from the brand. Kelly recolored the app buttons; the poster has not caught up yet. Keller planned the promo video with Claude." },
+  { project: "A swipe app for cats. Tuna red brand, static swipe card.", week: "Kelly ran the first cat test. Trevor has the footage." },
+  { project: "A swipe app for cats, led by a moving, purring dot.", week: "Luna only reacted to movement. The moving dot won." },
+  { project: "A cat swipe app led by a purring dot in blue and yellow.", week: "Trevor dropped red. The app is recoloring; the poster isn't." },
+  { project: "A cat swipe app led by a purring dot in blue and yellow.", week: "Red is out and the poster lags. Keller planned the promo video." },
 ][Math.min(STAGE, 4) - 1]
 
 // AI summaries shown on the decisions canvas, one per part and one per project.
 // Written by Whyspace from the decisions themselves, refreshed when one changes.
 export const PART_SUMMARY: Record<string, string> = {
-  Research: "Cats only react to things that move. Luna ignored the static card and pounced on a sliding notification.",
-  Brand: STAGE < 3 ? "Tuna red is the primary color. It feels playful and stands out on a phone screen." : "The purring dot is now a brand element. Red is out because cats see it as gray; the palette is blue and yellow.",
-  App: "A moving dot leads the swipe and purrs at about 25 Hz. Kelly is building it into the prototype.",
-  Marketing: "The promo video runs 15 seconds and opens on Luna's real pounce. The poster still needs the new palette.",
-  Interviews: "Six classmate interviews support short practice sessions after reviewing one lecture.",
-  Concept: "Recall generates five questions from one course PDF. Every explanation should have a supporting passage and page reference.",
-  Prototype: "Keller designs the upload, practice, and feedback experience. Jordan builds extraction and generation. Test real model failures in the Nov 4 working prototype.",
-  "Final crit": "Show the product, the evaluation evidence, and how failures changed the design. Keller and Jordan still need to divide the presentation.",
+  Research: "Cats only react to things that move.",
+  Brand: STAGE < 3 ? "Tuna red is the primary color." : "Blue and yellow with the purring dot. No red.",
+  App: "A moving dot leads the swipe and purrs at 25 Hz.",
+  Marketing: "A 15-second video opening on Luna's pounce. The poster needs new colors.",
+  Interviews: "Students review one lecture at a time.",
+  Concept: "Five cited questions from one course PDF.",
+  Prototype: "One working loop by Nov 4. Keller: interaction; Jordan: generation.",
+  "Final crit": "Show the demo, the failures and what changed.",
 }
 export const PROJECT_DECISION_SUMMARY: Record<string, string> = {
   whiskr: WHISKR_SUMMARY.project,
-  studio: "Recall turns one course PDF into five practice questions. Our two-person team is building a working flow for Nov 4. Open: citation behavior, unsupported questions, and the critique presentation split.",
+  studio: "Recall turns one PDF into five cited questions. Three things are open.",
 }
 // Each lead's view of the week opens with their own part. Christine sees the whole project.
 const WHISKR_WEEK_FOR: Record<string, string[]> = {
   MC: [
-    "The poster series is laid out in tuna red. Kelly ran the first cat test; Trevor has the footage.",
-    "The footage review is live: movement is the new rule, which will reach the poster and video.",
-    "Your poster still uses red: Trevor dropped it from the brand and marked it important. Kelly is recoloring the app.",
-    "You planned the 15-second promo video with Claude; confirm the length. The poster still uses red.",
+    "Your posters are in tuna red. Trevor has the test footage.",
+    "Movement is the new rule. It will reach your poster and video.",
+    "Your poster still uses red. Trevor dropped it from the brand.",
+    "You planned the promo video; confirm its length. The poster still uses red.",
   ],
   TR: [
-    "You have Monday's cat-test footage to review. Kelly ran the test with the static card.",
-    "You're reviewing the footage with Kelly: Luna only reacts to movement. Movement, the dot and the purr are logged.",
-    "You dropped red from the brand and marked it important. Kelly is recoloring the app; Keller's poster hasn't caught up.",
-    "Your palette is in the app. Keller's promo video plan builds on your guidelines; the poster still uses red.",
+    "Monday's cat-test footage is ready for you.",
+    "Luna only reacts to movement. The dot and purr are logged.",
+    "You dropped red. The app is recoloring; Keller's poster isn't.",
+    "Your palette is in the app. The poster still uses red.",
   ],
   KL: [
-    "You ran the first cat test with the static swipe card. Trevor has the footage.",
-    "In the footage review, the moving dot won out of your three directions. Next: build it with the purr.",
-    "Red is out of the brand: recolor the app buttons to blue and yellow. The moving dot is in the prototype.",
-    "You recolored the app buttons; the moving dot purrs at about 25 Hz. Keller planned the promo video.",
+    "You ran the first cat test. Trevor has the footage.",
+    "Your moving dot won. Next: build it with the purr.",
+    "Red is out: recolor the app to blue and yellow.",
+    "The app is recolored and the dot purrs. Keller planned the video.",
   ],
 }
 export const WEEK_SUMMARY: Record<string, string> = {
   whiskr: WHISKR_WEEK_FOR[VIEWER]?.[Math.min(STAGE, 4) - 1] ?? WHISKR_SUMMARY.week,
-  studio: "We moved from prewritten prototype questions to a working AI flow. Jordan added source passages; Keller is designing verification and failure states. Two evaluation questions lacked support.",
+  studio: "We switched to a real AI loop. Two questions lacked sources.",
 }
 export const CANVAS_EXTRAS: Record<string, { notePart?: string; note?: string; suggestion?: { name: string; from: string; moves: string[]; by: string; reason: string }; ask: string[] }> = {
   whiskr: {

@@ -4,7 +4,7 @@ import { ArrowUpRight, Bell, BellOff, CalendarDays, Check, Copy, X, Inbox as Inb
 import { ProjectLabel } from "@/components/app/project-mark"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty"
+import { Empty, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { AppShell } from "@/components/app/app-shell"
@@ -91,7 +91,6 @@ export function Inbox() {
                 <EmptyHeader>
                   <EmptyMedia variant="icon"><InboxIcon /></EmptyMedia>
                   <EmptyTitle>{category === "done" ? "Nothing done yet" : category === "needs" ? "Nothing needs you" : "No updates"}</EmptyTitle>
-                  <EmptyDescription>{category === "done" ? "Items you finish or mark done land here." : category === "needs" ? "Decisions to make and work to update show up here when they touch your work." : "Everything else that happened is in each project's Catch up."}</EmptyDescription>
                 </EmptyHeader>
               </Empty>
             ) : list.map((item) => (
@@ -114,14 +113,14 @@ export function Inbox() {
                 <div className="sticky top-0 z-10 flex flex-wrap items-center justify-end gap-2 border-b bg-background px-5 py-3">
                   <div className="flex items-center gap-2">
                     {selected.relatedArtifacts.length > 0 && !selected.meeting && (
-                      <Button variant="ghost" size="sm" aria-pressed={!!reminders[selected.id]} title="Bring this back in the overlay when you open the file it touches" onClick={() => { setReminder(selected.id, !reminders[selected.id]); toast(reminders[selected.id] ? "Reminder off" : "We'll remind you when you open it") }}>
+                      <Button variant="ghost" size="sm" aria-pressed={!!reminders[selected.id]} title="Show again in the overlay when you open the file" onClick={() => { setReminder(selected.id, !reminders[selected.id]); toast(reminders[selected.id] ? "Reminder off" : "Reminder set") }}>
                         {reminders[selected.id] ? <BellOff /> : <Bell />}{reminders[selected.id] ? "Reminder on" : "Remind me when I open it"}
                       </Button>
                     )}
                     <Button variant="ghost" size="sm" onClick={() => setInboxRead(selected.id, isUnread(selected))}>
                       {isUnread(selected) ? <MailOpen /> : <Mail />}{isUnread(selected) ? "Mark read" : "Mark unread"}
                     </Button>
-                    <Button variant="outline" size="sm" title={isDone(selected) ? "Return this notification to your inbox" : "Clear this notification without changing the related work"} onClick={() => toggleDone(selected)}>
+                    <Button variant="outline" size="sm" title={isDone(selected) ? "Move back to Inbox" : "Clear without changing the work"} onClick={() => toggleDone(selected)}>
                       {isDone(selected) ? <RotateCcw /> : <Check />}{isDone(selected) ? "Move to inbox" : "Done"}
                     </Button>
                   </div>
@@ -151,12 +150,12 @@ export function Inbox() {
                       <div className="flex items-start gap-3">
                         <div className="min-w-0 flex-1">
                           <p className="text-sm font-medium">{task.title}</p>
-                          <p className="text-xs text-muted-foreground">Task for {PEOPLE[task.owner]?.name} · due {task.due}{task.tool ? ` · ${task.tool}` : ""}</p>
+                          <p className="text-xs text-muted-foreground">Due {task.due}{task.tool ? ` · ${task.tool}` : ""}</p>
                         </div>
                         <Button size="sm" variant={task.status === "done" ? "secondary" : "default"} onClick={() => {
                           const done = task.status !== "done"
                           patchTask(task.id, { status: done ? "done" : "todo" })
-                          if (done) toast("Task done", { description: "The work now shows as updated on the decision.", action: { label: "Undo", onClick: () => patchTask(task.id, { status: task.status }) } })
+                          if (done) toast("Task done", { action: { label: "Undo", onClick: () => patchTask(task.id, { status: task.status }) } })
                         }}><Check />{task.status === "done" ? "Done" : "Mark done"}</Button>
                       </div>
                       {task.prompt && (
@@ -164,8 +163,8 @@ export function Inbox() {
                           <p className="text-sm leading-relaxed">{task.prompt}</p>
                           <Button size="sm" variant="outline" onClick={() => {
                             try { void navigator.clipboard?.writeText(task.prompt!) } catch { /* clipboard blocked: the toast still explains */ }
-                            toast(`Prompt copied. Paste it into ${task.tool}.`)
-                          }}><Copy />Copy prompt for {task.tool}</Button>
+                            toast("Prompt copied")
+                          }}><Copy />Copy prompt</Button>
                         </div>
                       )}
                     </section>
@@ -209,7 +208,7 @@ export function Inbox() {
               </>
             ) : (
               <div className="flex flex-1 items-center justify-center p-6">
-                <Empty className="border-0"><EmptyHeader><EmptyMedia variant="icon"><InboxIcon /></EmptyMedia><EmptyTitle>Select an item</EmptyTitle><EmptyDescription>Only things that touch your work land here. The rest is in each project's Catch up.</EmptyDescription></EmptyHeader></Empty>
+                <Empty className="border-0"><EmptyHeader><EmptyMedia variant="icon"><InboxIcon /></EmptyMedia><EmptyTitle>Select an item</EmptyTitle></EmptyHeader></Empty>
               </div>
             )}
           </aside>

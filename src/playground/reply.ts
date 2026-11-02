@@ -16,20 +16,20 @@ export function reply(q: string, m: ChatContext): Msg {
   }
   if (t.includes("changed") || t.includes("new")) {
     const ds = m.decisions.filter(isNew)
-    return { who: "ai", text: `${ds.length} decisions came in since your last visit on Oct 20.`, refs: ds }
+    return { who: "ai", text: `${ds.length} new since your last visit.`, refs: ds }
   }
   if (t.includes("ai") || t.includes("confirm")) {
     const ds = m.decisions.filter(isAI)
-    return { who: "ai", text: `${ds.length} decisions were inferred by AI tools and need a person to confirm.`, refs: ds }
+    return { who: "ai", text: `${ds.length} need confirming.`, refs: ds }
   }
   if (t.includes("prototype") || t.includes("show")) {
     const as = m.artifacts.filter((a) => a.kind === "Prototype" || a.kind === "Figma")
-    return { who: "ai", text: "Here's the design work for this project.", arts: as }
+    return { who: "ai", text: "Here's the design work.", arts: as }
   }
   const words = t.split(/\W+/).filter((w) => w.length > 2 && !STOP.has(w))
   // Rank decisions by how many of the question's words they contain.
   const score = (d: Decision) => words.filter((w) => new RegExp(`\\b${w}`).test(`${d.title} ${d.why ?? ""}`.toLowerCase())).length
   const hit = m.decisions.filter((d) => score(d) > 0).sort((a, b) => score(b) - score(a))
   if (hit.length) return { who: "ai", text: hit[0].why ? `${hit[0].title}: ${hit[0].why}` : `Here's what I found.`, refs: hit.slice(0, 4) }
-  return { who: "ai", text: "I couldn't find a decision about that. Try asking what's open or what changed." }
+  return { who: "ai", text: "No decision found. Try “What's open?”" }
 }

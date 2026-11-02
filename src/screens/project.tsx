@@ -68,10 +68,7 @@ export function Project({ id, section: asked, sub }: { id: string; section: stri
     >
       {section === "tasks" ? (
         <div className="flex flex-col gap-6 p-8">
-          <div className="space-y-1">
-            <h1 className="text-2xl font-semibold tracking-tight">Tasks</h1>
-            <p className="text-sm text-muted-foreground">Everything to do in {project.name}. Yours also show in My tasks.</p>
-          </div>
+          <h1 className="text-2xl font-semibold tracking-tight">Tasks</h1>
           <TasksView tasks={TASKS.filter((t) => t.project === project.name)} defaultProject={project.name} />
         </div>
       ) : section === "decisions" ? (
@@ -108,10 +105,7 @@ function Meetings({ project, free, onUpgrade }: { project: Project; free: boolea
   return (
     <div className="flex min-w-0 flex-col gap-6 p-4 sm:p-8">
       <div className="flex flex-wrap items-end justify-between gap-4">
-        <div className="space-y-1">
-          <h1 className="text-2xl font-semibold tracking-tight">Meetings</h1>
-          <p className="text-sm text-muted-foreground">Meet with your team. Keep the decisions.</p>
-        </div>
+        <h1 className="text-2xl font-semibold tracking-tight">Meetings</h1>
         <div className="flex gap-2">
           <Button variant="outline" size="sm" onClick={() => toast("Schedule a meeting")}><CalendarPlus />Schedule</Button>
           <Button size="sm" onClick={start}><Radio />Start meeting{free && <ProBadge />}</Button>
@@ -166,7 +160,6 @@ function Meetings({ project, free, onUpgrade }: { project: Project; free: boolea
                 <EmptyHeader>
                   <EmptyMedia variant="icon">{key === "upcoming" ? <CalendarDays /> : <MonitorPlay />}</EmptyMedia>
                   <EmptyTitle>{key === "upcoming" ? "No upcoming meetings" : "No past meetings yet"}</EmptyTitle>
-                  <EmptyDescription>{key === "upcoming" ? "Start a meeting now or schedule time with your team." : "Past meetings and their summaries will appear here."}</EmptyDescription>
                 </EmptyHeader>
                 {key === "upcoming" && <EmptyContent><Button variant="outline" onClick={() => toast("Schedule a meeting")}><CalendarPlus />Schedule meeting</Button></EmptyContent>}
               </Empty>
@@ -212,10 +205,7 @@ function Meetings({ project, free, onUpgrade }: { project: Project; free: boolea
                     )}
                   </>
                 ) : (
-                  <div className="space-y-1">
-                    <div className="text-xs font-medium text-muted-foreground">Meeting details</div>
-                    <p className="text-sm">{summary.status === "Live" ? "Your team is working together on the shared canvas. Join to take part." : "A scheduled meeting with your team on a shared canvas."}</p>
-                  </div>
+                  summary.status === "Live" && <p className="text-sm">Your team is on the canvas now.</p>
                 )}
                 <div className="space-y-2">
                   <div className="text-xs font-medium text-muted-foreground">People</div>
@@ -247,7 +237,7 @@ function NoDecisions() {
     <Empty className="border border-dashed">
       <EmptyHeader>
         <EmptyTitle>No decisions yet</EmptyTitle>
-        <EmptyDescription>Connect an AI tool and work as usual. Decisions it picks up land here as inferred until someone confirms them.</EmptyDescription>
+        <EmptyDescription>Connect an AI tool to start capturing them.</EmptyDescription>
       </EmptyHeader>
       <EmptyContent>
         <Button variant="outline" onClick={() => navigate("/account/ai-tools")}>Connect an AI tool</Button>
@@ -282,7 +272,7 @@ function ProjectSettings({ project, tab }: { project: Project; tab: string }) {
             <Field>
               <FieldLabel htmlFor="ps-brief">Brief</FieldLabel>
               <Textarea id="ps-brief" defaultValue={project.brief} rows={3} />
-              <FieldDescription>Connected AI tools read this to know what the project is for.</FieldDescription>
+              <FieldDescription>AI tools read this.</FieldDescription>
             </Field>
             <Field>
               <FieldLabel htmlFor="ps-target">Target date</FieldLabel>
@@ -348,7 +338,6 @@ function ProjectSettings({ project, tab }: { project: Project; tab: string }) {
       )}
       {tab === "ai-tools" && (
         <div className="max-w-2xl space-y-2">
-          <p className="text-sm text-muted-foreground">Tools that capture decisions into {project.name}. Connect your own in My AI tools.</p>
           <ul className="divide-y rounded-lg border text-sm">
             {AI_TOOLS.map((t) => (
               <li key={t.id} className="flex items-center gap-3 px-3 py-2.5">

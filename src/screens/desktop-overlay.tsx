@@ -29,7 +29,7 @@ type Decision = {
   part: string
   session?: number
   // Something said or suggested that breaks a logged decision.
-  conflict?: { decision: string; note: string }
+  conflict?: { decision: string }
 }
 
 type Session = { id: number; project: string; part: string; state: "active" | "paused" | "ended" }
@@ -44,7 +44,7 @@ const INITIAL_DECISIONS: Decision[] = [
   { id: "o1", title: "The promo video runs 15 seconds", inferred: true, why: "Inferred: cats lose interest fast", project: "whiskr", part: "Marketing" },
   { id: "o2", title: "Open on Luna's real pounce", question: "Why open on the pounce?", options: ["Shows the idea in the first second", "Real footage feels honest"], project: "whiskr", part: "Marketing" },
   { id: "o3", title: "Pull visuals from our brand guidelines", why: "Blue and yellow, with the purring dot", project: "whiskr", part: "Marketing" },
-  { id: "o4", title: "End card in tuna red, like the old logo", conflict: { decision: "nored", note: "Claude suggested it from the old logo" }, project: "whiskr", part: "Marketing" },
+  { id: "o4", title: "End card in tuna red, like the old logo", conflict: { decision: "nored" }, project: "whiskr", part: "Marketing" },
 ]
 
 // What the AI pulled for the part you're saving to, and the file you have open there.
@@ -244,7 +244,7 @@ export function DesktopMode() {
                 </div>
                 <ul className="space-y-1.5">
                   {updates.map((t) => <UpdateRow key={t.id} title={DECISIONS.find((d) => d.id === t.decision)?.title ?? t.title} detail={`${t.tool} · due ${t.due}`} prompt={t.prompt} onDone={() => patchTask(t.id, { status: "done" })} />)}
-                  {reminded.map((i) => <UpdateRow key={i.id} title={i.summary} detail="You asked to be reminded here" />)}
+                  {reminded.map((i) => <UpdateRow key={i.id} title={i.summary} detail="Reminder" />)}
                 </ul>
               </section>
             </FadeIn>
@@ -301,8 +301,7 @@ export function DesktopMode() {
                 ))}
               </ul>
               <p className="text-[11px] leading-snug text-muted-foreground">
-                Reaches {reachedBy(where.project, where.part).map((p) => PEOPLE[p]?.name.split(" ")[0]).join(", ")}.{" "}
-                {Object.values(important).some(Boolean) ? "Important ones go to their Inbox." : "It waits in their Catch up unless you mark something important."}
+                Reaches {reachedBy(where.project, where.part).map((p) => PEOPLE[p]?.name.split(" ")[0]).join(", ")} · {Object.values(important).some(Boolean) ? "Inbox" : "Catch up"}
               </p>
               <Button size="sm" className="h-8 w-full text-xs" onClick={() => { setSession(null); setImportant({}); toast("Session saved") }}>Done</Button>
             </FadeIn>
@@ -344,7 +343,7 @@ function DecisionRow({ decision: d, onUpdate }: { decision: Decision; onUpdate: 
       <div className="min-w-0 flex-1">
         <p className="text-xs leading-snug">{d.title}</p>
         {broken && <FadeIn className="mt-1 space-y-1.5">
-          <p className="text-xs leading-relaxed text-muted-foreground">Breaks “{broken.title}” · {broken.by}, {broken.when}. {d.conflict!.note}.</p>
+          <p className="text-xs leading-relaxed text-muted-foreground">Breaks “{broken.title}” · {broken.by}</p>
           <div className="flex gap-1">
             <button className="rounded px-1.5 py-1 text-xs text-foreground hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring" onClick={() => fold(null)}>Keep the decision</button>
             <button className="rounded px-1.5 py-1 text-xs text-muted-foreground hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring" onClick={() => { toast(`${broken.by} will see you want to reopen it`); fold(null) }}>Ask to reopen</button>

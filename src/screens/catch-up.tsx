@@ -96,8 +96,8 @@ function Briefing({ project }: { project: Project }) {
     <div className="space-y-8">
       <header className="space-y-3">
         <div className="flex items-center gap-2">
-          <p className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground"><Sparkles className="size-3.5" />Since you were last here</p>
-          <Button variant="ghost" size="sm" className="ml-auto h-7 text-xs text-muted-foreground" onClick={() => copy(update, "Update copied. Paste it wherever you report.")}><ClipboardCopy />Copy as update</Button>
+          <p className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground"><Sparkles className="size-3.5" />Since your last visit</p>
+          <Button variant="ghost" size="sm" className="ml-auto h-7 text-xs text-muted-foreground" onClick={() => copy(update, "Update copied")}><ClipboardCopy />Copy as update</Button>
         </div>
         <p className="leading-relaxed">{summary}</p>
         {changed.decisions.length > 0 && (
@@ -111,7 +111,7 @@ function Briefing({ project }: { project: Project }) {
 
       <WeekStrip project={project} />
       <NeedsYouBlock project={project} />
-      <WhatChanged project={project} decisions={changed.decisions} artifacts={changed.artifacts} />
+      <WhatChanged decisions={changed.decisions} artifacts={changed.artifacts} />
       <WhoIsWorking project={project} />
     </div>
   )
@@ -172,7 +172,7 @@ function WeekStrip({ project }: { project: Project }) {
                         </button>
                       ))}
                 </div>
-                <p className="mt-auto text-[11px] leading-snug text-muted-foreground">{future ? "" : DAY_INSIGHT[project.id]?.[day] ?? (ds.length ? `${ds.length} ${ds.length === 1 ? "decision" : "decisions"}` : "Quiet")}</p>
+                <p className="mt-auto text-[11px] leading-snug text-muted-foreground">{future ? "" : DAY_INSIGHT[project.id]?.[day] ?? (ds.length ? `${ds.length} ${ds.length === 1 ? "decision" : "decisions"}` : "")}</p>
               </li>
             )
           })}
@@ -194,7 +194,7 @@ function NeedsYouBlock({ project }: { project: Project }) {
           {decide.length > 0 && <div className="space-y-1.5"><p className="text-[11px] text-muted-foreground">Decide</p>{decide.map((item) => <NeedsYouCard key={item.id} item={item} project={project} />)}</div>}
           {doing.length > 0 && <div className="space-y-1.5"><p className="text-[11px] text-muted-foreground">Do</p>{doing.map((item) => <NeedsYouCard key={item.id} item={item} project={project} />)}</div>}
         </div>
-      ) : <p className="text-sm text-muted-foreground">Nothing waits on you.</p>}
+      ) : <p className="text-sm text-muted-foreground">All clear.</p>}
     </Block>
   )
 }
@@ -205,7 +205,7 @@ function NeedsYouCard({ item, project }: { item: NeedsYou; project: Project }) {
 
   if (item.kind === "decide") {
     const d = item.decision
-    const ask = { confirm: `Confirm the reason · ${d.why ?? "No reason recorded"}`, review: `Review · ${d.by ?? PEOPLE[d.owner]?.name} · ${d.part}`, answer: `Decide${d.due ? ` by ${d.due}` : ""} · ${d.part}` }[item.ask]
+    const ask = { confirm: d.why ?? "No reason yet", review: `${d.by ?? PEOPLE[d.owner]?.name} · ${d.part}`, answer: d.due ? `Due ${d.due}` : d.part }[item.ask]
     return (
       <div className={row}>
         <StatusIcon status={d.status} className="size-4 shrink-0 text-muted-foreground" />
@@ -224,23 +224,23 @@ function NeedsYouCard({ item, project }: { item: NeedsYou; project: Project }) {
   const t = item.task
   const finish = () => {
     patchTask(t.id, { status: "done" })
-    toast("Task done", { description: t.prompt ? "The work now shows as updated on the decision." : undefined, action: { label: "Undo", onClick: () => patchTask(t.id, { status: t.status }) } })
+    toast("Task done", { action: { label: "Undo", onClick: () => patchTask(t.id, { status: t.status }) } })
   }
   return (
     <div className={row}>
       <TaskStatusIcon status={t.status} />
       <button onClick={() => (t.decision ? openDecision(t.decision) : navigate(`/p/${project.id}/tasks`))} className="min-w-0 flex-1 text-left">
         <span className="block truncate text-sm hover:underline">{t.title}</span>
-        <span className="block truncate text-xs text-muted-foreground">{t.prompt ? `Update · ${t.tool} · ` : ""}Due {t.due}</span>
+        <span className="block truncate text-xs text-muted-foreground">{t.prompt ? `${t.tool} · ` : ""}Due {t.due}</span>
       </button>
-      {t.prompt && <Button size="sm" variant="ghost" className="text-muted-foreground" title={t.prompt} onClick={() => copy(t.prompt!, `Prompt copied. Paste it into ${t.tool}.`)}><Copy />Prompt</Button>}
+      {t.prompt && <Button size="sm" variant="ghost" className="text-muted-foreground" title={t.prompt} onClick={() => copy(t.prompt!, "Prompt copied")}><Copy />Copy prompt</Button>}
       <Button size="sm" variant="outline" onClick={finish}><Check />Done</Button>
     </div>
   )
 }
 
 // What changed, split by the Inbox rule: decisions and work that touch yours open by default.
-function WhatChanged({ project, decisions, artifacts }: { project: Project; decisions: Decision[]; artifacts: Artifact[] }) {
+function WhatChanged({ decisions, artifacts }: { decisions: Decision[]; artifacts: Artifact[] }) {
   const [elsewhereOpen, setElsewhereOpen] = useState(false)
   const mine = decisions.filter(touchesMe)
   const others = decisions.filter((d) => !touchesMe(d))
@@ -254,13 +254,13 @@ function WhatChanged({ project, decisions, artifacts }: { project: Project; deci
           <p className="text-[11px] text-muted-foreground">Touches your work</p>
           {mine.length || myWork.length ? (
             <ChangeList decisions={mine} artifacts={myWork} />
-          ) : <p className="text-sm text-muted-foreground">Nothing new touches your work.</p>}
+          ) : <p className="text-sm text-muted-foreground">Nothing new for you.</p>}
         </div>
         {(others.length > 0 || otherWork.length > 0) && (
           <div className="px-3 py-2">
             <button aria-expanded={elsewhereOpen} onClick={() => setElsewhereOpen((o) => !o)} className="flex w-full items-center gap-1.5 text-left text-[11px] text-muted-foreground hover:text-foreground">
               <ChevronRight className={cn("size-3 transition-transform duration-200 motion-reduce:transition-none", elsewhereOpen && "rotate-90")} />
-              Elsewhere in {project.name} <span className="tabular-nums">{others.length + otherWork.length}</span>
+              Elsewhere <span className="tabular-nums">{others.length + otherWork.length}</span>
             </button>
             <div className={cn("grid transition-[grid-template-rows,opacity] duration-300 motion-reduce:transition-none", elsewhereOpen ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0")} inert={!elsewhereOpen}>
               <div className="min-h-0 overflow-hidden"><div className="space-y-1.5 pt-2"><ChangeList decisions={others} artifacts={otherWork} /></div></div>
@@ -325,12 +325,11 @@ function NewHere({ project }: { project: Project }) {
   return (
     <div className="space-y-8">
       <header className="space-y-3">
-        <p className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground"><Sparkles className="size-3.5" />New here</p>
         <h1 className="text-2xl font-semibold tracking-tight">Welcome to {project.name}</h1>
         <p className="leading-relaxed">{PROJECT_DECISION_SUMMARY[project.id] ?? project.brief}</p>
         {milestone && <p className="text-xs text-muted-foreground">{milestone}</p>}
       </header>
-      <Block title="Decisions that shaped this project" count={shaped.length}>
+      <Block title="Key decisions" count={shaped.length}>
         {shaped.length ? (
           <ol className="divide-y rounded-lg border">
             {shaped.map((d, i) => (
@@ -347,7 +346,7 @@ function NewHere({ project }: { project: Project }) {
               </li>
             ))}
           </ol>
-        ) : <p className="text-sm text-muted-foreground">Nothing has shaped the project yet.</p>}
+        ) : <p className="text-sm text-muted-foreground">No decisions yet.</p>}
       </Block>
       <WhoIsWorking project={project} />
     </div>

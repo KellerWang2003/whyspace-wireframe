@@ -59,7 +59,7 @@ export function ProjectDecisions({ project }: { project: Project; selectedId?: s
   return <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto">
     <div className="space-y-5 p-6 sm:p-8">
       <header className="flex flex-wrap items-end justify-between gap-3">
-        <div><h1 className="text-2xl font-semibold tracking-tight">Decisions</h1><p className="mt-1 text-sm text-muted-foreground">Every decision in {project.name}. Ask Whyspace on the right to narrow it down.</p></div>
+        <h1 className="text-2xl font-semibold tracking-tight">Decisions</h1>
       </header>
       <div className="flex flex-wrap gap-1.5" role="group" aria-label="Saved views">
         {VIEWS.map(([id, label]) => <Button key={id} size="sm" variant={view === id ? 'secondary' : 'ghost'} className={cn('h-7 rounded-full text-xs', view !== id && 'text-muted-foreground')} aria-pressed={view === id} onClick={() => setView(id)}>{label}</Button>)}
@@ -87,7 +87,7 @@ export function ProjectDecisions({ project }: { project: Project; selectedId?: s
             <TableCell className="pr-4 text-xs">{reach.length ? <span className="flex items-center gap-1.5"><span className="tabular-nums">{reach.length}</span>{pending > 0 && <Badge variant="outline" className="font-normal">{pending} {pending === 1 ? 'needs' : 'need'} update</Badge>}</span> : <span className="text-muted-foreground">—</span>}</TableCell>
           </TableRow>
         })}
-        {!rows.length && <TableRow><TableCell colSpan={6} className="py-12 text-center text-sm text-muted-foreground">No decisions match. Try another view or clear the filters.</TableCell></TableRow>}
+        {!rows.length && <TableRow><TableCell colSpan={6} className="py-12 text-center text-sm text-muted-foreground">No matches.</TableCell></TableRow>}
       </TableBody></Table></div>
     </div>
   </div>

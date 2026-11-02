@@ -261,14 +261,13 @@ function TaskSheet({ task: t, onClose, onChange }: { task?: Task; onClose: () =>
               {t.prompt && (
                 <div className="space-y-2 rounded-lg border bg-muted/30 p-3">
                   <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
-                    Ready prompt for {t.tool}
+                    Prompt for {t.tool}
                     <Button size="sm" variant="outline" className="ml-auto h-7" onClick={() => {
                       try { void navigator.clipboard?.writeText(t.prompt!) } catch { /* clipboard blocked: the toast still explains */ }
-                      toast(`Prompt copied. Paste it into ${t.tool}.`)
+                      toast("Prompt copied")
                     }}><Copy />Copy</Button>
                   </div>
                   <p className="text-sm leading-relaxed">{t.prompt}</p>
-                  <p className="text-xs text-muted-foreground">Marking this done marks the work updated on the decision.</p>
                 </div>
               )}
 
@@ -342,7 +341,7 @@ function NewTaskDialog({ open, onOpenChange, defaultProject, onCreate }: { open:
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>New task</DialogTitle>
-          <DialogDescription>Link it to a decision so whoever picks it up knows why.</DialogDescription>
+          <DialogDescription className="sr-only">Add a task, optionally linked to a decision.</DialogDescription>
         </DialogHeader>
         <FieldGroup>
           <Field>

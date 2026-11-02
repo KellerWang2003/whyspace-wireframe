@@ -1,7 +1,7 @@
 import { FolderKanban, Plus, Sparkles } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
-import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty"
+import { Empty, EmptyContent, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty"
 import { AppShell, PageHeader } from "@/components/app/app-shell"
 import { MY_PROJECTS, WEEK_SUMMARY, nextMilestone, type Project } from "@/data"
 import { useNeedsYou } from "@/lib/work"
@@ -9,7 +9,7 @@ import { useStore } from "@/lib/store"
 
 function ProjectCard({ project }: { project: Project }) {
   const ask = `#/p/${project.id}/catch-up`
-  const summary = WEEK_SUMMARY[project.id]?.match(/^.*?[.!?](\s|$)/)?.[0].trim() ?? "Updates will appear here as work gets underway."
+  const summary = WEEK_SUMMARY[project.id]?.match(/^.*?[.!?](\s|$)/)?.[0].trim() ?? "No updates yet."
   const waiting = useNeedsYou(project.id).length
   const next = nextMilestone(project.id)
   const cover = { whiskr: "whiskr", studio: "recall" }[project.id]
@@ -26,7 +26,7 @@ function ProjectCard({ project }: { project: Project }) {
         </div>
         <p className="flex gap-1.5 text-sm leading-relaxed text-muted-foreground"><Sparkles className="mt-1 size-3 shrink-0" />{summary}</p>
         <div className="flex items-center justify-between gap-3 border-t pt-3 text-xs">
-          <a href={ask} className={waiting ? "font-medium hover:underline" : "text-muted-foreground"}>{waiting ? `${waiting} ${waiting === 1 ? "thing needs" : "things need"} you` : "Nothing needs you"}</a>
+          <a href={ask} className={waiting ? "font-medium hover:underline" : "text-muted-foreground"}>{waiting ? `${waiting} need you` : "All clear"}</a>
           {next && <span className="text-muted-foreground">Next: {next.name} · {next.date}</span>}
         </div>
       </div>
@@ -41,13 +41,12 @@ export function Projects() {
   return (
     <AppShell crumbs={[{ label: current?.name ?? "" }, { label: "All projects" }]}>
       <div className="flex flex-1 flex-col gap-6 p-4 md:p-8">
-        <PageHeader title="All projects" description={`The latest work and decisions across ${current?.name}.`} actions={<Button size="sm" onClick={() => setNewProjectOpen(true)}><Plus />New project</Button>} />
+        <PageHeader title="All projects" actions={<Button size="sm" onClick={() => setNewProjectOpen(true)}><Plus />New project</Button>} />
         {projects.length === 0 ? (
           <Empty className="flex-1 border border-dashed">
             <EmptyHeader>
               <EmptyMedia variant="icon"><FolderKanban /></EmptyMedia>
               <EmptyTitle>No projects yet</EmptyTitle>
-              <EmptyDescription>Create a project to start bringing your team's work and decisions together.</EmptyDescription>
             </EmptyHeader>
             <EmptyContent><Button onClick={() => setNewProjectOpen(true)}><Plus />New project</Button></EmptyContent>
           </Empty>
