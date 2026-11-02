@@ -1324,8 +1324,9 @@ export function reachOf(decisionId: string, tasks: Task[] = TASKS) {
   })
 }
 
-// Every decision, including ones a later decision replaced (for "What it replaced").
-export const decisionById = (id?: string) => ALL_DECISIONS.find((d) => d.id === id)
+// A decision as of this stage, or one that a current decision replaced (for "What it replaced").
+export const decisionById = (id?: string) =>
+  DECISIONS.find((d) => d.id === id) ?? ALL_DECISIONS.find((d) => d.id === id && DECISIONS.some((x) => x.replaces === id))
 
 // Decisions each viewer follows without leading the part or owning the work.
 const FOLLOWING: Record<string, string[]> = { CH: ["nored", "short", "dotbrand"], MC: ["dotbrand"], KL: ["nored"], TR: ["pounce"] }
