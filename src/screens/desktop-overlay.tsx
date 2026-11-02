@@ -1,5 +1,6 @@
 import { useLayoutEffect, useRef, useState } from "react"
-import { AudioLines, Check, ChevronDown, Mic, Pause, Play, Square, X } from "lucide-react"
+import { AudioLines, Check, ChevronDown, Copy, FileText, Mic, Pause, Play, Square, Star, X } from "lucide-react"
+import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -12,7 +13,9 @@ import {
 import { Input } from "@/components/ui/input"
 import { ProjectMark } from "@/components/app/project-mark"
 import { StatusIcon } from "@/components/app/status-badge"
-import { PROJECTS } from "@/data"
+import { ARTIFACTS, DECISIONS, INBOX, PEOPLE, PROJECTS, reachOf } from "@/data"
+import { useStore } from "@/lib/store"
+import { useTasks } from "@/lib/work"
 import { cn } from "@/lib/utils"
 
 type Decision = {
@@ -25,6 +28,8 @@ type Decision = {
   project: string
   part: string
   session?: number
+  // Something said or suggested that breaks a logged decision.
+  conflict?: { decision: string; note: string }
 }
 
 type Session = { id: number; project: string; part: string; state: "active" | "paused" | "ended" }
@@ -39,7 +44,27 @@ const INITIAL_DECISIONS: Decision[] = [
   { id: "o1", title: "The promo video runs 15 seconds", inferred: true, why: "Inferred: cats lose interest fast", project: "whiskr", part: "Marketing" },
   { id: "o2", title: "Open on Luna's real pounce", question: "Why open on the pounce?", options: ["Shows the idea in the first second", "Real footage feels honest"], project: "whiskr", part: "Marketing" },
   { id: "o3", title: "Pull visuals from our brand guidelines", why: "Blue and yellow, with the purring dot", project: "whiskr", part: "Marketing" },
+  { id: "o4", title: "End card in tuna red, like the old logo", conflict: { decision: "nored", note: "Claude suggested it from the old logo" }, project: "whiskr", part: "Marketing" },
 ]
+
+// What the AI pulled for the part you're saving to, and the file you have open there.
+const CONTEXT: Record<string, { using: string; file?: string }> = {
+  "whiskr/Marketing": { using: "Brand guidelines", file: "w6" },
+  "whiskr/App": { using: "Brand guidelines", file: "w5" },
+  "whiskr/Brand": { using: "Cat vision research", file: "w1" },
+  "whiskr/Research": { using: "Cat test footage", file: "w3" },
+  "studio/Prototype": { using: "Recall · project brief", file: "a15" },
+  "studio/Concept": { using: "Recall · research themes", file: "a13" },
+  "studio/Interviews": { using: "Recall · classmate interviews", file: "a11" },
+  "studio/Final crit": { using: "Recall · critique outline", file: "a17" },
+}
+
+// Who an end-of-session summary reaches: owners of the work it touches and the part's lead.
+function reachedBy(project: string, part: string) {
+  const owners = ARTIFACTS.filter((a) => a.project === project && a.part !== part).map((a) => a.owner)
+  const lead = DECISIONS.find((d) => d.project === project && d.part === part)?.owner
+  return [...new Set([lead, ...owners])].filter((p): p is string => !!p && p !== "MC").slice(0, 3)
+}
 
 // Motion: nothing in the overlay jumps. The box morphs between the pill and the panel
 // (FLIP on width and height), content fades in after it, sections slide open, and rows
@@ -88,9 +113,20 @@ export function DesktopMode() {
   const expanded = hovered || keyboardFocus || menuOpen
   const running = session?.state === "active" || session?.state === "paused"
   const projectName = PROJECTS.find((p) => p.id === where.project)?.name
-  const visible = decisions.filter((d) => d.project === where.project && d.part === where.part)
-  const needsAttention = visible.filter((d) => d.inferred || (d.question && !d.why))
-  const confirmed = visible.filter((d) => !d.inferred && !(d.question && !d.why))
+  // Conflicts only show once the decision they break exists at this stage.
+  const visible = decisions.filter((d) => d.project === where.project && d.part === where.part && (!d.conflict || DECISIONS.some((x) => x.id === d.conflict!.decision)))
+  // Conflicts come first: they break something the team already decided.
+  const needsAttention = visible.filter((d) => d.conflict || d.inferred || (d.question && !d.why)).sort((a, b) => Number(!!b.conflict) - Number(!!a.conflict))
+  const confirmed = visible.filter((d) => !d.conflict && !d.inferred && !(d.question && !d.why))
+  const context = CONTEXT[`${where.project}/${where.part}`]
+  const partDecisions = DECISIONS.filter((d) => d.project === where.project && d.part === where.part).length
+  const openFile = ARTIFACTS.find((a) => a.id === context?.file)
+  const tasks = useTasks()
+  const { reminders, patchTask } = useStore()
+  // Updates for the open file: pending update tasks from decisions that reach it, plus Inbox items you asked to be reminded of.
+  const updates = openFile ? [...new Set(DECISIONS.flatMap((d) => reachOf(d.id, tasks).filter((r) => r.artifact.id === openFile.id && r.needsUpdate).map((r) => r.task!)))] : []
+  const reminded = openFile ? INBOX.filter((i) => reminders[i.id] && i.relatedArtifacts.some((r) => r.id === openFile.id) && !updates.some((t) => t.id === i.task)) : []
+  const [important, setImportant] = useState<Record<string, boolean>>({})
 
   // Open at once, close after a beat so brushing past the edge doesn't flicker.
   function setHovered(on: boolean) {
@@ -190,7 +226,29 @@ export function DesktopMode() {
           </DropdownMenu>
         </header>
 
+        {context && (
+          <FadeIn key={`${where.project}/${where.part}`} className="flex items-center gap-1.5 border-b px-4 py-2 text-[11px] text-muted-foreground">
+            <span className="shrink-0">Using</span>
+            <span className="truncate text-foreground">{context.using}{context.using === "Brand guidelines" && ARTIFACTS.find((a) => a.id === "w1")?.version ? ` ${ARTIFACTS.find((a) => a.id === "w1")!.version}` : ""}</span>
+            <span className="shrink-0">· {partDecisions} {partDecisions === 1 ? "decision" : "decisions"}</span>
+          </FadeIn>
+        )}
+
         <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
+          {openFile && (updates.length > 0 || reminded.length > 0) && (
+            <FadeIn key={openFile.id}>
+              <section aria-label="Updates for the file you have open" className="border-b px-3 py-3">
+                <div className="mb-2 flex items-center gap-1.5 px-1 text-xs">
+                  <FileText className="size-3.5 text-muted-foreground" />
+                  <h2 className="min-w-0 flex-1 truncate font-medium">Updates for {openFile.name}</h2>
+                </div>
+                <ul className="space-y-1.5">
+                  {updates.map((t) => <UpdateRow key={t.id} title={DECISIONS.find((d) => d.id === t.decision)?.title ?? t.title} detail={`${t.tool} · due ${t.due}`} prompt={t.prompt} onDone={() => patchTask(t.id, { status: "done" })} />)}
+                  {reminded.map((i) => <UpdateRow key={i.id} title={i.summary} detail="You asked to be reminded here" />)}
+                </ul>
+              </section>
+            </FadeIn>
+          )}
           <section aria-label="Open decisions" className="min-h-[240px] shrink-0 px-3 py-3">
             <div className="mb-3 flex items-center justify-between px-1">
               <h2 className="text-xs font-medium">Open</h2>
@@ -229,7 +287,26 @@ export function DesktopMode() {
         </div>
 
         <footer className="shrink-0 px-3 pb-3">
-          {running ? (
+          {session?.state === "ended" ? (
+            <FadeIn key="summary" className="space-y-2 rounded-lg border bg-background/60 p-3">
+              <p className="text-xs font-medium">Session summary · {visible.filter((d) => !d.conflict).length} decisions</p>
+              <ul className="space-y-1">
+                {visible.filter((d) => !d.conflict).map((d) => (
+                  <li key={d.id} className="flex items-start gap-1.5 text-xs">
+                    <span className="min-w-0 flex-1 leading-snug">{d.title}</span>
+                    <button aria-pressed={!!important[d.id]} title={important[d.id] ? "Marked as important" : "Mark as important"} aria-label={`Mark as important: ${d.title}`} className={cn("rounded-sm p-0.5 transition-colors duration-200 hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring", important[d.id] ? "text-foreground" : "text-muted-foreground")} onClick={() => setImportant((m) => ({ ...m, [d.id]: !m[d.id] }))}>
+                      <Star className={cn("size-3.5 transition-[fill] duration-200", important[d.id] && "fill-current")} />
+                    </button>
+                  </li>
+                ))}
+              </ul>
+              <p className="text-[11px] leading-snug text-muted-foreground">
+                Reaches {reachedBy(where.project, where.part).map((p) => PEOPLE[p]?.name.split(" ")[0]).join(", ")}.{" "}
+                {Object.values(important).some(Boolean) ? "Important ones go to their Inbox." : "It waits in their Catch up unless you mark something important."}
+              </p>
+              <Button size="sm" className="h-8 w-full text-xs" onClick={() => { setSession(null); setImportant({}); toast("Session saved") }}>Done</Button>
+            </FadeIn>
+          ) : running ? (
             <FadeIn key="live" className="flex h-9 items-center gap-2 rounded-lg border bg-background/50 px-2">
               <Mic className="size-3.5 text-muted-foreground" />
               <FadeIn role="status" key={session.state} className="flex-1 text-xs font-medium">{session.state === "paused" ? "Paused" : "Live"}</FadeIn>
@@ -259,12 +336,20 @@ function DecisionRow({ decision: d, onUpdate }: { decision: Decision; onUpdate: 
   const [why, setWhy] = useState("")
   const needsReason = Boolean(d.question && !d.why)
   const needsAttention = d.inferred || needsReason
-  const status = d.inferred ? "Suggested decision · needs review" : needsReason ? "Decision needs a reason" : "Confirmed decision"
+  const broken = d.conflict ? DECISIONS.find((x) => x.id === d.conflict!.decision) : undefined
+  const status = broken ? "Breaks a logged decision" : d.inferred ? "Suggested decision · needs review" : needsReason ? "Decision needs a reason" : "Confirmed decision"
   return (
     <li ref={rowRef} className={cn("group flex items-start gap-2 overflow-hidden rounded-md px-2 py-2 transition-colors duration-300", needsAttention ? "bg-muted/60" : "text-muted-foreground")}>
-      <span title={status} className={cn("mt-0.5", needsAttention ? "text-foreground" : "text-muted-foreground")}><StatusIcon status={d.inferred ? "inf" : needsReason ? "open" : "conf"} className="size-3.5 shrink-0" /><span className="sr-only">{status}</span></span>
+      <span title={status} className={cn("mt-0.5", needsAttention ? "text-foreground" : "text-muted-foreground")}><StatusIcon status={broken ? "flag" : d.inferred ? "inf" : needsReason ? "open" : "conf"} className="size-3.5 shrink-0" /><span className="sr-only">{status}</span></span>
       <div className="min-w-0 flex-1">
         <p className="text-xs leading-snug">{d.title}</p>
+        {broken && <FadeIn className="mt-1 space-y-1.5">
+          <p className="text-xs leading-relaxed text-muted-foreground">Breaks “{broken.title}” · {broken.by}, {broken.when}. {d.conflict!.note}.</p>
+          <div className="flex gap-1">
+            <button className="rounded px-1.5 py-1 text-xs text-foreground hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring" onClick={() => fold(null)}>Keep the decision</button>
+            <button className="rounded px-1.5 py-1 text-xs text-muted-foreground hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring" onClick={() => { toast(`${broken.by} will see you want to reopen it`); fold(null) }}>Ask to reopen</button>
+          </div>
+        </FadeIn>}
         {d.why && <FadeIn className="mt-1 text-xs leading-relaxed text-muted-foreground">{d.why}</FadeIn>}
         {d.inferred && <button className="mt-1 rounded-sm text-xs text-muted-foreground hover:underline focus-visible:ring-2 focus-visible:ring-ring" onClick={() => fold({ inferred: false })}>Confirm</button>}
         {needsReason && !answering && <div className="group/reason mt-1">
@@ -284,6 +369,24 @@ function DecisionRow({ decision: d, onUpdate }: { decision: Decision; onUpdate: 
         </form></FadeIn>}
       </div>
       <button aria-label={`Remove decision: ${d.title}`} className="mt-0.5 rounded-sm text-muted-foreground opacity-0 transition-opacity duration-200 hover:text-foreground focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-ring group-hover:opacity-100 [@media(hover:none)]:opacity-100" onClick={() => fold(null)}><X className="size-3" /></button>
+    </li>
+  )
+}
+
+// One update for the open file: copy its prompt, or mark it done (it folds away).
+function UpdateRow({ title, detail, prompt, onDone }: { title: string; detail: string; prompt?: string; onDone?: () => void }) {
+  const rowRef = useFadeIn<HTMLLIElement>()
+  return (
+    <li ref={rowRef} className="overflow-hidden rounded-md bg-muted/60 px-2 py-2">
+      <p className="text-xs leading-snug">{title}</p>
+      <p className="mt-0.5 text-[11px] text-muted-foreground">{detail}</p>
+      {(prompt || onDone) && <div className="mt-1 flex gap-1">
+        {prompt && <button className="flex items-center gap-1 rounded px-1.5 py-1 text-xs hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring" onClick={() => {
+          try { void navigator.clipboard?.writeText(prompt) } catch { /* clipboard blocked: the toast still explains */ }
+          toast("Prompt copied")
+        }}><Copy className="size-3" />Copy prompt</button>}
+        {onDone && <button className="flex items-center gap-1 rounded px-1.5 py-1 text-xs text-muted-foreground hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring" onClick={() => foldAway(rowRef.current, onDone)}><Check className="size-3" />Done</button>}
+      </div>}
     </li>
   )
 }
