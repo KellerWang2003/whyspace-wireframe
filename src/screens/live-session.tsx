@@ -20,6 +20,7 @@ import {
 } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Separator } from "@/components/ui/separator"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
@@ -33,7 +34,8 @@ import { cn } from "@/lib/utils"
 // A live session is a shared canvas (think FigJam) with the call running alongside.
 // Whyspace listens, with everyone's consent, and pulls decisions out as people talk.
 // Two options sit side by side so the group can compare and pick; the one not picked
-// goes to the idea archive instead of disappearing.
+// goes to the idea archive instead of disappearing. Speech shows as live captions only:
+// nothing is transcribed or saved, just the decisions and ideas. Wrap-up gives each person their next steps.
 
 type Sticky = { id: string; x: number; y: number; text: string; by: string; shade: 0 | 1 | 2 }
 type Line = { who: string; at: string; text: string; decision?: string }
@@ -54,6 +56,17 @@ const LIVE_LINES: Line[] = [
 
 const SHADES = ["bg-neutral-100", "bg-neutral-200", "bg-neutral-300"]
 
+const NEXT_STEPS: Record<string, { who: string; text: string }[]> = {
+  whiskr: [
+    { who: "KL", text: "Build the moving dot into the swipe card" },
+    { who: "TR", text: "Check the 25 Hz purr with a second cat" },
+  ],
+  studio: [
+    { who: "JK", text: "Return a reason code for rejected questions" },
+    { who: "MC", text: "Design the missing-source retry state" },
+  ],
+}
+
 export function LiveSession({ id, sessionId }: { id: string; sessionId?: string }) {
   const project = PROJECTS.find((p) => p.id === id) ?? PROJECTS[0]
   const session = SESSIONS.find((s) => s.id === sessionId) ?? SESSIONS.find((s) => s.project === project.id && s.status === "Live") ?? {
@@ -73,6 +86,7 @@ export function LiveSession({ id, sessionId }: { id: string; sessionId?: string 
   const [lines, setLines] = useState<Line[]>(script)
   const [speaking, setSpeaking] = useState(studio ? "JK" : "TR")
   const [muted, setMuted] = useState(false)
+  const [wrapping, setWrapping] = useState(false)
   const [tool, setTool] = useState("select")
   const [zoom, setZoom] = useState(1)
   const [pan, setPan] = useState({ x: 20, y: 10 })
@@ -146,13 +160,14 @@ export function LiveSession({ id, sessionId }: { id: string; sessionId?: string 
             {muted ? <MicOff /> : <Mic />}
             <span className="sr-only">{muted ? "Unmute" : "Mute"}</span>
           </Button>
-          <Button size="sm" onClick={() => { toast("Meeting ended", { description: "Summary and decisions saved to the project." }); navigate(`/p/${project.id}/decisions`) }}>
+          <Button size="sm" onClick={() => setWrapping(true)}>
             End meeting
           </Button>
         </div>
       </header>
 
-      <div className="flex min-h-0 flex-1">
+      <div className="relative flex min-h-0 flex-1">
+        <Captions lines={lines} speaking={speaking} />
         <Canvas
           studio={studio}
           zoom={zoom}
@@ -167,17 +182,13 @@ export function LiveSession({ id, sessionId }: { id: string; sessionId?: string 
 
         {/* Right panel: what's being said, and what Whyspace caught from it */}
         <aside className="flex w-[360px] shrink-0 flex-col border-l">
-          <Tabs defaultValue="transcript" className="flex min-h-0 flex-1 flex-col gap-0">
+          <Tabs defaultValue="decisions" className="flex min-h-0 flex-1 flex-col gap-0">
             <div className="border-b p-3">
               <TabsList className="w-full">
-                <TabsTrigger value="transcript">Transcript</TabsTrigger>
-                <TabsTrigger value="decisions">Decisions · {caught.length}</TabsTrigger>
+                <TabsTrigger value="decisions">Decisions caught · {caught.length}</TabsTrigger>
                 <TabsTrigger value="ideas">Ideas</TabsTrigger>
               </TabsList>
             </div>
-            <TabsContent value="transcript" className="min-h-0 flex-1">
-              <Transcript lines={lines} speaking={speaking} />
-            </TabsContent>
             <TabsContent value="decisions" className="min-h-0 flex-1">
               <div className="h-full overflow-y-auto">
                 <div className="flex flex-col gap-3 p-4">
@@ -228,6 +239,36 @@ export function LiveSession({ id, sessionId }: { id: string; sessionId?: string 
         </aside>
       </div>
 
+      {/* Wrap-up: what was decided, and each person's next steps. */}
+      <Dialog open={wrapping} onOpenChange={setWrapping}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Wrap up {session.title}</DialogTitle>
+            <DialogDescription>Saved to {project.name}: the decisions and the next steps. No transcript is kept.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-1.5">
+              <p className="text-xs font-medium text-muted-foreground">Decisions · {caught.length}</p>
+              {caught.map((c) => (
+                <div key={c.id} className="flex items-center gap-2 text-sm"><StatusBadge status={c.status} /><span className="truncate">{c.title}</span></div>
+              ))}
+              {caught.some((c) => c.status === "inf") && <p className="text-xs text-muted-foreground">Unconfirmed ones stay inferred until someone confirms them.</p>}
+            </div>
+            <div className="space-y-2">
+              <p className="text-xs font-medium text-muted-foreground">Next steps</p>
+              {(NEXT_STEPS[project.id] ?? []).map((n) => (
+                <div key={n.who} className="flex items-center gap-2.5 text-sm"><PersonAvatar id={n.who} /><span className="w-16 shrink-0 font-medium">{PEOPLE[n.who].name.split(" ")[0]}</span><span>{n.text}</span></div>
+              ))}
+              <p className="text-xs text-muted-foreground">Each one lands in that person's tasks.</p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setWrapping(false)}>Keep going</Button>
+            <Button onClick={() => { toast("Meeting ended", { description: "Decisions and next steps saved to the project." }); navigate(`/p/${project.id}/sessions`) }}>End and save</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Floating canvas toolbar */}
       <div className="pointer-events-none fixed bottom-5 left-[calc(50%-180px)] flex -translate-x-1/2 items-center gap-2">
         <div className="pointer-events-auto flex items-center gap-1 rounded-xl border bg-background p-1 shadow-lg">
@@ -270,38 +311,25 @@ export function LiveSession({ id, sessionId }: { id: string; sessionId?: string 
   )
 }
 
-function Transcript({ lines, speaking }: { lines: Line[]; speaking: string }) {
-  const end = useRef<HTMLDivElement>(null)
-  useEffect(() => {
-    end.current?.scrollIntoView({ behavior: "smooth" })
-  }, [lines.length])
+// Live captions over the canvas: the last couple of lines, gone once they scroll off. Never saved.
+function Captions({ lines, speaking }: { lines: Line[]; speaking: string }) {
+  const recent = lines.slice(-2)
   return (
-    <div className="h-full overflow-y-auto">
-      <div className="flex flex-col gap-4 p-4">
-        {lines.map((l, i) => (
-          <div key={i} className="flex gap-3 text-sm">
-            <PersonAvatar id={l.who} className="size-7" />
-            <div className="min-w-0 flex-1 space-y-1">
-              <div className="text-xs"><span className="font-medium">{PEOPLE[l.who].name}</span> <span className="text-muted-foreground">{l.at}</span></div>
-              <p>{l.text}</p>
-              {l.decision && (
-                <div className="flex items-center gap-1.5 rounded-md bg-muted px-2 py-1 text-xs">
-                  <StatusBadge status="inf" />
-                  <span className="truncate">{l.decision}</span>
-                </div>
-              )}
-            </div>
-          </div>
+    <div aria-live="polite" className="pointer-events-none absolute inset-x-0 bottom-20 z-10 flex justify-center px-4" style={{ right: 360 }}>
+      <div className="max-w-xl space-y-1 rounded-xl bg-foreground/85 px-4 py-2.5 text-background shadow-lg">
+        {recent.map((l, i) => (
+          <p key={`${l.at}-${i}`} className={cn("text-sm leading-snug transition-opacity duration-300 motion-reduce:transition-none", i < recent.length - 1 && "opacity-60")}>
+            <span className="font-medium">{PEOPLE[l.who].name.split(" ")[0]}:</span> {l.text}
+          </p>
         ))}
-        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-          <span className="flex h-3 items-end gap-0.5">
+        <p className="flex items-center gap-1.5 pt-0.5 text-[11px] text-background/60">
+          <span className="flex h-2.5 items-end gap-0.5">
             {[0, 1, 2].map((b) => (
-              <span key={b} className="w-0.5 animate-pulse rounded-full bg-muted-foreground" style={{ height: 6 + b * 3, animationDelay: `${b * 150}ms` }} />
+              <span key={b} className="w-0.5 animate-pulse rounded-full bg-background/60 motion-reduce:animate-none" style={{ height: 5 + b * 2, animationDelay: `${b * 150}ms` }} />
             ))}
           </span>
-          {PEOPLE[speaking].name} is speaking
-        </div>
-        <div ref={end} />
+          {PEOPLE[speaking].name.split(" ")[0]} speaking · live captions, not saved
+        </p>
       </div>
     </div>
   )

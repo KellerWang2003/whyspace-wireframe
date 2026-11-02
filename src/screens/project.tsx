@@ -25,6 +25,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { AppShell } from "@/components/app/app-shell"
 import { ProBadge } from "@/components/app/global-dialogs"
 import { AvatarStack, PersonAvatar } from "@/components/app/person"
+import { StatusIcon } from "@/components/app/status-badge"
 import { TasksView } from "@/components/app/tasks"
 import {
   AI_TOOLS,
@@ -100,6 +101,8 @@ function Meetings({ project, free, onUpgrade }: { project: Project; free: boolea
   const upcoming = all.filter((s) => s.status !== "Ended").sort((a, b) => Number(b.status === "Live") - Number(a.status === "Live"))
   const past = all.filter((s) => s.status === "Ended").reverse()
   const [summary, setSummary] = useState<Session | null>(null)
+  const { openDecision } = useStore()
+  const summaryDecisions = DECISIONS.filter((d) => summary?.decisionIds?.includes(d.id))
   const start = () => (free ? onUpgrade() : navigate(`/p/${project.id}/sessions/new`))
 
   return (
@@ -180,11 +183,40 @@ function Meetings({ project, free, onUpgrade }: { project: Project; free: boolea
                 <SheetDescription>{summary.when}{summary.length && ` · ${summary.length}`} · hosted by {PEOPLE[summary.host].name}</SheetDescription>
                 <SheetTitle className="text-lg">{summary.title}</SheetTitle>
               </SheetHeader>
-              <div className="flex flex-col gap-5 px-4">
-                <div className="space-y-1">
-                  <div className="text-xs font-medium text-muted-foreground">{summary.status === "Ended" ? "Summary" : "Meeting details"}</div>
-                  <p className="text-sm">{summary.summary ?? (summary.status === "Live" ? "Your team is working together on the shared canvas. Join to take part." : "A scheduled meeting with your team on a shared canvas.")}</p>
-                </div>
+              {/* A past meeting leads with what it decided, its outcomes and each person's next steps. */}
+              <div className="flex flex-col gap-5 overflow-y-auto px-4">
+                {summary.status === "Ended" ? (
+                  <>
+                    <div className="space-y-2">
+                      <div className="text-xs font-medium text-muted-foreground">Decisions · {summaryDecisions.length}</div>
+                      {summaryDecisions.length ? summaryDecisions.map((d) => (
+                        <button key={d.id} onClick={() => { setSummary(null); openDecision(d.id) }} className="flex w-full items-start gap-2 rounded-lg border p-2.5 text-left hover:bg-muted">
+                          <StatusIcon status={d.status} className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
+                          <span className="min-w-0"><span className="block text-sm font-medium">{d.title}</span><span className="block text-xs text-muted-foreground">{d.by} · {d.part}</span></span>
+                        </button>
+                      )) : <p className="text-sm text-muted-foreground">No decisions were made.</p>}
+                    </div>
+                    {summary.outcomes && (
+                      <div className="space-y-1.5">
+                        <div className="text-xs font-medium text-muted-foreground">Outcomes</div>
+                        <ul className="list-disc space-y-1 pl-5 text-sm">{summary.outcomes.map((o) => <li key={o}>{o}</li>)}</ul>
+                      </div>
+                    )}
+                    {summary.nextSteps && (
+                      <div className="space-y-2">
+                        <div className="text-xs font-medium text-muted-foreground">Next steps</div>
+                        {summary.nextSteps.map((n) => (
+                          <div key={n.who + n.text} className="flex items-center gap-2.5 text-sm"><PersonAvatar id={n.who} /><span className="w-16 shrink-0 font-medium">{PEOPLE[n.who].name.split(" ")[0]}</span><span>{n.text}</span></div>
+                        ))}
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <div className="space-y-1">
+                    <div className="text-xs font-medium text-muted-foreground">Meeting details</div>
+                    <p className="text-sm">{summary.status === "Live" ? "Your team is working together on the shared canvas. Join to take part." : "A scheduled meeting with your team on a shared canvas."}</p>
+                  </div>
+                )}
                 <div className="space-y-2">
                   <div className="text-xs font-medium text-muted-foreground">People</div>
                   <div className="flex flex-wrap gap-2">
@@ -193,11 +225,11 @@ function Meetings({ project, free, onUpgrade }: { project: Project; free: boolea
                     ))}
                   </div>
                 </div>
-                {summary.status !== "Scheduled" && <div className="text-sm text-muted-foreground">{summary.decisions} {summary.decisions === 1 ? "decision" : "decisions"} {summary.status === "Live" ? "caught so far" : "saved"}</div>}
+                {summary.status === "Live" && <div className="text-sm text-muted-foreground">{summary.decisions} {summary.decisions === 1 ? "decision" : "decisions"} caught so far</div>}
               </div>
               <SheetFooter className="flex-row">
-                {summary.status !== "Scheduled" && <Button onClick={() => navigate(`/p/${project.id}/sessions/${summary.id}`)}>{summary.status === "Live" ? "Join meeting" : "Open canvas"}</Button>}
-                {summary.status === "Ended" && <Button variant="outline" onClick={() => navigate(`/p/${project.id}/decisions`)}>See decisions</Button>}
+                {summary.status === "Live" && <Button onClick={() => navigate(`/p/${project.id}/sessions/${summary.id}`)}>Join meeting</Button>}
+                {summary.status === "Ended" && <Button variant="outline" onClick={() => navigate(`/p/${project.id}/sessions/${summary.id}`)}>Open canvas</Button>}
                 {summary.status === "Scheduled" && <Button variant="outline" onClick={() => setSummary(null)}>Done</Button>}
               </SheetFooter>
             </>
