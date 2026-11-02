@@ -19,7 +19,8 @@ type Store = {
   reminders: Record<string, boolean>
   setReminder: (id: string, on: boolean) => void
   // The decision sheet, opened from any touch point (the Decisions tab uses its route instead).
-  sheet: string | null
+  // It remembers the page it was opened on, so moving to another page closes it.
+  sheet: { id: string; at: string } | null
   openDecision: (id: string | null) => void
   inboxState: InboxState
   setInboxRead: (id: string, read: boolean) => void
@@ -63,7 +64,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [confirmed, setConfirmed] = useState<Record<string, boolean>>({})
   const [replies, setReplies] = useState<Record<string, Reply[]>>({})
   const [reminders, setReminders] = useState<Record<string, boolean>>({})
-  const [sheet, setSheet] = useState<string | null>(null)
+  const [sheet, setSheet] = useState<{ id: string; at: string } | null>(null)
 
   function updateInbox(id: string, patch: { read?: boolean; done?: boolean; response?: "accepted" | "declined" }) {
     if (!currentId) return
@@ -82,7 +83,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     reminders,
     setReminder: (id, on) => setReminders((all) => ({ ...all, [id]: on })),
     sheet,
-    openDecision: setSheet,
+    openDecision: (id) => setSheet(id ? { id, at: window.location.hash } : null),
     inboxState: workspaceInbox[currentId ?? ""] ?? {},
     setInboxRead: (id, read) => updateInbox(id, { read }),
     setInboxDone: (id, done) => updateInbox(id, { done }),

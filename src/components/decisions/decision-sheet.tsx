@@ -29,7 +29,7 @@ export function DecisionSheetHost() {
   // Older links (/decisions/<id>, /projects/decisions/<id>) open over All projects.
   const base = first === "p" && third === "decisions" ? `/p/${second}/decisions` : first === "decisions" && second ? "/decisions" : first === "projects" && second === "decisions" ? "/projects/decisions" : null
   const routed = base ? (first === "p" ? fourth : first === "decisions" ? second : third) : undefined
-  const decision = decisionById(routed ?? sheet ?? undefined)
+  const decision = decisionById(routed ?? (sheet?.at === window.location.hash ? sheet.id : undefined))
 
   // Moving to another decision keeps the same mode: the route on the Decisions tab, the sheet elsewhere.
   const go = (id: string) => (routed ? navigate(`${base}/${id}`) : openDecision(id))
