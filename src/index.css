@@ -1,7 +1,40 @@
 @import "tailwindcss";
 @import "tw-animate-css";
-@import "@fontsource-variable/geist";
 @import "@fontsource-variable/geist-mono";
+
+/* Brand type (Whyspace identity): Geist Serif for titles, Instrument Sans for everything else.
+   Self-hosted in src/assets/fonts. Geist Serif ships one weight; its variable axis is a decorative
+   element shape, not weight, so titles get hierarchy from size. Both fonts are OFL. */
+@font-face {
+  font-family: "Geist Serif";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 400;
+  src: url("./assets/fonts/geist-serif-vf.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Instrument Sans Variable";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 400 700;
+  src: url("./assets/fonts/instrument-sans-latin-wght-normal.woff2") format("woff2-variations");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: "Instrument Sans Variable";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 400 700;
+  src: url("./assets/fonts/instrument-sans-latin-ext-wght-normal.woff2") format("woff2-variations");
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: "Instrument Sans Variable";
+  font-style: italic;
+  font-display: swap;
+  font-weight: 400 700;
+  src: url("./assets/fonts/instrument-sans-latin-wght-italic.woff2") format("woff2-variations");
+}
 
 @custom-variant dark (&:is(.dark *));
 
@@ -43,7 +76,8 @@
 }
 
 @theme inline {
-  --font-sans: "Geist Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Instrument Sans Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Geist Serif", "Times New Roman", Times, serif;
   --font-mono: "Geist Mono Variable", ui-monospace, monospace;
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
@@ -82,6 +116,110 @@
   --color-sidebar-ring: var(--sidebar-ring);
 }
 
+/* Type ramp. Sizes, line heights, tracking and weights per role; one type-<role> class sets them all.
+   Serif roles: display, title, heading. Everything else is Instrument Sans. */
+@theme {
+  --text-display: 2.25rem;
+  --text-display--line-height: 2.5rem;
+  --text-display--letter-spacing: -0.01em;
+  --text-display--font-weight: 400;
+  --text-title: 1.75rem;
+  --text-title--line-height: 2.125rem;
+  --text-title--letter-spacing: -0.01em;
+  --text-title--font-weight: 400;
+  --text-heading: 1.25rem;
+  --text-heading--line-height: 1.625rem;
+  --text-heading--letter-spacing: 0em;
+  --text-heading--font-weight: 400;
+  --text-subhead: 1rem;
+  --text-subhead--line-height: 1.5rem;
+  --text-subhead--letter-spacing: 0em;
+  --text-subhead--font-weight: 600;
+  --text-section: 0.875rem;
+  --text-section--line-height: 1.25rem;
+  --text-section--letter-spacing: 0em;
+  --text-section--font-weight: 600;
+  --text-prose: 1rem;
+  --text-prose--line-height: 1.625rem;
+  --text-prose--letter-spacing: 0em;
+  --text-prose--font-weight: 400;
+  --text-body: 0.875rem;
+  --text-body--line-height: 1.25rem;
+  --text-body--letter-spacing: 0em;
+  --text-body--font-weight: 400;
+  --text-label: 0.75rem;
+  --text-label--line-height: 1rem;
+  --text-label--letter-spacing: 0.01em;
+  --text-label--font-weight: 500;
+  --text-caption: 0.75rem;
+  --text-caption--line-height: 1rem;
+  --text-caption--letter-spacing: 0em;
+  --text-caption--font-weight: 400;
+}
+@utility type-display {
+  font-family: var(--font-serif);
+  font-size: var(--text-display);
+  line-height: var(--text-display--line-height);
+  letter-spacing: var(--text-display--letter-spacing);
+  font-weight: var(--text-display--font-weight);
+}
+@utility type-title {
+  font-family: var(--font-serif);
+  font-size: var(--text-title);
+  line-height: var(--text-title--line-height);
+  letter-spacing: var(--text-title--letter-spacing);
+  font-weight: var(--text-title--font-weight);
+}
+@utility type-heading {
+  font-family: var(--font-serif);
+  font-size: var(--text-heading);
+  line-height: var(--text-heading--line-height);
+  letter-spacing: var(--text-heading--letter-spacing);
+  font-weight: var(--text-heading--font-weight);
+}
+@utility type-subhead {
+  font-family: var(--font-sans);
+  font-size: var(--text-subhead);
+  line-height: var(--text-subhead--line-height);
+  letter-spacing: var(--text-subhead--letter-spacing);
+  font-weight: var(--text-subhead--font-weight);
+}
+@utility type-section {
+  font-family: var(--font-sans);
+  font-size: var(--text-section);
+  line-height: var(--text-section--line-height);
+  letter-spacing: var(--text-section--letter-spacing);
+  font-weight: var(--text-section--font-weight);
+}
+@utility type-prose {
+  font-family: var(--font-sans);
+  font-size: var(--text-prose);
+  line-height: var(--text-prose--line-height);
+  letter-spacing: var(--text-prose--letter-spacing);
+  font-weight: var(--text-prose--font-weight);
+}
+@utility type-body {
+  font-family: var(--font-sans);
+  font-size: var(--text-body);
+  line-height: var(--text-body--line-height);
+  letter-spacing: var(--text-body--letter-spacing);
+  font-weight: var(--text-body--font-weight);
+}
+@utility type-label {
+  font-family: var(--font-sans);
+  font-size: var(--text-label);
+  line-height: var(--text-label--line-height);
+  letter-spacing: var(--text-label--letter-spacing);
+  font-weight: var(--text-label--font-weight);
+}
+@utility type-caption {
+  font-family: var(--font-sans);
+  font-size: var(--text-caption);
+  line-height: var(--text-caption--line-height);
+  letter-spacing: var(--text-caption--letter-spacing);
+  font-weight: var(--text-caption--font-weight);
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
@@ -89,4 +227,29 @@
   body {
     @apply bg-background font-sans text-foreground antialiased;
   }
+}
+
+/* While a panel is being dragged wider or narrower: steady cursor, no text selection, no width easing. */
+html[data-resizing],
+html[data-resizing] * {
+  cursor: var(--resize-cursor, col-resize) !important;
+  user-select: none !important;
+  transition: none !important;
+}
+
+/* Text that shimmers while a tool is working on it, like an AI "generating" line. Still when motion is reduced. */
+.shimmer-text {
+  background: linear-gradient(90deg, var(--muted-foreground) 0%, var(--muted-foreground) 40%, var(--foreground) 50%, var(--muted-foreground) 60%, var(--muted-foreground) 100%);
+  background-size: 250% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: shimmer-text 2.2s linear infinite;
+}
+@keyframes shimmer-text {
+  from { background-position: 100% 0; }
+  to { background-position: 0% 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .shimmer-text { animation: none; background: none; color: var(--foreground); }
 }
