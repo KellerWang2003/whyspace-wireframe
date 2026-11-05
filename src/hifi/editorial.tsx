@@ -3,12 +3,18 @@ import { ArrowUpRight, Plus, Search } from "lucide-react"
 import { MarkIcon } from "@/components/app/status-badge"
 import { KIND_ICON } from "@/playground/artifact"
 import { cn } from "@/lib/utils"
+import illHands from "@/assets/landing/ill-hands.webp"
+import keep from "./assets/keep.webp"
+import echo from "./assets/echo.webp"
 import { BRAND as B, PROJECT_MARK, PROJECT_PAGES, INK, PIGMENTS, initialsOf, useHifiHome, useHifiNav, useHifiToday, type HAction, type HNeed, type HThread, type Pigment } from "./model"
+import { CaughtUp, ThreadRibbons } from "./ribbons"
 import { Scroll, YMark, type StyleProps } from "./shared"
 
 // Restrained and editorial: a paper page set like a journal. Type does the work: Geist Serif for the
 // why (decisions, questions, summaries), Instrument Sans for the work, mono for times and labels.
 // Hairlines instead of boxes. Pigment only as a strand tick, and once as the threads converging.
+// The work stays plain: painted pieces and illustrations live only where nothing needs doing, in the
+// masthead, in empty states and beside the quiet sections (Handled, Members).
 
 export function EditorialStyle({ page, go }: StyleProps) {
   return (
@@ -106,16 +112,34 @@ function ThreadLine({ className }: { className?: string }) {
   )
 }
 
-function Masthead({ kicker, title, right }: { kicker: ReactNode; title: string; right?: ReactNode }) {
+// A painted piece fades in and out at its ends instead of stopping at a straight edge.
+const FADE = "[mask-image:linear-gradient(to_right,transparent,black_18%,black_82%,transparent)]"
+// An illustration's own wash tile dissolves at its edges.
+const SOFT = "[mask-composite:intersect] [mask-image:linear-gradient(to_right,transparent,black_18%,black_82%,transparent),linear-gradient(to_bottom,transparent,black_14%,black_90%,transparent)]"
+
+function Masthead({ kicker, title, right, art }: { kicker: ReactNode; title: string; right?: ReactNode; art?: ReactNode }) {
   return (
     <header>
       <div className="flex h-9 items-center justify-between gap-6">
         <Label>{kicker}</Label>
         {right}
       </div>
-      <h1 className="mt-4 font-serif text-[112px] leading-[0.92] tracking-[-0.03em]">{title}</h1>
+      <div className="mt-4 flex items-end justify-between gap-10">
+        <h1 className="font-serif text-[112px] leading-[0.92] tracking-[-0.03em]">{title}</h1>
+        {art && <div aria-hidden className="pointer-events-none min-w-0 select-none">{art}</div>}
+      </div>
       <ThreadLine className="mt-8" />
     </header>
+  )
+}
+
+// Nothing to do: the one place in the work where the brand gets to show.
+function Clear({ children, large }: { children: string; large?: boolean }) {
+  return (
+    <div className={cn("flex items-center border-t border-(--line)", large ? "gap-8 py-7" : "gap-6 py-5")}>
+      <CaughtUp className={cn("shrink-0", FADE, large ? "h-[72px] w-[216px]" : "h-12 w-36")} />
+      <p className={cn("font-serif", large ? "text-[24px]" : "text-[20px]")}>{children}</p>
+    </div>
   )
 }
 
@@ -172,7 +196,7 @@ function Today() {
   const dayOf = (d: string) => (d === "today" ? "Today" : d === "yesterday" ? "Yesterday" : "Earlier")
   return (
     <div className="mx-auto max-w-[1180px] px-16 pt-12 pb-28">
-      <Masthead kicker={`${t.weekday} · ${t.date}`} title="Today" />
+      <Masthead kicker={`${t.weekday} · ${t.date}`} title="Today" art={<img src={keep} alt="" className={cn("-mb-3 w-[460px] max-w-full mix-blend-multiply", FADE)} />} />
       <p className="mt-9 max-w-[820px] font-serif text-[30px] leading-[1.28] tracking-[-0.012em]">{t.lead}</p>
 
       <div className="mt-16 grid grid-cols-[minmax(0,1fr)_280px] gap-x-20">
@@ -180,7 +204,7 @@ function Today() {
           <Section label="Needs you" count={t.needs.length}>
             {t.needs.length
               ? <ol>{t.needs.map((n, i) => <Need key={n.id} n={n} index={i + 1} />)}</ol>
-              : <p className="border-t border-(--line) py-6 font-serif text-[22px]">Nothing waits on you.</p>}
+              : <Clear large>Nothing waits on you.</Clear>}
           </Section>
 
           <Section label="Across your projects">
@@ -197,7 +221,8 @@ function Today() {
             </div>
           </Section>
 
-          <Section label="Handled">
+          <Section label="Handled" className="relative">
+            <img src={echo} alt="" className={cn("pointer-events-none absolute -top-16 right-0 w-[116px] mix-blend-multiply select-none", SOFT)} />
             <ul className="border-t border-(--line)">
               {t.handled.map((l, i) => {
                 const day = dayOf(l.day)
@@ -268,6 +293,7 @@ function Home() {
       <Masthead
         kicker={<span className="flex items-center gap-2"><mark.icon className="size-3.5" />Project</span>}
         title={h.name}
+        art={<ThreadRibbons threads={h.threads} width={640} height={150} className={cn("-mb-4 h-[120px] w-[520px] max-w-full", FADE)} />}
         right={
           <div className="flex items-center gap-5">
             <div className="flex -space-x-1.5">{h.members.map((m) => <Face key={m.id} id={m.id} className="bg-(--paper)" />)}</div>
@@ -288,10 +314,10 @@ function Home() {
             <p className="border-t border-(--line) pt-5 font-serif text-[24px] leading-[1.32] tracking-[-0.01em]">{h.since}</p>
           </Section>
           <Section label="Decide" count={h.decide.length}>
-            <ol>{h.decide.map((n, i) => <Need key={n.id} n={n} index={i + 1} compact />)}</ol>
+            {h.decide.length ? <ol>{h.decide.map((n, i) => <Need key={n.id} n={n} index={i + 1} compact />)}</ol> : <Clear>All clear.</Clear>}
           </Section>
           <Section label="Do" count={h.todo.length}>
-            <ol>{h.todo.map((n, i) => <Need key={n.id} n={n} index={i + 1} compact />)}</ol>
+            {h.todo.length ? <ol>{h.todo.map((n, i) => <Need key={n.id} n={n} index={i + 1} compact />)}</ol> : <Clear>All clear.</Clear>}
           </Section>
           <Section label="What changed" count={h.changed.length}>
             <ul className="border-t border-(--line)">
@@ -349,6 +375,7 @@ function Home() {
                 </li>
               ))}
             </ul>
+            <img src={illHands} alt="" className="pointer-events-none mt-8 ml-auto block w-[200px] mix-blend-multiply select-none" />
           </Section>
         </aside>
       </div>
