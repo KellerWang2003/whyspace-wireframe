@@ -30,6 +30,7 @@ import { Projects } from "@/screens/projects"
 import { WorkspaceSettings } from "@/screens/settings"
 import { CreateWorkspaceStep, WorkspaceDialog } from "@/screens/welcome"
 import { Demo } from "@/demo/demo"
+import { HiFi } from "@/hifi/hifi"
 import { getDataVersion, subscribeData } from "@/data"
 import { SCENARIO, openScenario } from "@/lib/scenario"
 import { AppLink } from "@/scenarios/app-link"
@@ -46,6 +47,8 @@ function Screen() {
   if (DESIGN === "c" && !window.location.hash && current) return <AppShell crumbs={[{ label: "Today" }]}><TodayC /></AppShell>
   // Marketing home page, opened from the account menu.
   if (first === "site") return second === "shapes" ? <Shapes /> : <Landing />
+  // High-fi playground: Today and Whiskr's Home in three brand styles.
+  if (first === "hifi") return <HiFi style={second} page={third} />
   if (first === "signup") return <SignUp />
   if (first === "login") return <LogIn />
   // No workspace yet (fresh sign up): create one on its own step before the app.
@@ -89,7 +92,7 @@ function OpenScenario({ n }: { n: number }) {
 function PersistentAssistant({ desktop }: { desktop: boolean }) {
   const [page, , third, fourth] = useRoute()
   const { current } = useStore()
-  if (desktop || !current || ["signup", "login", "onboarding", "site", "demo"].includes(page)) return null
+  if (desktop || !current || ["signup", "login", "onboarding", "site", "demo", "hifi"].includes(page)) return null
   // Design C has no assistant in the app: the Duet lives in the profile and in people's own AI tools.
   if (DESIGN === "c") return null
   // The Duet page is the conversation itself, full width.
