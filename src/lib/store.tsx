@@ -13,6 +13,9 @@ type Store = {
   patchTask: (id: string, patch: Partial<Task>) => void
   confirmed: Record<string, boolean>
   confirmDecision: (id: string) => void
+  // Design B: how you settled a clash of yours. "theirs" withdraws your decision; "mine" keeps it, with your reason.
+  clashes: Record<string, { choice: "theirs" | "mine"; reason?: string }>
+  settleClash: (id: string, choice: "theirs" | "mine", reason?: string) => void
   replies: Record<string, Reply[]>
   addReply: (decisionId: string, reply: Reply) => void
   // Inbox items to bring back in the overlay when you open the file they touch.
@@ -62,6 +65,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [workspaceInbox, setWorkspaceInbox] = useState<Record<string, InboxState>>({})
   const [taskPatches, setTaskPatches] = useState<Record<string, Partial<Task>>>({})
   const [confirmed, setConfirmed] = useState<Record<string, boolean>>({})
+  const [clashes, setClashes] = useState<Record<string, { choice: "theirs" | "mine"; reason?: string }>>({})
   const [replies, setReplies] = useState<Record<string, Reply[]>>({})
   const [reminders, setReminders] = useState<Record<string, boolean>>({})
   const [sheet, setSheet] = useState<{ id: string; at: string } | null>(null)
@@ -78,6 +82,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     patchTask: (id, patch) => setTaskPatches((all) => ({ ...all, [id]: { ...all[id], ...patch } })),
     confirmed,
     confirmDecision: (id) => setConfirmed((all) => ({ ...all, [id]: true })),
+    clashes,
+    settleClash: (id, choice, reason) => setClashes((all) => ({ ...all, [id]: { choice, reason } })),
     replies,
     addReply: (id, reply) => setReplies((all) => ({ ...all, [id]: [...(all[id] ?? []), reply] })),
     reminders,

@@ -29,7 +29,7 @@ export function CreateWorkspaceStep() {
     <AuthLayout>
       <Card>
         <CardHeader className="text-center">
-          <CardTitle className="text-xl">Create your workspace</CardTitle>
+          <CardTitle className="type-display">Create your workspace</CardTitle>
           <CardDescription>Starts on the free plan.</CardDescription>
         </CardHeader>
         <CardContent>

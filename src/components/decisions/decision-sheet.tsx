@@ -1,217 +1,193 @@
 import { useState, type ReactNode } from "react"
 import { toast } from "sonner"
-import { ArrowRight, BookOpen, Check, FlaskConical, Map as MapIcon, MessageSquare, Play, Sparkles, Users } from "lucide-react"
-import { Badge } from "@/components/ui/badge"
+import { AppWindow, BookOpen, Check, CircleDot, FlaskConical, History, Maximize2, MessageSquare, PanelRight, Play, Shapes, Sparkles, Users } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog"
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet"
-import { Textarea } from "@/components/ui/textarea"
+import { Dialog, DialogContent } from "@/components/ui/dialog"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { Input } from "@/components/ui/input"
+import { Sheet, SheetContent, SheetDescription, SheetTitle } from "@/components/ui/sheet"
 import { PersonAvatar } from "@/components/app/person"
-import { StatusBadge, StatusIcon } from "@/components/app/status-badge"
-import { SectionWorkspace } from "@/components/decisions/section-workspace"
-import { projectSections } from "@/components/decisions/section-data"
-import { DECISIONS, LINKS, ME, PEOPLE, PROJECTS, decisionById, type Decision, type Evidence } from "@/data"
+import { StatusBadge } from "@/components/app/status-badge"
+import { LINKS, ME, PEOPLE, PROJECTS, decisionById, type Decision, type Evidence } from "@/data"
 import { askWhyspace } from "@/lib/ask"
 import { navigate, useRoute } from "@/lib/router"
 import { useStore } from "@/lib/store"
 import { useReach, useStatusOf } from "@/lib/work"
 import { cn } from "@/lib/utils"
+import { DESIGN } from "@/lib/design"
+import { ThreadTag } from "@/design-b/thread-ui"
 import { KIND_ICON } from "@/playground/artifact"
 
 // The one detailed view of a decision. Every touch point opens it: Catch up, the Inbox,
-// an artifact, the Decisions table, Ask's citations and a meeting summary.
+// an artifact, the Decisions table, Ask's citations and a workshop summary.
 // On the Decisions tab it follows the route (/p/<id>/decisions/<decisionId>) so it can be linked;
 // everywhere else it opens over the current page.
 export function DecisionSheetHost() {
   const [first, second, third, fourth] = useRoute()
   const { sheet, openDecision } = useStore()
-  const [pathFor, setPathFor] = useState<Decision | null>(null)
   // Older links (/decisions/<id>, /projects/decisions/<id>) open over All projects.
   const base = first === "p" && third === "decisions" ? `/p/${second}/decisions` : first === "decisions" && second ? "/decisions" : first === "projects" && second === "decisions" ? "/projects/decisions" : null
   const routed = base ? (first === "p" ? fourth : first === "decisions" ? second : third) : undefined
   const decision = decisionById(routed ?? (sheet?.at === window.location.hash ? sheet.id : undefined))
+  const [mode, setMode] = useOpenMode()
 
-  // Moving to another decision keeps the same mode: the route on the Decisions tab, the sheet elsewhere.
-  const go = (id: string) => (routed ? navigate(`${base}/${id}`) : openDecision(id))
   const close = () => (routed ? navigate(base === `/p/${second}/decisions` ? base : "/projects") : openDecision(null))
   const leave = (path: string) => { openDecision(null); navigate(path) }
+  const body = decision && <DecisionBody key={decision.id} decision={decision} mode={mode} onMode={setMode} onLeave={leave} onClose={close} />
 
-  return (
-    <>
-      {/* The full path swaps in for the sheet; closing it brings the sheet back. */}
-      <Sheet open={!!decision && !pathFor} onOpenChange={(open) => !open && close()}>
-        <SheetContent className="w-[560px] gap-0 overflow-y-auto sm:max-w-[560px]">
-          {decision && <DecisionBody key={decision.id} decision={decision} onDecision={go} onLeave={leave} onPath={() => setPathFor(decision)} />}
-        </SheetContent>
+  // Opens like a task: centered window (default), side panel or full page.
+  if (mode === "side") {
+    return (
+      <Sheet open={!!decision} onOpenChange={(open) => !open && close()}>
+        <SheetContent resizeKey="decision" onOpenAutoFocus={(e) => e.preventDefault()} className="w-[560px] gap-0 overflow-y-auto sm:max-w-[560px]">{body}</SheetContent>
       </Sheet>
-      <Dialog open={!!pathFor} onOpenChange={(open) => !open && setPathFor(null)}>
-        <DialogContent className="flex h-[88vh] w-[94vw] max-w-none flex-col gap-0 overflow-hidden p-0 sm:max-w-none">
-          {pathFor && (
-            <>
-              <div className="border-b px-5 py-3 pr-12">
-                <DialogTitle className="text-sm">Full path · {pathFor.title}</DialogTitle>
-                <DialogDescription className="sr-only">The section map, traced to this decision.</DialogDescription>
-              </div>
-              <div className="relative flex min-h-0 flex-1">
-                <SectionWorkspace
-                  project={PROJECTS.find((p) => p.id === pathFor.project) ?? PROJECTS[0]}
-                  initialSections={projectSections(pathFor.project)}
-                  traceDecision={pathFor.id}
-                  onDecisionChange={(id) => { if (id) { setPathFor(null); go(id) } }}
-                  onArtifact={(id) => { setPathFor(null); leave(`/p/${pathFor.project}/artifacts/${id}`) }}
-                />
-              </div>
-            </>
-          )}
-        </DialogContent>
-      </Dialog>
-    </>
+    )
+  }
+  return (
+    <Dialog open={!!decision} onOpenChange={(open) => !open && close()}>
+      <DialogContent onOpenAutoFocus={(e) => e.preventDefault()} className={cn("gap-0 overflow-y-auto p-0", mode === "full" ? "top-0 left-0 h-screen w-screen max-w-none translate-x-0 translate-y-0 rounded-none border-0 sm:max-w-none" : "max-h-[85vh] max-w-2xl sm:max-w-2xl")}>{body}</DialogContent>
+    </Dialog>
   )
 }
 
-function Section({ title, children, aside }: { title: string; children: ReactNode; aside?: ReactNode }) {
+type OpenMode = "center" | "side" | "full"
+const OPEN_MODES: [OpenMode, string, typeof PanelRight][] = [["center", "Center peek", AppWindow], ["side", "Side peek", PanelRight], ["full", "Full page", Maximize2]]
+function useOpenMode() {
+  const [mode, setMode] = useState<OpenMode>(() => {
+    try { const m = localStorage.getItem("whyspace-decision-open"); return m === "side" || m === "full" ? m : "center" } catch { return "center" }
+  })
+  return [mode, (m: OpenMode) => { setMode(m); try { localStorage.setItem("whyspace-decision-open", m) } catch { /* storage blocked: still switches for now */ } }] as const
+}
+
+const EVIDENCE_ICON: Record<Evidence["kind"], typeof Play> = { clip: Play, research: BookOpen, test: FlaskConical, chat: MessageSquare, feedback: Users }
+
+function Block({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <section className="space-y-2.5 border-t px-5 py-5">
-      <div className="flex items-center gap-2">
-        <h3 className="text-xs font-medium text-muted-foreground">{title}</h3>
-        {aside && <div className="ml-auto">{aside}</div>}
-      </div>
+    <section className="flex min-w-0 flex-col gap-2.5">
+      <h3 className="type-label text-muted-foreground">{title}</h3>
       {children}
     </section>
   )
 }
 
-const EVIDENCE_ICON: Record<Evidence["kind"], typeof Play> = { clip: Play, research: BookOpen, test: FlaskConical, chat: MessageSquare, feedback: Users }
-
-// Up to two steps back along "builds on" links.
-function ledFrom(id: string) {
-  const back = (to: string) => LINKS.filter(([, t]) => t === to).map(([from]) => from)
-  const one = back(id)
-  const two = one.flatMap(back)
-  return [...two, ...one].map((x) => DECISIONS.find((d) => d.id === x)).filter((d): d is Decision => !!d)
+// A small card in a horizontal row: a source behind the why, or an artifact the decision affects.
+function Tile({ icon: Icon, label, sub, strong, onClick }: { icon: typeof Play; label: string; sub?: string; strong?: boolean; onClick?: () => void }) {
+  return (
+    <button onClick={onClick} disabled={!onClick} title={label} className="flex min-w-0 items-center gap-2.5 rounded-lg border px-3 py-2 text-left transition-colors enabled:hover:bg-accent/50">
+      <Icon className="size-4 shrink-0 text-muted-foreground" />
+      <span className="min-w-0 flex-1">
+        <span className="block truncate text-sm">{label}</span>
+        {sub && <span className={cn("block truncate text-xs", strong ? "font-medium text-foreground" : "text-muted-foreground")}>{sub}</span>}
+      </span>
+    </button>
+  )
 }
 
-function DecisionBody({ decision: d, onDecision, onLeave, onPath }: { decision: Decision; onDecision: (id: string) => void; onLeave: (path: string) => void; onPath: () => void }) {
-  const { replies: added, addReply, confirmDecision } = useStore()
+// Cards sit side by side and wrap, so nothing hides off to the side.
+const Row = ({ children }: { children: ReactNode }) => <div className="grid grid-cols-[repeat(auto-fill,minmax(11rem,1fr))] gap-2">{children}</div>
+
+function DecisionBody({ decision: d, mode, onMode, onLeave, onClose }: { decision: Decision; mode: OpenMode; onMode: (m: OpenMode) => void; onLeave: (path: string) => void; onClose: () => void }) {
+  const { replies: added, addReply, confirmDecision, clashes, settleClash } = useStore()
   const statusOf = useStatusOf()
   const status = statusOf(d)
+  // Design B: the confirmed decision this one clashes with, and how you settled it, if you did.
+  const clashWith = DESIGN === "b" && d.status === "flag" ? decisionById(d.clashes) : undefined
+  const settled = clashes[d.id]
+  const [reason, setReason] = useState("")
   const reach = useReach(d.id)
   const [reply, setReply] = useState("")
   const project = PROJECTS.find((p) => p.id === d.project)
-  const replaced = decisionById(d.replaces)
-  const chain = ledFrom(d.id)
   const replies = [...(d.replies ?? []), ...(added[d.id] ?? [])]
-  const seen = [...new Set(reach.flatMap((r) => r.seen))]
-  const notSeen = (project?.members ?? []).filter((m) => !seen.includes(m))
-  const decider = d.by ?? PEOPLE[d.owner]?.name
-  const source = d.status === "inf" ? `Inferred by ${d.tool ?? "AI"}${d.by ? ` from ${d.by}'s work` : ""}` : d.status === "open" ? `Open question · ${PEOPLE[d.owner]?.name}` : `Stated by ${decider}${d.tool ? ` · ${d.tool}` : ""}`
+  const who = d.status === "open" ? PEOPLE[d.owner]?.name : d.by ?? PEOPLE[d.owner]?.name
+  // History: what this decision replaced, or (Design B) the confirmed decision it follows.
+  const replaced = decisionById(d.replaces)
+  const precedents = status === "prec" ? LINKS.flatMap(([a, b]) => (b === d.id ? [decisionById(a)] : [])).filter((x): x is Decision => !!x) : []
+  const ModeIcon = OPEN_MODES.find(([m]) => m === mode)![2]
 
   return (
-    <>
-      <SheetHeader className="gap-3 p-5">
-        <SheetDescription className="text-xs">{project?.name} · {d.part}</SheetDescription>
-        <SheetTitle className="text-lg leading-snug">{d.title}</SheetTitle>
-        <div className="flex flex-wrap items-center gap-1.5">
-          <StatusBadge status={status} />
-          <span className="text-xs text-muted-foreground">{source}{d.when ? ` · ${d.when}` : d.due ? ` · due ${d.due}` : ""}</span>
-        </div>
-        {d.status === "inf" && status === "inf" && (
-          <div className="flex items-center gap-2 rounded-lg border border-dashed p-3 text-sm">
-            <span className="flex-1">{d.owner === ME.id ? "Not confirmed yet." : `Waiting on ${PEOPLE[d.owner]?.name.split(" ")[0]}.`}</span>
-            {d.owner === ME.id && <Button size="sm" onClick={() => { confirmDecision(d.id); toast("Decision confirmed") }}><Check />Confirm</Button>}
-          </div>
-        )}
-      </SheetHeader>
+    <div className={cn("relative flex min-w-0 flex-col gap-8 p-8", mode === "full" && "mx-auto w-full max-w-2xl py-16")}>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" size="icon" className={cn("absolute right-11 size-7 text-muted-foreground", mode === "full" ? "top-3 fixed" : "top-2.5")} aria-label="Open as"><ModeIcon /></Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          {OPEN_MODES.map(([m, label, Icon]) => (
+            <DropdownMenuItem key={m} onSelect={() => onMode(m)}><Icon />{label}{m === mode && <Check className="ml-auto" />}</DropdownMenuItem>
+          ))}
+        </DropdownMenuContent>
+      </DropdownMenu>
 
-      <Section title="Why">
-        <p className="text-sm leading-relaxed">{d.why ?? (d.status === "open" ? "Not decided yet." : "No reason yet.")}</p>
-        {d.evidence?.map((e) => {
-          const Icon = EVIDENCE_ICON[e.kind]
-          return (
-            <div key={e.label} className="flex items-start gap-3 rounded-lg border bg-muted/30 p-3">
-              <div className="flex size-8 shrink-0 items-center justify-center rounded-md border bg-background"><Icon className="size-3.5" /></div>
-              <div className="min-w-0 flex-1">
-                <div className="text-sm font-medium">{e.label}</div>
-                {e.detail && <p className="text-xs leading-relaxed text-muted-foreground">{e.detail}</p>}
-              </div>
-              {e.artifact && <Button variant="ghost" size="sm" className="shrink-0" onClick={() => onLeave(`/p/${d.project}/artifacts/${e.artifact}`)}>{e.kind === "clip" ? "Play" : "Open"}</Button>}
-            </div>
-          )
-        })}
-      </Section>
+      <header className="flex flex-col gap-2">
+        <SheetDescription className="flex items-center gap-1 text-xs">{project?.name} · {DESIGN === "b" ? <ThreadTag projectId={d.project} part={d.part} link /> : d.part}</SheetDescription>
+        <SheetTitle className="type-title">{d.title}</SheetTitle>
+        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+          <StatusBadge status={status} />
+          <span>{who}{d.when ? ` · ${d.when}` : d.due ? ` · due ${d.due}` : ""}</span>
+          {d.status === "inf" && status !== "conf" && d.owner === ME.id && (
+            <Button size="sm" className="ml-auto" onClick={() => { confirmDecision(d.id); toast("Decision confirmed") }}><Check />Confirm</Button>
+          )}
+        </div>
+      </header>
+
+      <Block title="Why">
+        <p className="leading-relaxed">{d.why ?? (d.status === "open" ? "Not decided yet." : "No reason yet.")}</p>
+        {!!d.evidence?.length && (
+          <Row>
+            {d.evidence.map((e) => (
+              <Tile
+                key={e.label}
+                icon={e.workshop ? Shapes : EVIDENCE_ICON[e.kind]}
+                label={e.label}
+                sub={e.detail}
+                onClick={e.artifact ? () => onLeave(`/p/${d.project}/artifacts/${e.artifact}`) : e.workshop ? () => onLeave(`/p/${d.project}/sessions/${e.workshop}`) : undefined}
+              />
+            ))}
+          </Row>
+        )}
+      </Block>
+
+      {clashWith && (
+        <Block title="Clashes with">
+          <Row>
+            <Tile icon={CircleDot} label={clashWith.title} sub={`${clashWith.by ?? PEOPLE[clashWith.owner]?.name}${clashWith.when ? ` · ${clashWith.when}` : ""}`} onClick={() => onLeave(`/p/${clashWith.project}/decisions/${clashWith.id}`)} />
+          </Row>
+          {clashWith.why && <p className="text-sm leading-relaxed text-muted-foreground">{PEOPLE[clashWith.owner]?.name.split(" ")[0]}: {clashWith.why}</p>}
+          {settled?.choice === "theirs" ? (
+            <p className="text-sm text-muted-foreground">You took {PEOPLE[clashWith.owner]?.name.split(" ")[0]}’s decision. Yours is withdrawn.</p>
+          ) : settled?.choice === "mine" ? (
+            <p className="text-sm text-muted-foreground">You kept yours{settled.reason ? `: ${settled.reason}` : ""}. {PEOPLE[clashWith.owner]?.name.split(" ")[0]} sees the clash until one of you changes it.</p>
+          ) : d.owner === ME.id && (
+            <form className="flex flex-wrap items-center gap-2" onSubmit={(e) => { e.preventDefault(); settleClash(d.id, "mine", reason.trim() || undefined); toast("Kept yours") }}>
+              <Button type="button" size="sm" onClick={() => { settleClash(d.id, "theirs"); toast(`Took ${PEOPLE[clashWith.owner]?.name.split(" ")[0]}’s decision`) }}>Take {PEOPLE[clashWith.owner]?.name.split(" ")[0]}’s</Button>
+              <Input value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Why keep yours?" aria-label="Why keep yours" className="h-8 w-56 text-sm" />
+              <Button type="submit" size="sm" variant="outline">Keep mine</Button>
+            </form>
+          )}
+        </Block>
+      )}
+
+      {(replaced || precedents.length > 0) && (
+        <Block title={replaced ? "Replaced" : "Precedent"}>
+          <Row>
+            {replaced && <Tile icon={History} label={replaced.title} sub={`${replaced.by ?? PEOPLE[replaced.owner]?.name}${replaced.when ? ` · ${replaced.when}` : ""}`} onClick={() => onLeave(`/p/${d.project}/decisions/${replaced.id}`)} />}
+            {precedents.map((p) => (
+              <Tile key={p.id} icon={CircleDot} label={p.title} sub={`${p.by ?? PEOPLE[p.owner]?.name}${p.when ? ` · ${p.when}` : ""}`} onClick={() => onLeave(`/p/${d.project}/decisions/${p.id}`)} />
+            ))}
+          </Row>
+        </Block>
+      )}
 
       {reach.length > 0 && (
-        <Section title="Reach">
-          <ul className="divide-y rounded-lg border">
-            {reach.map(({ artifact: a, task, needsUpdate }) => {
-              const Icon = KIND_ICON[a.kind]
-              return (
-                <li key={a.id} className="flex items-center gap-3 px-3 py-2">
-                  <Icon className="size-4 shrink-0 text-muted-foreground" />
-                  <button className="min-w-0 flex-1 text-left" onClick={() => onLeave(`/p/${d.project}/artifacts/${a.id}`)}>
-                    <span className="block truncate text-sm hover:underline">{a.name}</span>
-                    <span className="block truncate text-xs text-muted-foreground">{PEOPLE[a.owner]?.name}{task && needsUpdate ? ` · task due ${task.due}` : ""}</span>
-                  </button>
-                  {needsUpdate ? <Badge variant="outline" className="font-normal">Needs update</Badge> : <Badge variant="secondary" className="gap-1 font-normal"><Check />Updated</Badge>}
-                </li>
-              )
-            })}
-          </ul>
-          <p className="flex items-center gap-2 text-xs text-muted-foreground">
-            <span className="flex -space-x-1.5 *:ring-2 *:ring-background">{seen.map((p) => <PersonAvatar key={p} id={p} className="size-5" />)}</span>
-            Seen by {seen.map((p) => PEOPLE[p]?.name.split(" ")[0]).join(", ")}{notSeen.length > 0 && ` · not yet ${notSeen.map((p) => PEOPLE[p]?.name.split(" ")[0]).join(", ")}`}
-          </p>
-        </Section>
-      )}
-
-      <Section title="Led here from" aside={<Button variant="ghost" size="sm" className="h-7 text-xs" onClick={onPath}><MapIcon />Show full path</Button>}>
-        {chain.length ? (
-          <div className="flex flex-wrap items-center gap-1.5 text-sm">
-            {chain.map((c) => (
-              <span key={c.id} className="contents">
-                <button onClick={() => onDecision(c.id)} className="flex max-w-full items-center gap-1.5 rounded-md border px-2 py-1 text-left text-xs hover:bg-muted">
-                  <StatusIcon status={statusOf(c)} className="size-3.5 shrink-0 text-muted-foreground" /><span className="truncate">{c.title}</span>
-                </button>
-                <ArrowRight className="size-3.5 shrink-0 text-muted-foreground" />
-              </span>
+        <Block title="Artifacts">
+          <Row>
+            {[...reach].sort((a, b) => Number(b.needsUpdate) - Number(a.needsUpdate)).map(({ artifact: a, needsUpdate }) => (
+              <Tile key={a.id} icon={KIND_ICON[a.kind]} label={a.name} sub={needsUpdate ? "Needs update" : PEOPLE[a.owner]?.name} strong={needsUpdate} onClick={() => onLeave(`/p/${d.project}/artifacts/${a.id}`)} />
             ))}
-            <span className="rounded-md bg-muted px-2 py-1 text-xs font-medium">This one</span>
-          </div>
-        ) : <p className="text-sm text-muted-foreground">Starts here.</p>}
-      </Section>
-
-      {d.visual && (
-        <Section title="Before and after">
-          <div className="grid grid-cols-2 gap-3">
-            <VisualPlate label="Before" text={d.visual.before} />
-            <VisualPlate label="After" text={d.visual.after} after />
-          </div>
-        </Section>
+          </Row>
+        </Block>
       )}
 
-      {(replaced || d.was) && (
-        <Section title="What it replaced">
-          <button disabled={!replaced} onClick={() => replaced && onDecision(replaced.id)} className="w-full rounded-lg border p-3 text-left enabled:hover:bg-muted">
-            <span className="block text-sm text-muted-foreground line-through">{replaced?.title ?? d.was}</span>
-            {replaced && <span className="mt-1 block text-xs text-muted-foreground">{replaced.by} · {replaced.when} · {replaced.why}</span>}
-          </button>
-        </Section>
-      )}
-
-      {d.options && d.options.length > 0 && (
-        <Section title="Options not picked">
-          <ul className="space-y-1.5">
-            {d.options.map((o) => (
-              <li key={o.title} className="flex gap-3 text-sm">
-                <span className="mt-2 size-1.5 shrink-0 rounded-full border border-muted-foreground" />
-                <span><span className="font-medium">{o.title}</span> <span className="text-muted-foreground">· {o.why}</span></span>
-              </li>
-            ))}
-          </ul>
-        </Section>
-      )}
-
-      <Section title={`Replies${replies.length ? ` · ${replies.length}` : ""}`}>
+      <Block title={`Replies${replies.length ? ` · ${replies.length}` : ""}`}>
         {replies.map((r, i) => (
           <div key={i} className="flex gap-2.5 text-sm">
             <PersonAvatar id={r.who} className="mt-0.5" />
@@ -221,45 +197,18 @@ function DecisionBody({ decision: d, onDecision, onLeave, onPath }: { decision: 
             </div>
           </div>
         ))}
-        <form className="space-y-2" onSubmit={(e) => {
+        <form className="flex items-center gap-2" onSubmit={(e) => {
           e.preventDefault()
           if (!reply.trim()) return
           addReply(d.id, { who: ME.id, text: reply.trim(), when: "Just now" })
           setReply("")
           toast("Reply sent")
         }}>
-          <Textarea rows={2} value={reply} onChange={(e) => setReply(e.target.value)} placeholder={d.owner === ME.id ? "Add context…" : `Reply to ${PEOPLE[d.owner]?.name.split(" ")[0]}…`} />
-          <div className="flex items-center gap-2">
-            <Button type="submit" size="sm" variant="outline" disabled={!reply.trim()}>Reply</Button>
-            <Button type="button" size="sm" variant="ghost" className="ml-auto text-muted-foreground" onClick={() => askWhyspace(`Why ${d.title.charAt(0).toLowerCase()}${d.title.slice(1)}?`)}><Sparkles />Ask about this</Button>
-          </div>
+          <Input value={reply} onChange={(e) => setReply(e.target.value)} placeholder="Reply…" className="h-8" />
+          <Button type="submit" size="sm" variant="outline" disabled={!reply.trim()}>Reply</Button>
+          <Button type="button" size="sm" variant="ghost" className="text-muted-foreground" onClick={() => { onClose(); askWhyspace(`Why ${d.title.charAt(0).toLowerCase()}${d.title.slice(1)}?`) }}><Sparkles />{DESIGN === "b" ? "Ask Duet" : "Ask AI"}</Button>
         </form>
-      </Section>
-    </>
-  )
-}
-
-// A grayscale stand-in for a visual change. Color names become labelled swatches;
-// anything else gets a small swipe card, with the dot once it moves.
-function VisualPlate({ label, text, after }: { label: string; text: string; after?: boolean }) {
-  const colors = text.match(/red|blue|yellow/gi)
-  return (
-    <div className={cn("space-y-2 rounded-lg border p-3", after && "border-foreground/40")}>
-      <div className="text-[11px] text-muted-foreground">{label}</div>
-      <div className="flex h-20 items-center justify-center gap-2 rounded-md bg-muted/50">
-        {colors ? colors.map((c) => (
-          <div key={c} className="flex flex-col items-center gap-1">
-            <span className={cn("size-8 rounded-full border", { red: "bg-neutral-500", blue: "bg-neutral-700", yellow: "bg-neutral-200" }[c.toLowerCase()])} />
-            <span className="text-[10px] text-muted-foreground capitalize">{c}</span>
-          </div>
-        )) : (
-          <div className="relative h-14 w-10 rounded-md border-2 border-foreground/40 bg-background">
-            <div className="mx-auto mt-1.5 h-5 w-6 rounded-sm bg-muted" />
-            {after && <span className="absolute bottom-2 left-1/2 size-2.5 -translate-x-1/2 animate-pulse rounded-full bg-foreground motion-reduce:animate-none" />}
-          </div>
-        )}
-      </div>
-      <div className="text-xs font-medium">{text}</div>
+      </Block>
     </div>
   )
 }

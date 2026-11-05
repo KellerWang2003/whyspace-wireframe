@@ -3,16 +3,16 @@ import { toast } from "sonner"
 import {
   Archive,
   Bell,
+  Blend,
   Bot,
-  Building2,
   Check,
   ChevronRight,
   ChevronsUpDown,
   CircleUser,
+  Globe,
   Inbox,
   LayoutGrid,
   ListChecks,
-  LogIn,
   Link2,
   LogOut,
   MoreHorizontal,
@@ -22,16 +22,18 @@ import {
   Settings,
   UserPlus,
 } from "lucide-react"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { ProjectMark } from "@/components/app/project-mark"
+import { ProjectNewMenu } from "@/components/app/project-new-menu"
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuShortcut,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
@@ -44,7 +46,6 @@ import {
   SidebarGroupAction,
   SidebarGroupContent,
   SidebarGroupLabel,
-  SidebarHeader,
   SidebarMenu,
   SidebarMenuAction,
   SidebarMenuBadge,
@@ -54,76 +55,25 @@ import {
   SidebarMenuSubButton,
   SidebarMenuSubItem,
 } from "@/components/ui/sidebar"
-import { INBOX, ME, MY_PROJECTS, SESSIONS, SETTINGS_TABS } from "@/data"
+import { INBOX, ME, MY_PROJECTS, PEOPLE, SESSIONS, SETTINGS_TABS } from "@/data"
 import { useNeedsYou } from "@/lib/work"
 import { navigate, useRoute } from "@/lib/router"
 import { useStore } from "@/lib/store"
+import { cn } from "@/lib/utils"
+import { DESIGN } from "@/lib/design"
+import { ProjectNavItemB } from "@/design-b/sidebar"
 
 export function AppSidebar() {
   const route = useRoute()
-  const { inboxState, workspaces, current, switchWorkspace, setInviteOpen, setNewProjectOpen, setSearchOpen, setWorkspaceOpen } = useStore()
+  const { inboxState, current, setNewProjectOpen, setSearchOpen } = useStore()
   const projects = current?.example ? MY_PROJECTS : []
   const unread = current?.example ? INBOX.filter((i) => !inboxState[i.id]?.done && !(inboxState[i.id]?.read ?? !i.unread)).length : 0
   const at = (path: string) => "/" + route.join("/") === path
 
   return (
     <Sidebar>
-      {/* 1. Workspace menu: switch, invite people, settings, create or join */}
-      <SidebarHeader>
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <SidebarMenuButton size="lg">
-                  <div className="flex aspect-square size-8 items-center justify-center rounded-md bg-sidebar-primary text-sidebar-primary-foreground text-sm font-semibold">
-                    {current ? current.name[0] : <Building2 className="size-4" />}
-                  </div>
-                  <div className="grid flex-1 text-left text-sm leading-tight">
-                    <span className="truncate font-medium">{current?.name ?? "No workspace"}</span>
-                    <span className="truncate text-xs text-muted-foreground">{current ? `${current.plan} plan` : "Create or join one"}</span>
-                  </div>
-                  <ChevronsUpDown className="ml-auto" />
-                </SidebarMenuButton>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-64" align="start">
-                {workspaces.length > 0 && <DropdownMenuLabel className="text-xs text-muted-foreground">Workspaces</DropdownMenuLabel>}
-                {workspaces.map((w) => (
-                  <DropdownMenuItem key={w.id} onSelect={() => { switchWorkspace(w.id); navigate("/projects") }}>
-                    <div className="flex size-6 items-center justify-center rounded-sm border text-xs">{w.name[0]}</div>
-                    {w.name}
-                    {w.id === current?.id && <Check className="ml-auto" />}
-                  </DropdownMenuItem>
-                ))}
-                {current && (
-                  <>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onSelect={() => setInviteOpen(true)}>
-                      <UserPlus />
-                      Invite people
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onSelect={() => navigate("/settings/general")}>
-                      <Settings />
-                      Workspace settings
-                    </DropdownMenuItem>
-                  </>
-                )}
-                {workspaces.length > 0 && <DropdownMenuSeparator />}
-                <DropdownMenuItem onSelect={() => setWorkspaceOpen("create")}>
-                  <Plus />
-                  Create workspace
-                </DropdownMenuItem>
-                <DropdownMenuItem onSelect={() => setWorkspaceOpen("join")}>
-                  <LogIn />
-                  Join a workspace
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </SidebarMenuItem>
-        </SidebarMenu>
-      </SidebarHeader>
-
       <SidebarContent>
-        {/* 2. Search, Inbox, My tasks, All projects. New project is the + beside Projects. */}
+        {/* 1. Search, Inbox, My tasks, All projects. New project is the + beside Projects. */}
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
@@ -157,20 +107,20 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        {/* 3. Projects section, every project in the workspace */}
+        {/* 2. Projects section, every project in the workspace */}
         <SidebarGroup>
           <SidebarGroupLabel asChild>
             <button onClick={() => navigate("/projects")} className="hover:text-sidebar-foreground">
               Projects
             </button>
           </SidebarGroupLabel>
-          <SidebarGroupAction title="New project" onClick={() => setNewProjectOpen(true)}>
+          <SidebarGroupAction aria-label="New project" onClick={() => setNewProjectOpen(true)}>
             <Plus />
           </SidebarGroupAction>
           <SidebarGroupContent>
             <SidebarMenu>
               {projects.map((p) => (
-                <ProjectNavItem key={p.id} id={p.id} name={p.name} route={route} />
+                DESIGN === "b" ? <ProjectNavItemB key={p.id} id={p.id} name={p.name} route={route} /> : <ProjectNavItem key={p.id} id={p.id} name={p.name} route={route} />
               ))}
               {projects.length === 0 && (
                 <p className="px-2 py-1 text-xs text-muted-foreground">No projects yet</p>
@@ -180,45 +130,22 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
 
-      {/* 4. Profile menu */}
+      {/* 3. Account menu, like Notion: workspace, settings, invite, switch workspace, account, log out */}
       <SidebarFooter>
         <SidebarMenu>
           <SidebarMenuItem>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <SidebarMenuButton size="lg">
-                  <Avatar className="size-8 rounded-md">
-                    <AvatarFallback className="rounded-md">{ME.name[0]}</AvatarFallback>
-                  </Avatar>
+                  <WorkspaceMark name={current?.name} className="size-8 text-sm" />
                   <div className="grid flex-1 text-left text-sm leading-tight">
-                    <span className="truncate font-medium">{ME.name}</span>
+                    <span className="truncate font-medium">{current?.name ?? "No workspace"}</span>
                     <span className="truncate text-xs text-muted-foreground">{ME.email}</span>
                   </div>
                   <ChevronsUpDown className="ml-auto" />
                 </SidebarMenuButton>
               </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-60" side="top" align="start">
-                <DropdownMenuGroup>
-                  <DropdownMenuItem onSelect={() => navigate("/account/profile")}>
-                    <CircleUser />
-                    Profile
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onSelect={() => navigate("/account/ai-tools")}>
-                    <Bot />
-                    My AI tools
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onSelect={() => navigate("/account/notifications")}>
-                    <Bell />
-                    Notifications
-                  </DropdownMenuItem>
-                </DropdownMenuGroup>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onSelect={() => navigate("/login")}>
-                  <LogOut />
-                  Log out
-                  <DropdownMenuShortcut>⇧⌘Q</DropdownMenuShortcut>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
+              <AccountMenuContent side="top" align="start" />
             </DropdownMenu>
           </SidebarMenuItem>
         </SidebarMenu>
@@ -227,19 +154,91 @@ export function AppSidebar() {
   )
 }
 
-// 3a. Each project expands in place to its pages. Hovering the project shows ⋯ for its settings.
+
+// The account menu (workspace, settings, invite, account, switch workspace, log out).
+export function AccountMenuContent({ side, align }: { side: "top" | "right"; align: "start" | "end" }) {
+  const { workspaces, current, switchWorkspace, setInviteOpen, setWorkspaceOpen } = useStore()
+  const members = current?.example ? Object.keys(PEOPLE).length : 1
+  return (
+        <DropdownMenuContent className="w-72" side={side} align={align}>
+          {current && (
+            <>
+              <DropdownMenuLabel className="flex items-center gap-3 py-2">
+                <WorkspaceMark name={current.name} className="size-9 text-base" />
+                <div className="grid leading-tight">
+                  <span className="truncate">{current.name}</span>
+                  <span className="text-xs font-normal text-muted-foreground">{current.plan} plan · {members} members</span>
+                </div>
+              </DropdownMenuLabel>
+              <DropdownMenuItem onSelect={() => navigate("/settings/general")}>
+                <Settings />
+                Settings
+              </DropdownMenuItem>
+              <DropdownMenuItem onSelect={() => setInviteOpen(true)}>
+                <UserPlus />
+                Invite people
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+            </>
+          )}
+          <DropdownMenuSub>
+            <DropdownMenuSubTrigger className="text-xs text-muted-foreground [&>svg:last-child]:hidden">
+              <span className="truncate">{ME.email}</span>
+              <MoreHorizontal className="ml-auto" />
+            </DropdownMenuSubTrigger>
+            <DropdownMenuSubContent className="w-48">
+              <DropdownMenuItem onSelect={() => navigate("/account/profile")}><CircleUser />Profile</DropdownMenuItem>
+              {DESIGN === "b" && <DropdownMenuItem onSelect={() => navigate("/duet")}><Blend />Duet</DropdownMenuItem>}
+              <DropdownMenuItem onSelect={() => navigate("/account/ai-tools")}><Bot />My AI tools</DropdownMenuItem>
+              <DropdownMenuItem onSelect={() => navigate("/account/notifications")}><Bell />Notifications</DropdownMenuItem>
+            </DropdownMenuSubContent>
+          </DropdownMenuSub>
+          {workspaces.map((w) => (
+            <DropdownMenuItem key={w.id} onSelect={() => { switchWorkspace(w.id); navigate("/projects") }}>
+              <WorkspaceMark name={w.name} className="size-5 text-[10px]" />
+              <span className="truncate">{w.name}</span>
+              {w.id === current?.id && <Check className="ml-auto" />}
+            </DropdownMenuItem>
+          ))}
+          <DropdownMenuItem onSelect={() => setWorkspaceOpen("create")}>
+            <Plus />
+            New workspace
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onSelect={() => navigate("/site")}>
+            <Globe />
+            Home page
+          </DropdownMenuItem>
+          <DropdownMenuItem onSelect={() => navigate("/login")}>
+            <LogOut />
+            Log out
+            <DropdownMenuShortcut>⇧⌘Q</DropdownMenuShortcut>
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+  )
+}
+
+export function WorkspaceMark({ name, className }: { name?: string; className?: string }) {
+  return (
+    <div className={cn("flex aspect-square shrink-0 items-center justify-center rounded-md bg-sidebar-primary font-semibold text-sidebar-primary-foreground", className)}>
+      {name?.[0] ?? "?"}
+    </div>
+  )
+}
+
+// 2a. Each project expands in place to its pages. Hovering the project shows ⋯ for its settings.
 const SECTIONS = [
-  ["catch-up", "Catch up"],
+  ["home", "Home"],
   ["tasks", "Tasks"],
   ["decisions", "Decisions"],
   ["artifacts", "Artifacts"],
-  ["sessions", "Meetings"],
+  ["sessions", "Workshops"],
 ] as const
 
 function ProjectNavItem({ id, name, route }: { id: string; name: string; route: string[] }) {
   const inProject = route[0] === "p" && route[1] === id
   const [open, setOpen] = useState(inProject)
-  const section = inProject ? (!route[2] || ["overview", "ask"].includes(route[2]) ? "catch-up" : route[2]) : null
+  const section = inProject ? (!route[2] || ["catch-up", "ask", "overview"].includes(route[2]) ? "home" : route[2]) : null
   const live = SESSIONS.some((s) => s.project === id && s.status === "Live")
   const waiting = useNeedsYou(id).length
 
@@ -247,16 +246,25 @@ function ProjectNavItem({ id, name, route }: { id: string; name: string; route: 
     <Collapsible asChild open={open || inProject} onOpenChange={setOpen}>
       <SidebarMenuItem>
         <SidebarMenuButton
-          isActive={inProject && section === "catch-up"}
           onClick={() => {
             setOpen(true)
-            navigate(`/p/${id}/catch-up`)
+            navigate(`/p/${id}/home`)
           }}
         >
           <ProjectMark project={id} />
           <span>{name}</span>
           {live && <Radio className="ml-auto size-3.5 text-muted-foreground group-hover/menu-item:hidden" />}
         </SidebarMenuButton>
+        <ProjectNewMenu
+          project={{ id, name }}
+          side="right"
+          trigger={
+            <SidebarMenuAction showOnHover className="right-[3.25rem]">
+              <Plus />
+              <span className="sr-only">New in {name}</span>
+            </SidebarMenuAction>
+          }
+        />
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <SidebarMenuAction showOnHover className="right-7">
@@ -290,7 +298,7 @@ function ProjectNavItem({ id, name, route }: { id: string; name: string; route: 
                     {key === "sessions" && live ? (
                       <span className="ml-auto flex items-center gap-1 text-xs text-muted-foreground"><Radio className="size-3" />Live</span>
                     ) : (
-                      key === "catch-up" && waiting > 0 && <span className="ml-auto text-xs tabular-nums text-muted-foreground" title={`${waiting} need you`}>{waiting}</span>
+                      key === "home" && waiting > 0 && <span className="ml-auto text-xs tabular-nums text-muted-foreground">{waiting}</span>
                     )}
                   </a>
                 </SidebarMenuSubButton>

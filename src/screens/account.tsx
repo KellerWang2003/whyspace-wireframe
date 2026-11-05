@@ -10,21 +10,25 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { AppShell, PageHeader } from "@/components/app/app-shell"
 import { AI_TOOLS, ME } from "@/data"
 import { navigate } from "@/lib/router"
+import { DESIGN } from "@/lib/design"
+import { DuetTab } from "@/design-c/duet"
 
 // The profile menu's pages: Profile, My AI tools, Notifications.
 export function Account({ tab }: { tab: string }) {
   return (
     <AppShell crumbs={[{ label: "Account" }]}>
-      <div className="flex flex-col gap-6 p-8">
+      <div className="mx-auto flex w-full max-w-2xl flex-col gap-6 p-6 sm:p-8">
         <PageHeader title="Account" />
-        <Tabs value={tab} onValueChange={(v) => navigate(`/account/${v}`)}>
+        <Tabs value={tab} onValueChange={(v) => navigate(v === "duet" && DESIGN === "b" ? "/duet" : `/account/${v}`)}>
           <TabsList>
             <TabsTrigger value="profile">Profile</TabsTrigger>
+            {DESIGN !== "a" && <TabsTrigger value="duet">Duet</TabsTrigger>}
             <TabsTrigger value="ai-tools">My AI tools</TabsTrigger>
             <TabsTrigger value="notifications">Notifications</TabsTrigger>
           </TabsList>
         </Tabs>
         {tab === "profile" && <Profile />}
+        {tab === "duet" && DESIGN === "c" && <DuetTab />}
         {tab === "ai-tools" && <AiTools />}
         {tab === "notifications" && <Notifications />}
       </div>
@@ -84,7 +88,7 @@ function Notifications() {
     ["Decisions to confirm", "Your AI tool logged one", true],
     ["Updates to make", "A decision changed your work", true],
     ["Conflicts", "Work breaks a decision", true],
-    ["Meeting invites", "Someone invites you", true],
+    ["Workshop invites", "Someone invites you", true],
     ["Mentions", "Someone mentions you", false],
   ] as const
   return (

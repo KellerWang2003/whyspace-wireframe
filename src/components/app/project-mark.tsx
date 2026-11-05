@@ -1,4 +1,4 @@
-import { Cat, GraduationCap, type LucideIcon } from "lucide-react"
+import { Cat, Gift, GraduationCap, Smartphone, Sprout, Users, type LucideIcon } from "lucide-react"
 import { PROJECTS } from "@/data"
 import { cn } from "@/lib/utils"
 
@@ -7,6 +7,10 @@ import { cn } from "@/lib/utils"
 const MARKS: Record<string, { icon: LucideIcon; tone: string }> = {
   whiskr: { icon: Cat, tone: "bg-foreground text-background" },
   studio: { icon: GraduationCap, tone: "border border-foreground/40 bg-background text-foreground" },
+  holiday: { icon: Gift, tone: "bg-muted text-foreground" },
+  seed: { icon: Sprout, tone: "bg-muted text-foreground" },
+  panel: { icon: Users, tone: "bg-muted text-foreground" },
+  android: { icon: Smartphone, tone: "bg-muted text-foreground" },
 }
 
 // `project` can be a project's id or its name.

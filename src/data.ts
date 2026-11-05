@@ -1,6 +1,8 @@
 import type { Plan } from "@/lib/store"
+import { DESIGN } from "@/lib/design"
 import { STAGE } from "@/lib/stage"
 import { VIEWER } from "@/lib/viewer"
+import { PRESET } from "@/scenarios/data"
 
 // Fictional scenario: Keller markets Whiskr, a swipe app for cats, and builds Recall with one AI Studio teammate.
 
@@ -49,10 +51,12 @@ export const initials = (name: string) =>
     .join("")
     .slice(0, 2)
 
-export type Status = "conf" | "inf" | "open" | "chg" | "flag"
+// "prec" (from precedent) is never stored: Design B derives it for an inferred decision that builds on a confirmed one.
+export type Status = "conf" | "prec" | "inf" | "open" | "chg" | "flag"
 
 export const STATUS_LABEL: Record<Status, string> = {
   conf: "Confirmed",
+  prec: "From precedent",
   inf: "Inferred",
   open: "Open",
   chg: "Changed",
@@ -79,112 +83,116 @@ export type Decision = {
   options?: { title: string; why: string }[]
   // The decision this one replaced (an id, so the sheet can show who decided it and when).
   replaces?: string
+  // A clash: the confirmed decision this one contradicts (its id). Design B shows ▲ until one side changes.
+  clashes?: string
   // Visual changes get a before and after on the decision sheet.
   visual?: { before: string; after: string }
   replies?: Reply[]
 }
 
-export type Evidence = { kind: "clip" | "research" | "test" | "chat" | "feedback"; label: string; detail?: string; artifact?: string }
+export type Evidence = { kind: "clip" | "research" | "test" | "chat" | "feedback"; label: string; detail?: string; artifact?: string; workshop?: string }
 export type Reply = { who: string; text: string; when: string }
 
 const ALL_DECISIONS: Decision[] = [
   {
     "id": "move",
     "project": "whiskr",
-    "title": "Every element should move to catch a cat's attention",
+    "title": "Make things move to get cats' attention",
     "part": "Research",
     "status": "conf",
     "owner": "TR",
     "by": "Trevor",
     "when": "Oct 22",
-    "tool": "Live session",
-    "why": "Luna ignored the static card, then pounced on a moving notification.",
-    "snippet": "She only cares when something moves. We need the element to move.",
-    "evidence": [{ "kind": "clip", "label": "Luna at 5:55", "artifact": "w3" }],
-    "visual": { "before": "Static swipe card", "after": "Every element moves" }
+    "tool": "User testing workshop",
+    "why": "In user testing, all 3 cats ignored the still card and chased anything that moved.",
+    "snippet": "She only looks when something moves.",
+    "evidence": [
+      { "kind": "test", "label": "User testing workshop", "detail": "3 cats, Oct 21", "workshop": "testing" },
+      { "kind": "clip", "label": "Luna pounces · 0:42", "artifact": "w3" }
+    ],
+    "visual": { "before": "Still swipe card", "after": "Moving swipe card" }
   },
   {
     "id": "dot",
     "project": "whiskr",
-    "title": "A moving dot leads the swipe",
+    "title": "Add a moving dot that shows cats where to swipe",
     "part": "App",
     "status": "conf",
     "owner": "KL",
-    "by": "Kelly and Trevor",
+    "by": "Kelly",
     "when": "Oct 22",
     "tool": "Claude Code",
-    "why": "The dot works on the app, billboard and video.",
-    "evidence": [{ "kind": "clip", "label": "Canvas comparison · footage review", "detail": "Three directions compared live.", "artifact": "w5" }],
+    "why": "Cats follow a moving dot, so it shows them where to swipe.",
+    "evidence": [{ "kind": "test", "label": "Kelly's 2 prototypes", "detail": "The dot beat the wiggling card.", "workshop": "testing" }],
     "options": [
-      { "title": "A wiggling card", "why": "Hard for a paw to hit" },
-      { "title": "A dangling feather", "why": "Covered the cat's photo" }
+      { "title": "Wiggle the whole card", "why": "Hard for a paw to hit" },
+      { "title": "A feather toy", "why": "Covered the cat's photo" }
     ],
-    "visual": { "before": "Static swipe card", "after": "A moving dot leads the swipe" }
+    "visual": { "before": "Still swipe card", "after": "Swipe card with a moving dot" }
   },
   {
     "id": "purr",
     "project": "whiskr",
-    "title": "The dot purrs when it moves",
+    "title": "Add a purring sound to the dot",
     "part": "App",
     "status": "conf",
     "owner": "KL",
     "by": "Trevor",
     "when": "Oct 22",
     "tool": "Perplexity",
-    "why": "Cats feel a 25 Hz buzz through their paws, like a purr.",
-    "evidence": [{ "kind": "research", "label": "Perplexity · 3 sources", "artifact": "w2" }],
-    "options": [{ "title": "A chirp sound", "why": "Lost when the phone is on mute" }]
+    "why": "Research found that cats pay attention to purring sounds.",
+    "evidence": [{ "kind": "research", "label": "Cat research", "detail": "Perplexity · 3 sources", "artifact": "w2" }]
   },
   {
     "id": "red",
     "project": "whiskr",
-    "title": "Tuna red as the primary color",
+    "title": "Use red as the brand color",
     "part": "Brand",
     "status": "conf",
     "owner": "TR",
     "by": "Trevor",
     "when": "Oct 8",
     "tool": "Figma",
-    "why": "Playful, food-related and bright on a phone."
+    "why": "Red feels playful and stands out."
   },
   {
     "id": "dotbrand",
     "project": "whiskr",
-    "title": "The purring dot is a brand element",
+    "title": "Add the swipe dot to the logo",
     "part": "Brand",
     "status": "conf",
     "owner": "TR",
     "by": "Trevor",
     "when": "Oct 22",
     "tool": "Figma",
-    "why": "Cats should recognize the dot everywhere, not just in the app.",
-    "options": [{ "title": "Keep the dot in the app only", "why": "Cats wouldn't know it elsewhere" }]
+    "why": "Cats already know the dot from the app, so they'll recognize the logo.",
+    "options": [{ "title": "Keep the dot in the app only", "why": "Cats wouldn't spot it on posters" }]
   },
   {
     "id": "nored",
     "project": "whiskr",
-    "title": "Drop red from the brand; use blue and yellow",
+    "title": "Change the brand color from red to blue",
     "part": "Brand",
     "status": "chg",
     "owner": "TR",
     "by": "Trevor",
     "when": "Oct 23",
     "tool": "Claude",
-    "was": "Tuna red as the primary color",
-    "why": "Cats see red as gray; blue and yellow stand out.",
+    "was": "Use red as the brand color",
+    "why": "Research found that cats can't see red. Blue is the color they see best.",
     "replaces": "red",
-    "evidence": [{ "kind": "research", "label": "Cat vision research · Perplexity", "artifact": "w2" }],
-    "options": [{ "title": "Keep red as an accent", "why": "Still reads as gray to cats" }],
-    "visual": { "before": "Tuna red", "after": "Blue and yellow" },
+    "evidence": [{ "kind": "research", "label": "Cat research", "detail": "Cats see red as gray.", "artifact": "w2" }],
+    "options": [{ "title": "Keep red for small details", "why": "Cats still can't see it" }],
+    "visual": { "before": "Red", "after": "Blue" },
     "replies": [
       { "who": "MC", "text": "Posters too? They're mostly for owners.", "when": "Oct 23" },
-      { "who": "TR", "text": "Yes, anything cats might see.", "when": "Oct 23" }
+      { "who": "TR", "text": "Yes, cats see them too.", "when": "Oct 23" }
     ]
   },
   {
     "id": "short",
     "project": "whiskr",
-    "title": "The promo video runs 15 seconds",
+    "title": "Make the promo video 15 seconds",
     "part": "Marketing",
     "status": "inf",
     "owner": "MC",
@@ -192,23 +200,52 @@ const ALL_DECISIONS: Decision[] = [
     "when": "Today",
     "tool": "Claude",
     "snippet": "Let's keep it short, like 15 seconds.",
-    "why": "Inferred: cats lose interest fast.",
+    "why": "Cats lose interest fast.",
     "evidence": [{ "kind": "chat", "label": "Keller's chat with Claude", "detail": "\"Let's keep it short, like 15 seconds.\"" }],
     "options": [{ "title": "30 seconds", "why": "Too long for cats" }]
   },
   {
+    "id": "bluecard",
+    "project": "whiskr",
+    "title": "Use blue for the promo title card",
+    "part": "Marketing",
+    "status": "inf",
+    "owner": "MC",
+    "by": "Keller",
+    "when": "Today",
+    "tool": "Claude",
+    "snippet": "Title card in the brand blue, white type.",
+    "why": "Follows the brand color change: cats see blue best.",
+    "evidence": [{ "kind": "chat", "label": "Keller's chat with Claude", "detail": "\"Title card in the brand blue, white type.\"" }]
+  },
+  {
+    "id": "redcard",
+    "project": "whiskr",
+    "title": "Make the end card red, like the old logo",
+    "part": "Marketing",
+    "status": "flag",
+    "owner": "MC",
+    "by": "Keller",
+    "when": "Today",
+    "tool": "Claude",
+    "snippet": "End on the red logo card people know.",
+    "why": "People know the red logo from the posters.",
+    "clashes": "nored",
+    "evidence": [{ "kind": "chat", "label": "Keller's chat with Claude", "detail": "\"End on the red logo card people know.\"" }]
+  },
+  {
     "id": "pounce",
     "project": "whiskr",
-    "title": "Open the video on Luna's real pounce",
+    "title": "Start the promo video with a real cat clip",
     "part": "Marketing",
     "status": "conf",
     "owner": "MC",
     "by": "Keller",
     "when": "Today",
     "tool": "Claude",
-    "why": "A real catch shows the idea in one second.",
-    "evidence": [{ "kind": "clip", "label": "Luna's pounce", "detail": "The catch at 5:55 is the opening shot.", "artifact": "w3" }],
-    "options": [{ "title": "Open on the logo", "why": "Doesn't show the idea" }]
+    "why": "Seeing a real cat chase the screen explains the app in a second.",
+    "evidence": [{ "kind": "clip", "label": "Luna pounces · 0:42", "artifact": "w3" }],
+    "options": [{ "title": "Start with the logo", "why": "Doesn't show what the app does" }]
   },
   {
       "id": "cram",
@@ -292,6 +329,7 @@ export const LINKS: [string, string][] = [
   ["purr", "dotbrand"],
   ["dotbrand", "pounce"],
   ["nored", "pounce"],
+  ["nored", "bluecard"],
   ["cram", "slides"],
   ["slides", "cite"],
   ["slides", "figma"],
@@ -312,7 +350,7 @@ export type Project = { id: string; name: string; brief: string; members: string
 export const PROJECTS: Project[] = [
   {
     "id": "whiskr",
-    "name": "Whiskr",
+    "name": "Whiskr (Demo project)",
     "brief": {
       MC: "A swipe app for cat playdates. I lead marketing.",
       CH: "A swipe app for cat playdates. I run the company.",
@@ -336,8 +374,16 @@ export const PROJECTS: Project[] = [
         "JK"
       ],
       "updated": "1 hour ago"
-    }
+    },
+  // Empty example projects, so everyone has more than one. Only Whiskr has content.
+  { id: "holiday", name: "Holiday campaign", brief: "", members: ["MC", "CH"], updated: "2 days ago" },
+  { id: "seed", name: "Seed round", brief: "", members: ["CH"], updated: "3 days ago" },
+  { id: "panel", name: "Cat owner panel", brief: "", members: ["TR", "KL"], updated: "4 days ago" },
+  { id: "android", name: "Android app", brief: "", members: ["KL"], updated: "1 week ago" },
 ]
+
+// Projects with no work in them yet: their pages show empty states.
+export const EMPTY_PROJECTS = ["holiday", "seed", "panel", "android"]
 
 export type TaskStatus = "todo" | "prog" | "review" | "done"
 export type Priority = "urgent" | "high" | "med" | "low" | "none"
@@ -347,15 +393,19 @@ export type Task = {
   project: string
   part: string
   owner: string
+  // More people on the task besides the owner.
+  assignees?: string[]
   due: string
   status: TaskStatus
   priority: Priority
   decision?: string
   description?: string
-  subtasks?: { title: string; done: boolean }[]
   comments?: { who: string; text: string; when: string }[]
-  // Update tasks: Whyspace adds one when a decision changes something you own.
-  // The prompt is ready to paste into the tool; finishing the task marks the work updated.
+  // Context the task came from: meetings, workshops, decisions and artifacts. Hidden until opened.
+  related?: { meetings?: string[]; workshops?: string[]; decisions?: string[]; artifacts?: string[] }
+  // Every task suggests a tool and a prompt to start it there. The prompt tells the tool to read
+  // the context from Whyspace over MCP, then says how to do the task. Update tasks (added when a
+  // decision changes something you own) are done once the work is updated.
   prompt?: string
   tool?: string
 }
@@ -366,10 +416,15 @@ export const PRIORITY_LABEL: Record<Priority, string> = { urgent: "Urgent", high
 const ALL_TASKS: Task[] = [
   {
     "id": "t7",
-    "title": "Review the poster and promo video before launch",
-    "project": "Whiskr",
+    "tool": "Claude",
+    "prompt": "Use the Whyspace MCP to read Whiskr's Marketing thread.\n\nThen check the posters and the promo video against its decisions. List anything that doesn't match, with the fix.",
+    "related": {"decisions": ["nored", "pounce"], "meetings": ["s3"], "artifacts": ["w6", "w8"]},
+    "description": "Check both match this week's decisions.",
+    "title": "Review the posters and video before launch",
+    "project": "Whiskr (Demo project)",
     "part": "Marketing",
     "owner": "CH",
+    "assignees": ["MC"],
     "due": "Fri Oct 30",
     "status": "todo",
     "priority": "med",
@@ -377,47 +432,43 @@ const ALL_TASKS: Task[] = [
   },
   {
     "id": "t1",
-    "title": "Update the poster for the moving dot and new palette",
-    "project": "Whiskr",
+    "related": {"decisions": ["nored", "dotbrand"], "artifacts": ["w1", "w6"]},
+    "title": "Change the posters from red to blue",
+    "project": "Whiskr (Demo project)",
     "part": "Marketing",
     "owner": "MC",
     "due": "Fri Oct 30",
     "status": "todo",
     "priority": "high",
     "decision": "nored",
-    "description": "Swap tuna red for blue and yellow; add the dot.",
+    "description": "Cats can't see red. Add the swipe dot too.",
     "tool": "Figma",
-    "prompt": "Recolor the 3 posters to the blue and yellow in brand guidelines v3 and add the purring dot. Cats see red as gray."
+    "prompt": "Change the 3 posters from red to the blue in brand guidelines v3, and add the dot from the logo. Cats can't see red."
   },
   {
     "id": "t2",
-    "title": "Plan and storyboard the 15-second promo video",
-    "project": "Whiskr",
+    "tool": "Claude",
+    "prompt": "Use the Whyspace MCP to read Whiskr's Marketing thread and the promo video plan.\n\nThen plan the 15-second promo video:\n1. A one-line idea.\n2. A shot list: seconds, shot, text on screen.\n3. Start with Luna's real clip, use blue, end on the dot.\n\nAsk me before changing anything already decided.",
+    "related": {"decisions": ["pounce", "nored"], "meetings": ["s3"], "artifacts": ["w7", "w1"]},
+    "description": "Start with a real cat clip. Use blue, not red.",
+    "title": "Plan the 15-second promo video",
+    "project": "Whiskr (Demo project)",
     "part": "Marketing",
     "owner": "MC",
+    "assignees": ["CH"],
     "due": "Mon Nov 2",
     "status": "prog",
     "priority": "high",
-    "decision": "short",
-    "subtasks": [
-      {
-        "title": "Write the plan with Claude",
-        "done": true
-      },
-      {
-        "title": "Storyboard in Runway",
-        "done": false
-      },
-      {
-        "title": "Review with Christine",
-        "done": false
-      }
-    ]
+    "decision": "short"
   },
   {
     "id": "t3",
-    "title": "Build the purring dot into the swipe card",
-    "project": "Whiskr",
+    "tool": "Claude Code",
+    "prompt": "Use the Whyspace MCP to read Whiskr's App thread.\n\nThen add the dot to the swipe card: it moves toward the swipe direction and purrs. Use the blue color tokens.",
+    "related": {"decisions": ["dot"], "workshops": ["testing"], "meetings": ["s1", "s2"], "artifacts": ["w5", "w4"]},
+    "description": "The dot moves toward the swipe and purrs.",
+    "title": "Add the moving dot to the swipe card",
+    "project": "Whiskr (Demo project)",
     "part": "App",
     "owner": "KL",
     "due": "Fri Oct 30",
@@ -427,22 +478,27 @@ const ALL_TASKS: Task[] = [
   },
   {
     "id": "t4",
-    "title": "Recolor the app to blue and yellow",
-    "project": "Whiskr",
+    "related": {"artifacts": ["w1", "w5"]},
+    "title": "Change the app from red to blue",
+    "project": "Whiskr (Demo project)",
     "part": "App",
     "owner": "KL",
     "due": "Thu Oct 29",
     "status": "done",
     "priority": "med",
     "decision": "nored",
-    "description": "App buttons still use tuna red.",
+    "description": "The buttons are still red.",
     "tool": "Claude Code",
-    "prompt": "Replace tuna red in the swipe card with the blue and yellow tokens from brand guidelines v3. Cats see red as gray."
+    "prompt": "Use the Whyspace MCP to read the decision \"Change the brand color from red to blue\" in Whiskr's Brand thread.\n\nThen replace red in the app with the blue tokens from brand guidelines v3. Cats can't see red."
   },
   {
     "id": "t5",
-    "title": "Add the purring dot to the brand guidelines",
-    "project": "Whiskr",
+    "tool": "Claude",
+    "prompt": "Use the Whyspace MCP to read Whiskr's Brand thread.\n\nThen draft a brand guidelines page for the dot in the logo: sizes, motion, and do and don't examples.",
+    "related": {"decisions": ["dot"], "artifacts": ["w1"]},
+    "description": "One guidelines page: sizes, motion, do and don't.",
+    "title": "Add the swipe dot to the logo",
+    "project": "Whiskr (Demo project)",
     "part": "Brand",
     "owner": "TR",
     "due": "Oct 23",
@@ -452,8 +508,12 @@ const ALL_TASKS: Task[] = [
   },
   {
     "id": "t6",
-    "title": "Review Monday's cat-test footage",
-    "project": "Whiskr",
+    "tool": "Claude",
+    "prompt": "Use the Whyspace MCP to read Whiskr's Research thread.\n\nThen summarize the cat test videos: what each cat reacted to, with timestamps.",
+    "related": {"meetings": ["s1"], "workshops": ["testing"], "artifacts": ["w3", "w2"]},
+    "description": "Note what each cat reacted to.",
+    "title": "Review the cat test videos",
+    "project": "Whiskr (Demo project)",
     "part": "Research",
     "owner": "TR",
     "due": "Oct 22",
@@ -463,6 +523,9 @@ const ALL_TASKS: Task[] = [
   },
   {
       "id": "t11",
+      "tool": "Claude Code",
+      "prompt": "Use the Whyspace MCP to read Recall's Prototype thread and the decision \"Build one working upload-to-feedback flow\".\n\nThen connect the upload, quiz and feedback screens to Jordan's endpoint, with loading, failure and retry states.",
+      "related": {"workshops": ["recall"], "meetings": ["s9"], "artifacts": ["a15", "a16"]},
       "title": "Connect Recall’s upload, quiz, and feedback screens",
       "project": "AI Studio · Recall",
       "part": "Prototype",
@@ -471,24 +534,13 @@ const ALL_TASKS: Task[] = [
       "status": "prog",
       "priority": "high",
       "decision": "figma",
-      "description": "Use Jordan’s endpoint. Design loading, failure and retry states.",
-      "subtasks": [
-        {
-          "title": "Upload and processing states",
-          "done": true
-        },
-        {
-          "title": "Answer submission and feedback",
-          "done": false
-        },
-        {
-          "title": "Source-page preview and retry",
-          "done": false
-        }
-      ]
+      "description": "Use Jordan’s endpoint. Design loading, failure and retry states."
     },
   {
       "id": "t12",
+      "tool": "Claude",
+      "prompt": "Use the Whyspace MCP to read Recall's Concept thread and the decision \"Attach a source page to every answer explanation\".\n\nThen propose 3 ways a citation opens the right PDF page without leaving the question. Pick one and say why.",
+      "related": {"artifacts": ["a15", "a13"]},
       "title": "Design a source citation that opens the right PDF page",
       "project": "AI Studio · Recall",
       "part": "Prototype",
@@ -501,6 +553,9 @@ const ALL_TASKS: Task[] = [
     },
   {
       "id": "t13",
+      "tool": "Claude",
+      "prompt": "Use the Whyspace MCP to read Recall's Prototype thread and the decision \"Generate five practice questions from one course PDF\".\n\nThen score 15 generated questions from three course PDFs for support, correctness and clarity, in one table.",
+      "related": {"artifacts": ["a15"]},
       "title": "Evaluate generated questions on three course PDFs",
       "project": "AI Studio · Recall",
       "part": "Prototype",
@@ -513,6 +568,9 @@ const ALL_TASKS: Task[] = [
     },
   {
       "id": "t14",
+      "tool": "Claude",
+      "prompt": "Use the Whyspace MCP to read Recall's Interviews thread and the classmate interviews.\n\nThen write a short message inviting four classmates to test the prototype, each bringing one course PDF, with three time slots.",
+      "related": {"artifacts": ["a11"]},
       "title": "Schedule four classmate tests for the working prototype",
       "project": "AI Studio · Recall",
       "part": "Interviews",
@@ -524,10 +582,14 @@ const ALL_TASKS: Task[] = [
     },
   {
       "id": "t15",
+      "tool": "Claude",
+      "prompt": "Use the Whyspace MCP to read Recall's Final crit thread: \"Show model failures alongside the successful demo\" and the critique outline.\n\nThen outline our critique story in 5 beats and split the roles: Jordan on evaluation, Keller on interaction changes.",
+      "related": {"decisions": ["presenter"], "meetings": ["s4"], "artifacts": ["a17"]},
       "title": "Outline our critique story and divide presentation roles",
       "project": "AI Studio · Recall",
       "part": "Final crit",
       "owner": "JK",
+      "assignees": ["MC"],
       "due": "Fri Oct 30",
       "status": "todo",
       "priority": "med",
@@ -542,6 +604,9 @@ const ALL_TASKS: Task[] = [
     },
   {
       "id": "t16",
+      "tool": "Claude",
+      "prompt": "Use the Whyspace MCP to read Recall's Interviews thread.\n\nThen write a 6-question interview guide about how classmates review lectures before an exam.",
+      "related": {"artifacts": ["a11", "a12"]},
       "title": "Interview six classmates about reviewing lectures",
       "project": "AI Studio · Recall",
       "part": "Interviews",
@@ -590,37 +655,37 @@ const ALL_INBOX: InboxItem[] = [
     "need": "do", "task": "t4", "touches": "Your app design and prototype", "id": "i4",
     "to": ["KL"],
     "relatedArtifacts": [
-      { "id": "w1", "context": "Brand guidelines · new palette" },
-      { "id": "w5", "context": "Swipe card prototype · buttons still red" }
+      { "id": "w1", "context": "Brand guidelines · now blue" },
+      { "id": "w5", "context": "Whiskr prototype · buttons still red" }
     ],
     "author": { "kind": "ai", "name": "Whyspace AI" },
-    "source": "Trevor's brand guidelines update",
+    "source": "Trevor's brand update",
     "kind": "alert",
     "from": "TR",
-    "project": "Whiskr",
-    "summary": "Recolor the app: Trevor dropped red from the brand",
+    "project": "Whiskr (Demo project)",
+    "summary": "Cats can't see red. Change the app to blue.",
     "time": "2h",
     "unread": true,
     "decision": "nored",
-    "body": "Red is out. Your task and Claude Code prompt are ready."
+    "body": "Trevor changed the brand color. Your task and Claude Code prompt are ready."
   },
   {
     "need": "decide", "touches": "Your brand guidelines", "id": "i5",
     "to": ["TR"],
     "relatedArtifacts": [
       { "id": "w7", "context": "Promo video plan" },
-      { "id": "w1", "context": "Brand guidelines · palette and the purring dot" }
+      { "id": "w1", "context": "Brand guidelines" }
     ],
     "author": { "kind": "ai", "name": "Whyspace AI" },
     "source": "Keller's chat with Claude",
     "kind": "mention",
     "from": "MC",
-    "project": "Whiskr",
-    "summary": "Keller's promo video plan builds on your brand guidelines",
+    "project": "Whiskr (Demo project)",
+    "summary": "Keller's promo video plan uses your brand guidelines",
     "time": "20m",
     "unread": true,
     "decision": "short",
-    "body": "Check the video plan matches your guidelines."
+    "body": "Check that it uses the new blue."
   },
   {
     "touches": "Marketing, which you follow", "id": "i9",
@@ -630,87 +695,61 @@ const ALL_INBOX: InboxItem[] = [
     "source": "Weekly digest",
     "kind": "change",
     "from": "MC",
-    "project": "Whiskr",
-    "summary": "This week: red is out, the dot moves",
+    "project": "Whiskr (Demo project)",
+    "summary": "This week: the brand changed to blue, and the app got a moving dot",
     "time": "1h",
     "unread": true,
     "decision": "short",
-    "body": "The video length waits on Keller; the poster still uses red."
+    "body": "Keller still needs to confirm the video length. The posters are still red."
   },
   {
-    "need": "do", "task": "t1", "touches": "Your poster campaign", "id": "i1",
+    "need": "do", "task": "t1", "touches": "Your posters", "id": "i1",
     "relatedArtifacts": [
-      {
-        "id": "w1",
-        "context": "Brand guidelines · new palette"
-      },
-      {
-        "id": "w6",
-        "context": "Poster campaign · still uses tuna red"
-      }
+      { "id": "w1", "context": "Brand guidelines · now blue" },
+      { "id": "w6", "context": "Posters · still red" }
     ],
-    "author": {
-      "kind": "ai",
-      "name": "Whyspace AI"
-    },
-    "source": "Trevor's brand guidelines update",
+    "author": { "kind": "ai", "name": "Whyspace AI" },
+    "source": "Trevor's brand update",
     "kind": "alert",
     "from": "TR",
-    "project": "Whiskr",
-    "summary": "Update your poster: Trevor dropped red from the brand",
+    "project": "Whiskr (Demo project)",
+    "summary": "Cats can't see red. Change your posters to blue.",
     "time": "1d",
     "unread": true,
     "decision": "nored",
-    "body": "Your poster still uses red. Your task and Figma prompt are ready."
+    "body": "Trevor changed the brand color. Your task and Figma prompt are ready."
   },
   {
-    "touches": "Your poster and promo video", "id": "i2",
+    "touches": "Your posters and promo video", "id": "i2",
     "relatedArtifacts": [
-      {
-        "id": "w3",
-        "context": "Luna at 5:55"
-      },
-      {
-        "id": "w5",
-        "context": "Swipe card prototype"
-      }
+      { "id": "w3", "context": "Luna pounces · 0:42" },
+      { "id": "w5", "context": "Whiskr prototype" }
     ],
-    "author": {
-      "kind": "ai",
-      "name": "Whyspace AI"
-    },
+    "author": { "kind": "ai", "name": "Whyspace AI" },
     "to": ["MC", "CH"],
-    "source": "Footage review · live session",
+    "source": "User testing workshop",
     "kind": "change",
     "from": "TR",
-    "project": "Whiskr",
-    "summary": "Every element should move to catch a cat's attention",
+    "project": "Whiskr (Demo project)",
+    "summary": "Make things move to get cats' attention",
     "time": "2d",
     "unread": false,
     "decision": "move",
-    "body": "Trevor marked this important. It affects the poster and video."
+    "body": "Trevor marked this important. Your posters and video should move too."
   },
   {
     "need": "decide", "touches": "Your promo video plan", "id": "i3",
-    "relatedArtifacts": [
-      {
-        "id": "w7",
-        "context": "Promo video plan"
-      }
-    ],
-    "author": {
-      "kind": "ai",
-      "name": "Whyspace AI"
-    },
+    "relatedArtifacts": [{ "id": "w7", "context": "Promo video plan" }],
+    "author": { "kind": "ai", "name": "Whyspace AI" },
     "source": "Your chat with Claude",
     "kind": "review",
     "from": "MC",
-    "project": "Whiskr",
-    "summary": "Confirm why the promo video runs 15 seconds",
+    "project": "Whiskr (Demo project)",
+    "summary": "Confirm the promo video is 15 seconds",
     "time": "10m",
     "unread": true,
     "decision": "short",
-    "body": "Claude inferred the reason from your chat. Confirm or correct it."
+    "body": "Claude guessed why from your chat. Confirm or fix it."
   },
   {
       "need": "decide", "touches": "Your feedback screen", "id": "i8",
@@ -767,61 +806,52 @@ export type Session = {
   length?: string
   decisions: number
   summary?: string
-  // A past meeting leads with what it decided, its outcomes and each person's next steps.
+  // A past workshop leads with what it decided, its outcomes and each person's next steps.
   decisionIds?: string[]
   outcomes?: string[]
   nextSteps?: { who: string; text: string }[]
+  // The workshop this meeting happens in.
+  workshop?: string
 }
 
 const ALL_SESSIONS: Session[] = [
   {
     "id": "s1",
     "project": "whiskr",
-    "title": "Footage review",
+    "title": "Cat video review",
     "host": "TR",
-    "people": [
-      "TR",
-      "KL"
-    ],
+    "people": ["TR", "KL"],
     "status": "Ended",
     "when": "Oct 22",
     "length": "16 min",
     "decisions": 3,
-    "summary": "Luna only reacted to movement. Kelly tried three interface directions; the moving dot won. Trevor's research added a 25 Hz purr. Trevor marked the movement finding as important.",
+    "summary": "Cats only reacted to things that moved, so Kelly added a moving dot that shows them where to swipe. Trevor's research added a purring sound.",
     "decisionIds": ["move", "dot", "purr"],
-    "outcomes": ["Luna only reacts to movement", "The moving dot beat the wiggle and the feather", "Movement marked as important for the whole team"],
+    "outcomes": ["Cats only react to things that move", "A moving dot beat a wiggling card", "Trevor marked movement as important for the team"],
     "nextSteps": [
-      { "who": "KL", "text": "Build the purring dot into the swipe card" },
-      { "who": "TR", "text": "Add the purring dot to the brand guidelines" }
+      { "who": "KL", "text": "Add the moving dot to the swipe card" },
+      { "who": "TR", "text": "Add the swipe dot to the logo" }
     ]
   },
   {
     "id": "s2",
     "project": "whiskr",
-    "title": "Cat test with the prototype",
+    "title": "First cat test",
     "host": "KL",
-    "people": [
-      "KL",
-      "TR"
-    ],
+    "people": ["KL", "TR"],
     "status": "Ended",
     "when": "Oct 21",
     "length": "40 min",
     "decisions": 0,
-    "outcomes": ["Luna ignored the static card", "Footage saved for review"],
-    "nextSteps": [{ "who": "TR", "text": "Review the footage before Thursday" }]
+    "outcomes": ["Cats ignored the still swipe card", "Videos saved for review"],
+    "nextSteps": [{ "who": "TR", "text": "Review the videos before Thursday" }]
   },
   {
     "id": "s3",
     "project": "whiskr",
     "title": "Poster and video review",
     "host": "MC",
-    "people": [
-      "MC",
-      "CH",
-      "TR",
-      "KL"
-    ],
+    "people": ["MC", "CH", "TR", "KL"],
     "status": "Scheduled",
     "when": "Fri Oct 30, 10:00",
     "decisions": 0
@@ -862,8 +892,9 @@ const ALL_SESSIONS: Session[] = [
     }
 ]
 
-// Artifacts are the work itself: prototypes, design files, repos, docs, videos and AI outputs.
-// Each belongs to a part of a project, so the decisions canvas can show them in place.
+// Artifacts are links to the work wherever it lives (Figma, Drive, GitHub, Runway, an AI chat).
+// Only manual uploads and pasted text are stored in Whyspace. Each belongs to a thread
+// (the internal field is still `part`), so the decisions canvas can show them in place.
 export type ArtifactKind = "Prototype" | "Figma" | "Repo" | "Doc" | "AI output" | "Sheet" | "Video"
 export type Artifact = {
   id: string
@@ -878,8 +909,6 @@ export type Artifact = {
   content?: { heading: string; paragraphs: string[] }
   files?: string[] // repos: recently changed files
   pr?: string // repos: the open pull request
-  // Evidence backs a why (research, tests, recordings); everything else is the work itself.
-  evidence?: boolean
   version?: string
 }
 
@@ -894,31 +923,29 @@ const ALL_ARTIFACTS: Artifact[] = [
     "updated": "Oct 23",
     "decisions": 2,
     "version": "v3",
-    "evidence": true,
-    "meta": "Blue and yellow palette, purring dot · 18 frames"
+    "meta": "Blue brand color, swipe dot in the logo · 18 frames"
   },
   {
     "id": "w2",
     "project": "whiskr",
     "part": "Research",
-    "name": "Cat attention research",
+    "name": "Cat research",
     "kind": "AI output",
     "owner": "TR",
     "updated": "Oct 23",
-    "decisions": 1,
-    "evidence": true,
-    "meta": "Perplexity · 3 sources on cat vision and vibration"
+    "decisions": 2,
+    "meta": "Perplexity · what cats see and hear"
   },
   {
     "id": "w3",
     "project": "whiskr",
     "part": "Research",
-    "name": "Cat test footage",
+    "name": "Cat test videos",
     "kind": "Video",
     "owner": "TR",
     "updated": "Oct 21",
-    "decisions": 1,
-    "meta": "Luna and Miso · 3 clips"
+    "decisions": 2,
+    "meta": "Luna, Mochi and Biscuit · 3 clips"
   },
   {
     "id": "w4",
@@ -929,7 +956,7 @@ const ALL_ARTIFACTS: Artifact[] = [
     "owner": "KL",
     "updated": "Yesterday",
     "decisions": 2,
-    "meta": "Swipe card, matches · 24 frames"
+    "meta": "Swipe card with the moving dot · 24 frames"
   },
   {
     "id": "w5",
@@ -940,18 +967,18 @@ const ALL_ARTIFACTS: Artifact[] = [
     "owner": "KL",
     "updated": "Today",
     "decisions": 3,
-    "meta": "localhost:5173 · swipe card with purring dot"
+    "meta": "localhost:5173 · swipe card with the moving dot"
   },
   {
     "id": "w6",
     "project": "whiskr",
     "part": "Marketing",
-    "name": "Poster campaign",
+    "name": "Posters",
     "kind": "Figma",
     "owner": "MC",
     "updated": "Oct 20",
     "decisions": 1,
-    "meta": "3 posters · needs the new palette"
+    "meta": "3 posters · still in red"
   },
   {
     "id": "w7",
@@ -962,13 +989,13 @@ const ALL_ARTIFACTS: Artifact[] = [
     "owner": "MC",
     "updated": "Today",
     "decisions": 2,
-    "meta": "From Claude · 15 seconds, 3 beats",
+    "meta": "From Claude · 15 seconds, 3 shots",
     "content": {
       "heading": "Promo video plan",
       "paragraphs": [
-        "0–5 s: Luna's real pounce on the moving dot.",
-        "5–10 s: The dot leads a swipe on the Whiskr card, purring.",
-        "10–15 s: Blue and yellow end card with the logo."
+        "0–5 s: Luna's real pounce from testing.",
+        "5–10 s: The moving dot leads a swipe and purrs.",
+        "10–15 s: The logo on a blue end card."
       ]
     }
   },
@@ -981,7 +1008,7 @@ const ALL_ARTIFACTS: Artifact[] = [
     "owner": "MC",
     "updated": "Today",
     "decisions": 1,
-    "meta": "Runway storyboard · set up from the plan"
+    "meta": "Runway · set up from the plan"
   },
   {
       "id": "a11",
@@ -992,7 +1019,6 @@ const ALL_ARTIFACTS: Artifact[] = [
       "owner": "JK",
       "updated": "Today",
       "decisions": 1,
-      "evidence": true,
     "meta": "6 interviews · lecture-review habits"
     },
   {
@@ -1004,7 +1030,6 @@ const ALL_ARTIFACTS: Artifact[] = [
       "owner": "JK",
       "updated": "Yesterday",
       "decisions": 1,
-      "evidence": true,
     "meta": "Claude synthesis · linked to interview quotes"
     },
   {
@@ -1074,47 +1099,10 @@ const ALL_ARTIFACTS: Artifact[] = [
 export type Activity = { project: string; who: string; tool?: string; aiDoing?: string; doing: string; part: string; since: string; state: "active" | "idle"; artifact?: string }
 
 const ALL_ACTIVITY: Activity[] = [
-  {
-    "project": "whiskr",
-    "who": "MC",
-    "tool": "Claude",
-    "aiDoing": "Drafting the promo video plan",
-    "artifact": "w7",
-    "doing": "Promo video",
-    "part": "Marketing",
-    "since": "25 min",
-    "state": "active"
-  },
-  {
-    "project": "whiskr",
-    "who": "KL",
-    "tool": "Claude Code",
-    "aiDoing": "Adding the purr buzz to the dot",
-    "artifact": "w5",
-    "doing": "Swipe card",
-    "part": "App",
-    "since": "40 min",
-    "state": "active"
-  },
-  {
-    "project": "whiskr",
-    "who": "TR",
-    "tool": "Perplexity",
-    "aiDoing": "Researching what cats see",
-    "artifact": "w2",
-    "doing": "Cat vision research",
-    "part": "Research",
-    "since": "1 h",
-    "state": "active"
-  },
-  {
-    "project": "whiskr",
-    "who": "CH",
-    "doing": "Reviewed the week's decisions",
-    "part": "Brand",
-    "since": "Yesterday",
-    "state": "idle"
-  },
+  { "project": "whiskr", "who": "MC", "tool": "Claude", "aiDoing": "Planning the promo video", "artifact": "w7", "doing": "Promo video", "part": "Marketing", "since": "25 min", "state": "active" },
+  { "project": "whiskr", "who": "KL", "tool": "Claude Code", "aiDoing": "Adding the purr to the dot", "artifact": "w5", "doing": "Swipe card", "part": "App", "since": "40 min", "state": "active" },
+  { "project": "whiskr", "who": "TR", "tool": "Perplexity", "aiDoing": "Researching what cats hear", "artifact": "w2", "doing": "Cat research", "part": "Research", "since": "1 h", "state": "active" },
+  { "project": "whiskr", "who": "CH", "doing": "Read the week's decisions", "part": "Brand", "since": "Yesterday", "state": "idle" },
   {
       "project": "studio",
       "who": "MC",
@@ -1139,7 +1127,7 @@ const ALL_ACTIVITY: Activity[] = [
     }
 ]
 
-// Milestone timeline per project, for cadence on Overview.
+// Milestone timeline per project: next milestone and target date on Overview.
 export const TIMELINE: Record<string, { name: string; date: string; done: boolean }[]> = {
   whiskr: [
     { name: "Kickoff", date: "Oct 5", done: true },
@@ -1156,6 +1144,9 @@ export const TIMELINE: Record<string, { name: string; date: string; done: boolea
   ],
 }
 
+// Links pinned to the top of a project's Overview: where the real work lives.
+export const PINNED: Record<string, string[]> = { whiskr: ["w1", "w5", "w6"], studio: ["a14", "a15", "a16"] }
+
 export const AI_TOOLS = [
   { id: "claude", name: "Claude", desc: "Desktop app and Claude Code", connected: true },
   { id: "cursor", name: "Cursor", desc: "Editor sessions and chat", connected: true },
@@ -1171,19 +1162,19 @@ export const PLANS: { name: Plan; price: string; blurb: string; features: string
 
 // Whiskr's summaries at each stage of the week (see lib/stage.ts).
 const WHISKR_SUMMARY = [
-  { project: "A swipe app for cats. Tuna red brand, static swipe card.", week: "Kelly ran the first cat test. Trevor has the footage." },
-  { project: "A swipe app for cats, led by a moving, purring dot.", week: "Luna only reacted to movement. The moving dot won." },
-  { project: "A cat swipe app led by a purring dot in blue and yellow.", week: "Trevor dropped red. The app is recoloring; the poster isn't." },
-  { project: "A cat swipe app led by a purring dot in blue and yellow.", week: "Red is out and the poster lags. Keller planned the promo video." },
+  { project: "Whiskr is a swipe app for cats. The brand color is red.", week: "Kelly tested the app with 3 cats. Trevor has the videos to review." },
+  { project: "Whiskr is a swipe app for cats. A moving dot now shows cats where to swipe.", week: "In testing, cats only noticed things that moved. So we added a moving dot that shows them where to swipe." },
+  { project: "Whiskr is a swipe app for cats. The brand color changed from red to blue, and a moving dot shows cats where to swipe.", week: "Research found that cats can't see red, so Trevor changed the brand color to blue. The posters are still red." },
+  { project: "Whiskr is a swipe app for cats. The brand color changed from red to blue, and a moving dot shows cats where to swipe.", week: "The brand color is now blue, but the posters are still red. Keller planned a 15-second promo video." },
 ][Math.min(STAGE, 4) - 1]
 
 // AI summaries shown on the decisions canvas, one per part and one per project.
 // Written by Whyspace from the decisions themselves, refreshed when one changes.
 export const PART_SUMMARY: Record<string, string> = {
-  Research: "Cats only react to things that move.",
-  Brand: STAGE < 3 ? "Tuna red is the primary color." : "Blue and yellow with the purring dot. No red.",
-  App: "A moving dot leads the swipe and purrs at 25 Hz.",
-  Marketing: "A 15-second video opening on Luna's pounce. The poster needs new colors.",
+  Research: "Cats only notice things that move.",
+  Brand: STAGE < 3 ? "The brand color is red." : "The brand color changed from red to blue, because cats can't see red. The logo now has the swipe dot.",
+  App: "A moving dot shows cats where to swipe, and it purrs.",
+  Marketing: "The promo video is 15 seconds and starts with a real cat clip.",
   Interviews: "Students review one lecture at a time.",
   Concept: "Five cited questions from one course PDF.",
   Prototype: "One working loop by Nov 4. Keller: interaction; Jordan: generation.",
@@ -1196,22 +1187,22 @@ export const PROJECT_DECISION_SUMMARY: Record<string, string> = {
 // Each lead's view of the week opens with their own part. Christine sees the whole project.
 const WHISKR_WEEK_FOR: Record<string, string[]> = {
   MC: [
-    "Your posters are in tuna red. Trevor has the test footage.",
-    "Movement is the new rule. It will reach your poster and video.",
-    "Your poster still uses red. Trevor dropped it from the brand.",
-    "You planned the promo video; confirm its length. The poster still uses red.",
+    "Your posters use the red brand color. Trevor has the test videos.",
+    "Cats only notice things that move. This will change your posters and video.",
+    "Cats can't see red, so the brand is now blue. Your posters are still red.",
+    "Confirm the promo video length. Your posters are still red.",
   ],
   TR: [
-    "Monday's cat-test footage is ready for you.",
-    "Luna only reacts to movement. The dot and purr are logged.",
-    "You dropped red. The app is recoloring; Keller's poster isn't.",
-    "Your palette is in the app. The poster still uses red.",
+    "The videos from the first cat test are ready for you.",
+    "Cats only notice things that move. The moving dot and the purr are logged.",
+    "You changed the brand from red to blue. Kelly is updating the app; Keller's posters are still red.",
+    "The app is blue now. Keller's posters are still red.",
   ],
   KL: [
-    "You ran the first cat test. Trevor has the footage.",
-    "Your moving dot won. Next: build it with the purr.",
-    "Red is out: recolor the app to blue and yellow.",
-    "The app is recolored and the dot purrs. Keller planned the video.",
+    "You tested the app with 3 cats. Trevor has the videos.",
+    "Your moving dot won. Next, build it with the purring sound.",
+    "Cats can't see red, so change the app from red to blue.",
+    "The app is blue and the dot purrs. Keller planned the promo video.",
   ],
 }
 export const WEEK_SUMMARY: Record<string, string> = {
@@ -1220,8 +1211,8 @@ export const WEEK_SUMMARY: Record<string, string> = {
 }
 export const CANVAS_EXTRAS: Record<string, { notePart?: string; note?: string; suggestion?: { name: string; from: string; moves: string[]; by: string; reason: string }; ask: string[] }> = {
   whiskr: {
-    ...(STAGE >= 3 && { notePart: "Brand", note: "Trevor marked the palette change as important · Oct 23" }),
-    ask: ["Why is there a dot everywhere?", "Why no red?", "What needs my review?", "What changed this week?"],
+    ...(STAGE >= 3 && { notePart: "Brand", note: "Trevor marked the change to blue as important · Oct 23" }),
+    ask: ["Why did the brand change to blue?", "What is the moving dot for?", "What needs me?", "What changed this week?"],
   },
   studio: {
     notePart: "Prototype", note: "Jordan linked the first question evaluation · Today",
@@ -1232,7 +1223,7 @@ export const CANVAS_EXTRAS: Record<string, { notePart?: string; note?: string; s
 // Whiskr plays out over one week (see lib/stage.ts). Each item shows from the stage
 // where it first happens, and until the stage where it is replaced. Unlisted items always show.
 const FROM: Record<string, number> = {
-  move: 2, dot: 2, purr: 2, dotbrand: 3, nored: 3, short: 4, pounce: 4,
+  move: 2, dot: 2, purr: 2, dotbrand: 3, nored: 3, short: 4, pounce: 4, bluecard: 4, redcard: 5,
   t3: 2, t1: 3, t4: 3, t5: 3, t2: 4, t7: 5,
   i2: 2, i1: 3, i4: 3, i3: 4, i5: 4, i9: 5,
   s3: 4,
@@ -1247,14 +1238,14 @@ const EARLIER: Record<string, { until: number; patch: object }[]> = {
     { until: 1, patch: { status: "Scheduled", when: "Thu Oct 22, 3:30 PM", length: undefined, decisions: 0, summary: undefined } },
     { until: 2, patch: { status: "Live", when: "Now", length: "8 min so far", decisions: 3, summary: undefined } },
   ],
-  w1: [{ until: 2, patch: { updated: "Oct 8", decisions: 1, version: "v2", meta: "Tuna red palette · 16 frames" } }],
-  w4: [{ until: 2, patch: { updated: "Oct 20", meta: "Static swipe card, matches · 20 frames" } }],
-  w5: [{ until: 1, patch: { updated: "Oct 21", meta: "localhost:5173 · static swipe card" } }],
-  w6: [{ until: 2, patch: { meta: "3 posters in tuna red" } }],
+  w1: [{ until: 2, patch: { updated: "Oct 8", decisions: 1, version: "v2", meta: "Red brand color · 16 frames" } }],
+  w4: [{ until: 2, patch: { updated: "Oct 20", meta: "Still swipe card, no dot · 20 frames" } }],
+  w5: [{ until: 1, patch: { updated: "Oct 21", meta: "localhost:5173 · still swipe card" } }],
+  w6: [{ until: 2, patch: { meta: "3 posters in red" } }],
   t4: [{ until: 3, patch: { status: "prog" } }],
 }
 
-const inWhiskr = (item: { project: string }) => item.project === "whiskr" || item.project === "Whiskr"
+const inWhiskr = (item: { project: string }) => item.project === "whiskr" || item.project === "Whiskr (Demo project)"
 
 function staged<T extends { id: string; project: string }>(items: T[]): T[] {
   return items
@@ -1265,32 +1256,104 @@ function staged<T extends { id: string; project: string }>(items: T[]): T[] {
     })
 }
 
-export const DECISIONS = staged(ALL_DECISIONS)
-export const TASKS = staged(ALL_TASKS)
-export const INBOX = staged(ALL_INBOX).filter((item) => (item.to ?? ["MC"]).includes(VIEWER))
-export const SESSIONS = staged(ALL_SESSIONS)
-export const ARTIFACTS = staged(ALL_ARTIFACTS)
+// A test scenario (src/scenarios/data.ts) sets Whiskr up for its moment: its items join the lists
+// (a hidden decision that a shown one replaces still resolves in decisionById), then its patches
+// and hides apply over the stage's.
+ALL_DECISIONS.unshift(...(PRESET.add?.decisions ?? []))
+ALL_TASKS.unshift(...(PRESET.add?.tasks ?? []))
+ALL_INBOX.unshift(...(PRESET.add?.inbox ?? []))
+ALL_ARTIFACTS.push(...(PRESET.add?.artifacts ?? []))
+LINKS.push(...(PRESET.links ?? []))
+Object.assign(WEEK_SUMMARY, PRESET.week)
+Object.assign(PART_SUMMARY, PRESET.part)
+const HIDDEN = new Set(PRESET.hide ?? [])
+function inScenario<T extends { id: string }>(items: T[], patches?: Record<string, Partial<T>>): T[] {
+  return items.filter((item) => !HIDDEN.has(item.id)).map((item) => (patches?.[item.id] ? { ...item, ...patches[item.id] } : item))
+}
+
+// Decisions can be recorded while the prototype runs (a scenario's Claude records them as you talk).
+// The list is changed in place, so every screen reads the latest, and a version lets hooks re-render.
+export const DECISIONS: Decision[] = inScenario(staged(ALL_DECISIONS), PRESET.patch?.decisions)
+let dataVersion = 0
+const dataListeners = new Set<() => void>()
+export const subscribeData = (l: () => void) => { dataListeners.add(l); return () => dataListeners.delete(l) }
+export const getDataVersion = () => dataVersion
+const bumpData = () => { dataVersion += 1; dataListeners.forEach((l) => l()) }
+// Decisions recorded while the prototype runs (a scenario's tools write them), by id.
+export const RECORDED = new Set<string>()
+export function recordDecision(d: Decision) {
+  const i = DECISIONS.findIndex((x) => x.id === d.id)
+  if (i >= 0) DECISIONS.splice(i, 1)
+  DECISIONS.push(d)
+  RECORDED.add(d.id)
+  bumpData()
+}
+export function patchDecision(id: string, patch: Partial<Decision>) {
+  const i = DECISIONS.findIndex((d) => d.id === id)
+  if (i >= 0) DECISIONS[i] = { ...DECISIONS[i], ...patch }
+  bumpData()
+}
+// New LINKS edges [followed, follower] while the prototype runs: a recorded guess that follows a
+// confirmed decision reads ◉ from precedent.
+export function addLinks(links: [string, string][]) {
+  for (const [a, b] of links) if (!LINKS.some(([x, y]) => x === a && y === b)) LINKS.push([a, b])
+  bumpData()
+}
+export const TASKS = inScenario(staged(ALL_TASKS), PRESET.patch?.tasks)
+export const INBOX = inScenario(staged(ALL_INBOX), PRESET.patch?.inbox).filter((item) => (item.to ?? ["MC"]).includes(VIEWER))
+// A workshop is a lasting shared canvas, like a design file: open it any time, alone or together.
+// Meetings are times the team meets inside one; each leaves a record in the workshop's History.
+export type Workshop = { id: string; project: string; title: string; thread?: string; canvas?: "whiskr" | "studio" | "testing"; edited: string; people: string[]; notes?: string[] }
+export const WORKSHOPS: Workshop[] = [
+  // Starts empty; Listen in plays the demo: cat test videos, notes as people talk, decisions caught.
+  { id: "testing", project: "whiskr", thread: "Research", title: "User testing", canvas: "testing", edited: "Oct 22", people: ["TR", "KL", "MC"] },
+  { id: "recall", project: "studio", thread: "Prototype", title: "Unsupported question handling", canvas: "studio", edited: "Oct 21", people: ["JK", "MC"] },
+]
+const SESSION_WORKSHOP: Record<string, string> = { s1: "testing", s2: "testing", s4: "recall", s9: "recall" }
+export const SESSIONS = staged(ALL_SESSIONS).map((s) => ({ ...s, workshop: s.workshop ?? SESSION_WORKSHOP[s.id] }))
+export const ARTIFACTS = inScenario(staged(ALL_ARTIFACTS), PRESET.patch?.artifacts)
+
+// Where each artifact lives. Whyspace links out to it; "Whyspace" means it is stored here.
+export type ArtifactSource = "Figma" | "Google Drive" | "GitHub" | "Runway" | "Claude" | "Notion" | "Link" | "Whyspace"
+export const ARTIFACT_SOURCE: Record<string, { source: ArtifactSource; where: string; url?: string }> = {
+  w1: { source: "Figma", where: "Whiskr / Brand", url: "https://figma.com" },
+  w2: { source: "Whyspace", where: "Uploaded · research.md" },
+  w3: { source: "Google Drive", where: "Whiskr / Footage", url: "https://drive.google.com" },
+  w4: { source: "Figma", where: "Whiskr / App", url: "https://figma.com" },
+  w5: { source: "Link", where: "whiskr-proto.vercel.app", url: "https://vercel.com" },
+  w6: { source: "Figma", where: "Whiskr / Marketing", url: "https://figma.com" },
+  w7: { source: "Google Drive", where: "Whiskr / Marketing", url: "https://docs.google.com" },
+  w8: { source: "Runway", where: "Whiskr promo", url: "https://runwayml.com" },
+  a11: { source: "Google Drive", where: "Recall / Interviews", url: "https://drive.google.com" },
+  a12: { source: "Claude", where: "Chat · research themes", url: "https://claude.ai" },
+  a13: { source: "Figma", where: "Recall / Concept", url: "https://figma.com" },
+  a14: { source: "Notion", where: "AI Studio", url: "https://notion.so" },
+  a15: { source: "Link", where: "recall-proto.vercel.app", url: "https://vercel.com" },
+  a16: { source: "GitHub", where: "ai-studio/recall", url: "https://github.com" },
+  a17: { source: "Google Drive", where: "Recall / Final crit", url: "https://docs.google.com" },
+}
+for (const a of PRESET.add?.artifacts ?? []) if (a.source) ARTIFACT_SOURCE[a.id] = { source: a.source, where: a.where ?? "", url: a.url }
 // The projects the viewer is in. Use PROJECTS for lookups by id or name.
 export const MY_PROJECTS = PROJECTS.filter((p) => p.members.includes(VIEWER))
 
 // What the Whiskr team is doing at each stage.
 const WHISKR_ACTIVITY: Record<number, Activity[]> = {
   1: [
-    { project: "whiskr", who: "TR", doing: "Cat test footage", part: "Research", since: "1 h", state: "active", artifact: "w3" },
-    { project: "whiskr", who: "KL", tool: "Claude Code", aiDoing: "Tidying the swipe card prototype", doing: "Swipe card", part: "App", since: "2 h", state: "active", artifact: "w5" },
-    { project: "whiskr", who: "MC", tool: "Figma", aiDoing: "Laying out the poster series", doing: "Poster campaign", part: "Marketing", since: "3 h", state: "active", artifact: "w6" },
+    { project: "whiskr", who: "TR", doing: "Cat test videos", part: "Research", since: "1 h", state: "active", artifact: "w3" },
+    { project: "whiskr", who: "KL", tool: "Claude Code", aiDoing: "Tidying the swipe card", doing: "Swipe card", part: "App", since: "2 h", state: "active", artifact: "w5" },
+    { project: "whiskr", who: "MC", tool: "Figma", aiDoing: "Laying out the posters", doing: "Posters", part: "Marketing", since: "3 h", state: "active", artifact: "w6" },
   ],
   2: [
-    { project: "whiskr", who: "TR", tool: "Perplexity", aiDoing: "Researching how cats respond to vibration", doing: "Footage review · live", part: "Research", since: "8 min", state: "active", artifact: "w2" },
-    { project: "whiskr", who: "KL", tool: "Claude Code", aiDoing: "Exploring card motion", doing: "Footage review · live", part: "App", since: "8 min", state: "active", artifact: "w5" },
+    { project: "whiskr", who: "TR", tool: "Perplexity", aiDoing: "Researching what cats hear", doing: "Cat video review · live", part: "Research", since: "8 min", state: "active", artifact: "w2" },
+    { project: "whiskr", who: "KL", tool: "Claude Code", aiDoing: "Trying card motion", doing: "Cat video review · live", part: "App", since: "8 min", state: "active", artifact: "w5" },
   ],
   3: [
     { project: "whiskr", who: "TR", tool: "Perplexity", aiDoing: "Researching what cats see", doing: "Brand guidelines", part: "Brand", since: "1 h", state: "active", artifact: "w1" },
-    { project: "whiskr", who: "KL", tool: "Claude Code", aiDoing: "Recoloring buttons to blue and yellow", doing: "Swipe card", part: "App", since: "30 min", state: "active", artifact: "w5" },
+    { project: "whiskr", who: "KL", tool: "Claude Code", aiDoing: "Changing the buttons to blue", doing: "Swipe card", part: "App", since: "30 min", state: "active", artifact: "w5" },
   ],
 }
 export const ACTIVITY: Activity[] = [
-  ...(WHISKR_ACTIVITY[STAGE] ?? ALL_ACTIVITY.filter(inWhiskr)),
+  ...(PRESET.activity ?? WHISKR_ACTIVITY[STAGE] ?? ALL_ACTIVITY.filter(inWhiskr)),
   ...ALL_ACTIVITY.filter((a) => !inWhiskr(a)),
 ]
 
@@ -1305,6 +1368,8 @@ const ALL_REACH: Record<string, { artifact: string; task?: string; seen: string[
   dotbrand: [{ artifact: "w1", task: "t5", seen: ["TR", "KL"] }, { artifact: "w6", task: "t1", seen: ["TR"] }, { artifact: "w8", seen: ["MC"] }],
   nored: [{ artifact: "w1", seen: ["TR", "CH"] }, { artifact: "w4", task: "t4", seen: ["KL"] }, { artifact: "w5", task: "t4", seen: ["KL"] }, { artifact: "w6", task: "t1", seen: ["TR"] }],
   short: [{ artifact: "w7", seen: ["MC"] }, { artifact: "w8", task: "t2", seen: ["MC"] }],
+  bluecard: [{ artifact: "w7", seen: ["MC"] }, { artifact: "w8", task: "t2", seen: ["MC"] }],
+  redcard: [{ artifact: "w7", seen: ["MC"] }],
   pounce: [{ artifact: "w7", seen: ["MC"] }, { artifact: "w8", task: "t2", seen: ["MC", "TR"] }],
   cram: [{ artifact: "a12", seen: ["JK", "MC"] }],
   slides: [{ artifact: "a13", seen: ["MC", "JK"] }, { artifact: "a15", seen: ["MC", "JK"] }],
@@ -1313,6 +1378,7 @@ const ALL_REACH: Record<string, { artifact: string; task?: string; seen: string[
   deck: [{ artifact: "a17", task: "t15", seen: ["JK"] }],
   presenter: [{ artifact: "a17", seen: ["JK", "MC"] }],
 }
+for (const [id, entries] of Object.entries(PRESET.reach ?? {})) ALL_REACH[id] = [...(ALL_REACH[id] ?? []), ...entries]
 
 // Reach as it stands at this stage: only artifacts and tasks that exist yet.
 export function reachOf(decisionId: string, tasks: Task[] = TASKS) {
@@ -1341,13 +1407,13 @@ export function touchesMe(d: Decision) {
   return ledBy(d.project).includes(d.part) || (ALL_REACH[d.id] ?? []).some((r) => ARTIFACTS.find((a) => a.id === r.artifact)?.owner === VIEWER) || (FOLLOWING[VIEWER] ?? []).includes(d.id)
 }
 
-// One line per day for the Catch up week strip.
+// One line per day for the Overview calendar.
 export const DAY_INSIGHT: Record<string, Record<number, string>> = {
   whiskr: {
-    21: "First cat test: Luna ignored the static card",
-    22: "Movement is the rule; the dot leads and purrs",
-    23: "Red is out; blue and yellow are in",
-    25: "Promo video planned around Luna's pounce",
+    21: "First cat test: cats ignored the still swipe card",
+    22: "Cats follow movement, so we added a moving dot",
+    23: "Cats can't see red, so the brand changed to blue",
+    25: "Keller planned a 15-second promo video",
   },
   studio: {
     21: "A real AI loop instead of a clickable mock",
@@ -1367,19 +1433,21 @@ export const SHAPED: Record<string, string[]> = {
 // - decide: inferred decisions you own or were asked to review, and open questions you own
 // - do: your open tasks, including the update tasks Whyspace adds when a decision changes your work
 export type NeedsYou =
-  | { kind: "decide"; id: string; decision: Decision; ask: "confirm" | "review" | "answer" }
+  | { kind: "decide"; id: string; decision: Decision; ask: "confirm" | "review" | "answer" | "clash" }
   | { kind: "do"; id: string; task: Task }
 
 export function needsYou(projectId: string, tasks: Task[] = TASKS, confirmed: Record<string, boolean> = {}): NeedsYou[] {
   const name = projectName(projectId)
   const asked = INBOX.filter((i) => i.project === name && i.need === "decide").map((i) => i.decision)
   const decide = DECISIONS.filter((d) => d.project === projectId && !confirmed[d.id] && (
-    (d.status === "inf" && (d.owner === VIEWER || asked.includes(d.id))) || (d.status === "open" && d.owner === VIEWER) || (d.status !== "open" && d.status !== "inf" && asked.includes(d.id))
+    (d.status === "inf" && (d.owner === VIEWER || asked.includes(d.id))) || (d.status === "open" && d.owner === VIEWER) || (d.status !== "open" && d.status !== "inf" && asked.includes(d.id)) ||
+    // Design B: a clash of yours waits on you until you take theirs or keep yours.
+    (DESIGN === "b" && d.status === "flag" && d.owner === VIEWER)
   ))
   const day = (t: Task) => Number(t.due.match(/\d+/)?.[0] ?? 99) + (t.due.includes("Nov") ? 31 : 0)
-  const mine = tasks.filter((t) => t.project === name && t.owner === VIEWER && t.status !== "done").sort((a, b) => day(a) - day(b))
+  const mine = tasks.filter((t) => t.project === name && (t.owner === VIEWER || !!t.assignees?.includes(VIEWER)) && t.status !== "done").sort((a, b) => day(a) - day(b))
   return [
-    ...decide.map((decision) => ({ kind: "decide" as const, id: decision.id, decision, ask: decision.status === "open" ? "answer" as const : decision.status === "inf" && decision.owner === VIEWER ? "confirm" as const : "review" as const })),
+    ...decide.map((decision) => ({ kind: "decide" as const, id: decision.id, decision, ask: decision.status === "flag" ? "clash" as const : decision.status === "open" ? "answer" as const : decision.status === "inf" && decision.owner === VIEWER ? "confirm" as const : "review" as const })),
     ...mine.map((task) => ({ kind: "do" as const, id: task.id, task })),
   ]
 }

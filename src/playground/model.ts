@@ -1,10 +1,12 @@
 import { ARTIFACTS, DECISIONS, LINKS, PROJECTS, partsOf, type Artifact, type Decision } from "@/data"
+import { PINS } from "@/lib/scenario"
 
 // Playground only: extra structure the seven decision views need on top of data.ts.
 // Kept in its own file so the main prototype data stays untouched.
 
 // The prototype's "today" and the reader's last visit, as day numbers counted from Oct 1.
-export const TODAY = 25
+// A test scenario sets its own day.
+export const TODAY = PINS?.today ?? 25
 export const LAST_VISIT = 20
 
 const MONTH_START: Record<string, number> = { Sep: -30, Oct: 0, Nov: 31, Dec: 61 }

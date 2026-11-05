@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react"
-import { Bug, Check, ChevronDown } from "lucide-react"
+import { Bug, Check, ChevronDown, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
@@ -18,26 +18,47 @@ import { navigate, useRoute } from "@/lib/router"
 import { useStore } from "@/lib/store"
 import { STAGE, STAGES, setStage } from "@/lib/stage"
 import { VIEWER, VIEWERS, setViewer } from "@/lib/viewer"
+import { DESIGN, setDesign, type Design } from "@/lib/design"
 import { PEOPLE } from "@/data"
 import { PersonAvatar } from "@/components/app/person"
 import { cn } from "@/lib/utils"
+import { SCENARIOS as DEMO_SCENARIOS } from "@/demo/scenarios"
+import { PINS, SCENARIO, exitScenario, openScenario } from "@/lib/scenario"
+import { PEOPLE_C, SCENES, VIEWERS_C } from "@/design-c/data"
+import { resetVisit, setScene, setViewerC, useC } from "@/design-c/state"
+import { Face } from "@/design-c/ui"
 
 // Prototype helper only, not part of the app: a debug tab that rests on any screen edge
 // and opens a small overlay for reviewing the flow.
 const SCREENS: [string, [string, string][]][] = [
-  ["Getting in", [["Sign up", "/signup"], ["Log in", "/login"], ["Create workspace", "/new"]]],
+  ["Getting in", [["Home page", "/site"], ["Home page · shapes", "/site/shapes"], ["Sign up", "/signup"], ["Log in", "/login"], ["Create workspace", "/new"]]],
   ["Workspace", [["All projects", "/projects"], ["Inbox", "/inbox"], ["My tasks", "/my-tasks"]]],
-  ["Project", [["Catch up", "/p/whiskr/catch-up"], ["Catch up · new here", "/p/whiskr/catch-up/new-here"], ["Tasks", "/p/whiskr/tasks"], ["Decisions", "/p/whiskr/decisions"], ["Decision detail", "/p/whiskr/decisions/nored"], ["Meetings", "/p/whiskr/sessions"], ["Live canvas", "/p/whiskr/sessions/s1"], ["Project settings", "/p/whiskr/settings/general"], ["Project people", "/p/whiskr/settings/people"]]],
-  ["Playground", [["Decision display states", "/playground/decisions/states"], ["Section map & outline", "/playground/whiskr/canvas"], ["Earlier decision views", "/playground/whiskr/board"]]],
+  ["Project", [["Home", "/p/whiskr/home"], ["Tasks", "/p/whiskr/tasks"], ["Decisions", "/p/whiskr/decisions"], ["Decision detail", "/p/whiskr/decisions/nored"], ["Workshops", "/p/whiskr/sessions"], ["Workshop · user testing demo", "/p/whiskr/sessions/testing"], ["Workshop · in a meeting", "/p/studio/sessions/s9"], ["Project settings", "/p/whiskr/settings/general"], ["Project people", "/p/whiskr/settings/people"]]],
+  ["Playground", [["Left nav", "/playground/nav/drill"], ["Overlay pill", "/playground/pill/grid"], ["Expanded pill", "/playground/pill/expanded"], ["Decisions layouts", "/playground/layouts/sections"], ["Decision display states", "/playground/decisions/states"], ["Section map & outline", "/playground/whiskr/canvas"], ["Earlier decision views", "/playground/whiskr/board"]]],
   ["Settings", [["Workspace settings", "/settings/general"], ["Plan and billing", "/settings/billing"], ["Profile", "/account/profile"], ["My AI tools", "/account/ai-tools"], ["Notifications", "/account/notifications"]]],
 ]
+// Design B (projects around threads) swaps in its own project screens.
+const SCREENS_B: [string, [string, string][]][] = SCREENS.map(([group, items]) => [group, group === "Workspace" ? [["Today", "/today"], ["Duet", "/duet"], ["All projects", "/projects"], ["The Desk", "/desk"]] : group !== "Project" ? items : [
+  ["Home", "/p/whiskr/home"], ["Home · Tasks", "/p/whiskr/tasks"], ["Home · Decisions", "/p/whiskr/decisions"], ["Home · Artifacts", "/p/whiskr/artifacts"],
+  ["Thread · Marketing", "/p/whiskr/t/marketing"], ["Thread · Brand decisions", "/p/whiskr/t/brand/decisions"], ["Thread · App artifacts", "/p/whiskr/t/app/artifacts"],
+  ["Decision detail", "/p/whiskr/decisions/nored"], ["Workshops", "/p/whiskr/sessions"], ["Workshop · user testing demo", "/p/whiskr/sessions/testing"], ["Project settings", "/p/whiskr/settings/general"],
+]])
+// Design C (handoffs) has far fewer screens: Today, projects, threads, talks, the Duet.
+const SCREENS_C: [string, [string, string][]][] = [
+  ["Getting in", [["Home page", "/site"], ["Sign up", "/signup"], ["Log in", "/login"], ["Create workspace", "/new"]]],
+  ["Workspace", [["Today", "/today"], ["Projects", "/projects"], ["The Desk", "/desk"]]],
+  ["Launch", [["Project", "/p/launch"], ["Thread · Onboarding", "/p/launch/t/onboarding"], ["Thread · Pricing", "/p/launch/t/pricing"], ["Thread · Launch comms", "/p/launch/t/comms"], ["Thread · API", "/p/launch/t/api"], ["Handoff · PRD v2", "/p/launch/t/onboarding/h/prd"], ["Talk · Onboarding steps", "/p/launch/talks/steps"], ["Talk · Kickoff", "/p/launch/talks/kickoff"], ["Project settings", "/p/launch/settings/general"]]],
+  ["Settings", [["Workspace settings", "/settings/general"], ["Profile", "/account/profile"], ["Duet", "/account/duet"], ["My AI tools", "/account/ai-tools"], ["Notifications", "/account/notifications"]]],
+]
+const SCREEN_LIST = DESIGN === "c" ? SCREENS_C : DESIGN === "b" ? SCREENS_B : SCREENS
 
 type Edge = "left" | "right" | "top" | "bottom"
 // Where the tab rests: an edge, and how far along it (0–1).
 type Spot = { edge: Edge; along: number }
 
-const SPOT_KEY = "debug-tab-spot"
-const DEFAULT_SPOT: Spot = { edge: "left", along: 0.5 }
+// A scenario's desktop has its dock at the left middle, so there the tab rests lower and keeps its own spot.
+const SPOT_KEY = SCENARIO ? "debug-tab-spot-scenario" : "debug-tab-spot"
+const DEFAULT_SPOT: Spot = { edge: "left", along: SCENARIO ? 0.86 : 0.5 }
 // Keep the tab's centre this far from the corners.
 const INSET = 48
 // Pointer travel before a press counts as a drag rather than a click.
@@ -100,8 +121,11 @@ export function FlowMenu({ desktop, onDesktop }: { desktop: boolean; onDesktop: 
   const justDragged = useRef(false)
   const tabRef = useRef<HTMLButtonElement>(null)
   const { w, h } = useViewport()
+  const c = useC()
   const here = "/" + useRoute().join("/")
-  const currentScreen = desktop ? undefined : SCREENS.flatMap(([, items]) => items).find(([, path]) => path === here)?.[0]
+  // The scenario running: on the real app, or still on its demo page (#/demo/N).
+  const demoOn = SCENARIO || (here.startsWith("/demo/") ? Number(here.split("/")[2]) || 0 : 0)
+  const currentScreen = desktop ? undefined : SCREEN_LIST.flatMap(([, items]) => items).find(([, path]) => path === here)?.[0]
 
   // ` toggles the overlay from anywhere, except while typing.
   useEffect(() => {
@@ -148,7 +172,7 @@ export function FlowMenu({ desktop, onDesktop }: { desktop: boolean; onDesktop: 
       navigate("/onboarding")
       return
     }
-    onDesktop(false)
+    onDesktop(path === "/desk")
     if (!["/signup", "/login"].includes(path)) joinWorkspace()
     navigate(path)
   }
@@ -189,7 +213,7 @@ export function FlowMenu({ desktop, onDesktop }: { desktop: boolean; onDesktop: 
           )}
         >
           <Bug className="size-3.5" />
-          <span className={cn("text-[10px] font-medium tracking-wide", !drag && vertical && "[writing-mode:vertical-rl]")}>Debug · {STAGE} · {PEOPLE[VIEWER].name}</span>
+          <span className={cn("text-[10px] font-medium tracking-wide", !drag && vertical && "[writing-mode:vertical-rl]")}>{DESIGN === "c" ? <>Debug · {SCENES[c.scene - 1]?.day} {SCENES[c.scene - 1]?.time} · {PEOPLE_C[c.viewer]?.name} · C</> : <>{SCENARIO ? `Scenario ${SCENARIO}` : "Debug"} · {STAGE} · {PEOPLE[VIEWER].name}{DESIGN === "b" && " · B"}</>}</span>
         </button>
       </PopoverAnchor>
 
@@ -209,38 +233,111 @@ export function FlowMenu({ desktop, onDesktop }: { desktop: boolean; onDesktop: 
 
         <div className="space-y-3 p-3">
           <div className="space-y-1.5">
-            <div className="text-[11px] font-medium text-muted-foreground">View as</div>
-            <Select value={VIEWER} onValueChange={setViewer}>
+            <div className="text-[11px] font-medium text-muted-foreground">Design</div>
+            <Select value={DESIGN} onValueChange={(v) => setDesign(v as Design)} disabled={!!PINS}>
               <SelectTrigger size="sm" className="w-full text-xs">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent className="z-[70]">
-                {VIEWERS.map((id) => (
-                  <SelectItem key={id} value={id} className="text-xs">
-                    <PersonAvatar id={id} className="size-5" />
-                    {PEOPLE[id].name}
-                    <span className="text-muted-foreground">· {PEOPLE[id].role}</span>
-                  </SelectItem>
-                ))}
+                <SelectItem value="a" className="text-xs">A · Current</SelectItem>
+                <SelectItem value="b" className="text-xs">B · Projects around threads</SelectItem>
+                <SelectItem value="c" className="text-xs">C · Handoffs</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
+          {DESIGN === "c" ? (
+            <>
+              <div className="space-y-1.5">
+                <div className="text-[11px] font-medium text-muted-foreground">View as</div>
+                <Select value={c.viewer} onValueChange={setViewerC}>
+                  <SelectTrigger size="sm" className="w-full text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="z-[70]">
+                    {VIEWERS_C.map((id) => (
+                      <SelectItem key={id} value={id} className="text-xs">
+                        <Face id={id} className="size-5" />
+                        {PEOPLE_C[id].name}
+                        <span className="text-muted-foreground">· {PEOPLE_C[id].role} · {PEOPLE_C[id].ai}</span>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-1.5">
+                <div className="text-[11px] font-medium text-muted-foreground">Scene · ← → in the Desk</div>
+                <Select value={String(c.scene)} onValueChange={(v) => setScene(Number(v))}>
+                  <SelectTrigger size="sm" className="w-full text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="z-[70]">
+                    {SCENES.map((sc) => (
+                      <SelectItem key={sc.id} value={String(sc.id)} className="text-xs">
+                        {sc.id}. {sc.day} {sc.time} · {sc.title}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </>
+          ) : (
+            <>
           <div className="space-y-1.5">
-            <div className="text-[11px] font-medium text-muted-foreground">Whiskr stage</div>
-            <Select value={String(STAGE)} onValueChange={(v) => setStage(Number(v))}>
+                <div className="text-[11px] font-medium text-muted-foreground">View as</div>
+                <Select value={VIEWER} onValueChange={setViewer} disabled={!!PINS}>
+                  <SelectTrigger size="sm" className="w-full text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="z-[70]">
+                    {VIEWERS.map((id) => (
+                      <SelectItem key={id} value={id} className="text-xs">
+                        <PersonAvatar id={id} className="size-5" />
+                        {PEOPLE[id].name}
+                        <span className="text-muted-foreground">· {PEOPLE[id].role}</span>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+    
+              <div className="space-y-1.5">
+                <div className="text-[11px] font-medium text-muted-foreground">Whiskr stage</div>
+                <Select value={String(STAGE)} onValueChange={(v) => setStage(Number(v))} disabled={!!PINS}>
+                  <SelectTrigger size="sm" className="w-full text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="z-[70]">
+                    {STAGES.map((stage, i) => (
+                      <SelectItem key={stage.name} value={String(i + 1)} className="text-xs">
+                        {i + 1}. {stage.name} · {stage.date}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-[11px] leading-snug text-muted-foreground">{STAGES[STAGE - 1].what}</p>
+              </div>
+            </>
+          )}
+
+          <div className="space-y-1.5">
+            <div className="text-[11px] font-medium text-muted-foreground">Test scenarios</div>
+            <Select value={demoOn ? String(demoOn) : ""} onValueChange={(v) => openScenario(Number(v))}>
               <SelectTrigger size="sm" className="w-full text-xs">
-                <SelectValue />
+                <SelectValue placeholder="Pick a scenario" />
               </SelectTrigger>
               <SelectContent className="z-[70]">
-                {STAGES.map((stage, i) => (
-                  <SelectItem key={stage.name} value={String(i + 1)} className="text-xs">
-                    {i + 1}. {stage.name} · {stage.date}
+                {DEMO_SCENARIOS.map((sc) => (
+                  <SelectItem key={sc.n} value={String(sc.n)} className="text-xs">
+                    {sc.n}. {sc.title}
+                    <span className="text-muted-foreground">· {sc.who}</span>
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
-            <p className="text-[11px] leading-snug text-muted-foreground">{STAGES[STAGE - 1].what}</p>
+            {PINS && <p className="text-[11px] leading-snug text-muted-foreground">Runs on the real app: design B, {PEOPLE[PINS.viewer]?.name}, Whiskr at stage {PINS.stage}. The three above are pinned.</p>}
+            {demoOn > 0 && <Button variant="outline" size="sm" className="w-full text-xs" onClick={exitScenario}><X />Exit scenario</Button>}
           </div>
 
           <div className="space-y-1.5">
@@ -253,7 +350,7 @@ export function FlowMenu({ desktop, onDesktop }: { desktop: boolean; onDesktop: 
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start" className="z-[70] max-h-[60vh] w-(--radix-dropdown-menu-trigger-width) overflow-y-auto">
-                {SCREENS.map(([group, items], gi) => (
+                {SCREEN_LIST.map(([group, items], gi) => (
                   <div key={group}>
                     {gi > 0 && <DropdownMenuSeparator />}
                     <DropdownMenuLabel className="text-[11px] font-normal text-muted-foreground">{group}</DropdownMenuLabel>
@@ -269,10 +366,15 @@ export function FlowMenu({ desktop, onDesktop }: { desktop: boolean; onDesktop: 
             </DropdownMenu>
           </div>
 
-          <Label className="flex items-center justify-between gap-2 text-xs font-normal">
-            Outside the app (desktop overlay)
+          {!SCENARIO && <Label className="flex items-center justify-between gap-2 text-xs font-normal">
+            {DESIGN === "c" ? "The Desk (Docs, Figma, Slack, GitHub, Claude, Meet)" : DESIGN === "b" ? "The Desk (Claude, Docs, Slack, Figma)" : "Outside the app (desktop overlay)"}
             <Switch checked={desktop} onCheckedChange={onDesktop} />
-          </Label>
+          </Label>}
+          {DESIGN === "c" && (
+            <Button variant="outline" size="sm" className="w-full text-xs" onClick={resetVisit}>
+              Forget what I did this visit
+            </Button>
+          )}
 
           <Button variant="outline" size="sm" className="w-full text-xs" onClick={() => { setOpen(false); setUpgradeOpen(true) }}>
             Open upgrade dialog

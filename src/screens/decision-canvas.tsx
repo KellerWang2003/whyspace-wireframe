@@ -322,7 +322,7 @@ export function DecisionCanvas({ all, visible, basePath, acrossProjects, scopeNa
           {suggestion && aiCanEdit && (
             <div data-node className="absolute w-[340px] rounded-xl border-2 border-dashed bg-background/80 p-4" style={{ left: suggestion.x, top: suggestion.y }}>
               <div className="flex items-center gap-2 text-xs text-muted-foreground"><Bot className="size-3.5" />Suggested by {suggestion.by} over MCP</div>
-              <div className="mt-2 font-medium">New part: {suggestion.name}</div>
+              <div className="mt-2 font-medium">New thread: {suggestion.name}</div>
               <p className="mt-1 text-sm text-muted-foreground">{suggestion.reason}</p>
               <div className="mt-3 rounded-md border bg-background p-2 text-sm">
                 <div className="mb-1 text-xs text-muted-foreground">Would move from {suggestion.from}</div>
@@ -348,13 +348,13 @@ export function DecisionCanvas({ all, visible, basePath, acrossProjects, scopeNa
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start" className="w-56">
                 <DropdownMenuItem onSelect={onAddDecision}>Add decision</DropdownMenuItem>
-                {!acrossProjects && <DropdownMenuItem onSelect={() => setAdding(true)}>Add part</DropdownMenuItem>}
+                {!acrossProjects && <DropdownMenuItem onSelect={() => setAdding(true)}>Add thread</DropdownMenuItem>}
                 <DropdownMenuItem onSelect={() => toast("Share an artifact")}>Share artifact</DropdownMenuItem>
                 {!acrossProjects && (
                   <>
                     <DropdownMenuSeparator />
                     <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">Connected AIs (over MCP)</DropdownMenuLabel>
-                    <DropdownMenuCheckboxItem checked={aiCanEdit} onCheckedChange={(v) => setAiCanEdit(!!v)}>Can edit parts</DropdownMenuCheckboxItem>
+                    <DropdownMenuCheckboxItem checked={aiCanEdit} onCheckedChange={(v) => setAiCanEdit(!!v)}>Can edit threads</DropdownMenuCheckboxItem>
                   </>
                 )}
               </DropdownMenuContent>
@@ -441,15 +441,15 @@ function PartNode({ node, artifacts, decisions, total, summary, renaming, onRena
         {node.owner && <PersonAvatar id={node.owner} />}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button size="icon-sm" variant="ghost" onPointerDown={stop}><MoreHorizontal /><span className="sr-only">Part options</span></Button>
+            <Button size="icon-sm" variant="ghost" onPointerDown={stop}><MoreHorizontal /><span className="sr-only">Thread options</span></Button>
           </DropdownMenuTrigger>
           {/* Don't pull focus back to the button, so Rename's field keeps it. */}
           <DropdownMenuContent align="end" onCloseAutoFocus={(e) => e.preventDefault()}>
-            <DropdownMenuItem onSelect={onAsk}><Sparkles />Ask about this part</DropdownMenuItem>
+            <DropdownMenuItem onSelect={onAsk}><Sparkles />Ask about this thread</DropdownMenuItem>
             <DropdownMenuItem onSelect={() => toast(`Share an artifact to ${node.name}`)}><Plus />Add artifact</DropdownMenuItem>
             {canEdit && <DropdownMenuItem onSelect={() => setTimeout(onStartRename, 0)}><Pencil />Rename</DropdownMenuItem>}
             {canEdit && <DropdownMenuSeparator />}
-            {canEdit && <DropdownMenuItem variant="destructive" onSelect={onDelete}><Trash2 />Delete part</DropdownMenuItem>}
+            {canEdit && <DropdownMenuItem variant="destructive" onSelect={onDelete}><Trash2 />Delete thread</DropdownMenuItem>}
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
@@ -675,8 +675,8 @@ function AddPartDialog({ open, onOpenChange, onAdd }: { open: boolean; onOpenCha
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Add a part</DialogTitle>
-          <DialogDescription>Parts split a project into areas, like visual design, engineering or UX. Whyspace sorts new decisions and artifacts into the part they fit.</DialogDescription>
+          <DialogTitle>Add a thread</DialogTitle>
+          <DialogDescription>Threads split a project into areas, like visual design, engineering or UX. Whyspace sorts new decisions and artifacts into the thread they fit.</DialogDescription>
         </DialogHeader>
         <div className="grid gap-2">
           <Label htmlFor="part-name">Name</Label>
@@ -684,7 +684,7 @@ function AddPartDialog({ open, onOpenChange, onAdd }: { open: boolean; onOpenCha
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-          <Button onClick={submit}>Add part</Button>
+          <Button onClick={submit}>Add thread</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

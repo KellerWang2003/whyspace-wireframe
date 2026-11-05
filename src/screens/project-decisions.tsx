@@ -1,10 +1,14 @@
 import { useEffect, useState } from 'react'
-import { Search, Sparkles, X } from 'lucide-react'
+import { Sparkles, X } from 'lucide-react'
+import { DropdownMenuCheckboxItem, DropdownMenuItem, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuSeparator, DropdownMenuSub, DropdownMenuSubContent, DropdownMenuSubTrigger } from '@/components/ui/dropdown-menu'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { StatusIcon } from '@/components/app/status-badge'
+import { Table, TableBody, TableCell, TableHeader, TableRow } from '@/components/ui/table'
+import { SortableHead } from '@/components/app/sortable-table'
+import { FilterMenu, TablePageHeader, ViewTabs } from '@/components/app/view-tabs'
+import { useSort, type Sort } from '@/lib/use-sort'
+import { useSavedViews, type SavedView } from '@/lib/saved-views'
+import { StatusIcon, StatusLegend } from '@/components/app/status-badge'
 import { projectSections } from '@/components/decisions/section-data'
 import { descendants, sectionPath } from '@/components/decisions/section-model'
 import { DECISIONS, PEOPLE, STATUS_LABEL, ledBy, reachOf, type Decision, type Project, type Status } from '@/data'
@@ -14,81 +18,124 @@ import { useStatusOf, useTasks } from '@/lib/work'
 import { cn } from '@/lib/utils'
 import { dayOf } from '@/playground/model'
 
-// Decisions is a plain database: a table with filters and saved views, for auditing
-// ("every open decision in design") or when Ask isn't enough. Ask Whyspace docks on the
-// right and its answers filter the table. Rows open the decision sheet (the route keeps it linkable).
-// Sections are a filter here; the section map only opens from a decision's Show full path.
+// Decisions is a plain database. The default view splits it by thread, one sub-tab per thread,
+// the way Artifacts keeps a shelf per thread. Other views are Notion-style: add one with +, then
+// set its filters, sort and split from the ⋯ menu; every change saves into the open view.
+// Ask Whyspace docks on the right and its answers filter the table. Rows open the decision sheet.
 
-const VIEWS = [
-  ['all', 'All'],
-  ['mine', 'Open in my parts'],
-  ['update', 'Needs update'],
-  ['week', 'This week'],
-  ['inferred', 'Inferred, not confirmed'],
-] as const
-type View = (typeof VIEWS)[number][0]
+type Filters = { thread: string; state: 'all' | Status; mine: boolean; update: boolean; week: boolean; split: boolean }
+type SortKey = 'part' | 'title' | 'state' | 'by' | 'date' | 'artifacts'
+const BLANK: Filters = { thread: 'all', state: 'all', mine: false, update: false, week: false, split: false }
+const SEED: SavedView<Filters>[] = [
+  { id: 'threads', name: 'By thread', filters: { ...BLANK, split: true }, sort: null, locked: true },
+  { id: 'all', name: 'All', filters: BLANK, sort: null },
+]
+const FLAGS = [['mine', 'My threads'], ['update', 'Needs update'], ['week', 'This week']] as const
+const STATES: Status[] = ['conf', 'inf', 'open', 'chg']
 
 export function ProjectDecisions({ project }: { project: Project; selectedId?: string }) {
   const tasks = useTasks()
   const statusOf = useStatusOf()
   const sections = projectSections(project.id)
+  const threads = sections.filter(s => !s.parent)
   const all = DECISIONS.filter(d => d.project === project.id)
-  const [view, setView] = useState<View>('all')
+  const v = useSavedViews<Filters>(`decisions:${project.id}`, SEED, BLANK)
+  const filters = v.active.filters
+  const [tab, setTab] = useState(threads[0]?.id ?? '')
   const [search, setSearch] = useState('')
-  const [section, setSection] = useState('all')
-  const [state, setState] = useState<'all' | Status>('all')
   const [asked, setAsked] = useState<{ ids: string[]; question: string } | null>(null)
   useEffect(() => onFilterDecisions((ids, question) => setAsked({ ids, question })), [])
 
   const mine = ledBy(project.id)
-  const inSection = (d: Decision) => {
-    if (section === 'all') return true
-    const ids = [section, ...descendants(sections, section)]
+  const inThread = (d: Decision, id: string) => {
+    if (id === 'all') return true
+    const ids = [id, ...descendants(sections, id)]
     return sections.some(s => ids.includes(s.id) && s.decisions.some(x => x.id === d.id))
   }
-  const inView = (d: Decision) => ({
-    all: true,
-    mine: mine.includes(d.part) && ['open', 'inf'].includes(statusOf(d)),
-    update: reachOf(d.id, tasks).some(r => r.needsUpdate),
-    week: (dayOf(d.when) ?? 0) >= 19,
-    inferred: statusOf(d) === 'inf',
-  })[view]
   const query = search.trim().toLowerCase()
-  const rows = all.filter(d => inView(d) && inSection(d) && (state === 'all' || statusOf(d) === state) && (!asked || asked.ids.includes(d.id)) && `${d.title} ${d.why ?? ''} ${d.part} ${d.by ?? ''}`.toLowerCase().includes(query))
+  const matches = (d: Decision) => (filters.split || inThread(d, filters.thread))
+    && (filters.state === 'all' || statusOf(d) === filters.state)
+    && (!filters.mine || mine.includes(d.part))
+    && (!filters.update || reachOf(d.id, tasks).some(r => r.needsUpdate))
+    && (!filters.week || (dayOf(d.when) ?? 0) >= 19)
+    && (!asked || asked.ids.includes(d.id))
+    && `${d.title} ${d.why ?? ''} ${d.part} ${d.by ?? ''}`.toLowerCase().includes(query)
+  const filtered = all.filter(matches)
+  const shown = filters.split ? filtered.filter(d => inThread(d, tab)) : filtered
+  const { sorted: rows, sort, toggle } = useSort<Decision, SortKey>(shown, {
+    part: d => d.part,
+    title: d => d.title,
+    state: d => STATUS_LABEL[statusOf(d)],
+    by: d => d.by ?? PEOPLE[d.owner]?.name,
+    date: d => dayOf(d.when) ?? dayOf(d.due),
+    artifacts: d => reachOf(d.id, tasks).length,
+  }, null, { sort: v.active.sort as Sort<SortKey>, setSort: v.setSort })
+
+  const seed = SEED.find(s => s.id === v.active.id)?.filters ?? BLANK
+  const changed = JSON.stringify({ ...filters, split: seed.split }) !== JSON.stringify(seed)
+  const filtering = (filters.thread !== 'all' && !filters.split) || filters.state !== 'all' || FLAGS.some(([k]) => filters[k])
+  const cols = filters.split ? 5 : 6
 
   return <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto">
-    <div className="space-y-5 p-6 sm:p-8">
-      <header className="flex flex-wrap items-end justify-between gap-3">
-        <h1 className="text-2xl font-semibold tracking-tight">Decisions</h1>
-      </header>
-      <div className="flex flex-wrap gap-1.5" role="group" aria-label="Saved views">
-        {VIEWS.map(([id, label]) => <Button key={id} size="sm" variant={view === id ? 'secondary' : 'ghost'} className={cn('h-7 rounded-full text-xs', view !== id && 'text-muted-foreground')} aria-pressed={view === id} onClick={() => setView(id)}>{label}</Button>)}
+    <div className="space-y-6 p-6 sm:p-8">
+      <TablePageHeader title="Decisions" search={search} onSearch={setSearch} placeholder="Search decisions…" />
+      <div className="space-y-3">
+        <ViewTabs v={v}>
+          <FilterMenu active={filtering}>
+            {!filters.split && <DropdownMenuSub>
+              <DropdownMenuSubTrigger>Thread</DropdownMenuSubTrigger>
+              <DropdownMenuSubContent>
+                <DropdownMenuRadioGroup value={filters.thread} onValueChange={thread => v.setFilters({ thread })}>
+                  <DropdownMenuRadioItem value="all">All threads</DropdownMenuRadioItem>
+                  {sections.map(s => <DropdownMenuRadioItem key={s.id} value={s.id}>{sectionPath(sections, s.id).map(x => x.name).join(' / ')}</DropdownMenuRadioItem>)}
+                </DropdownMenuRadioGroup>
+              </DropdownMenuSubContent>
+            </DropdownMenuSub>}
+            <DropdownMenuSub>
+              <DropdownMenuSubTrigger>State</DropdownMenuSubTrigger>
+              <DropdownMenuSubContent>
+                <DropdownMenuRadioGroup value={filters.state} onValueChange={state => v.setFilters({ state: state as Filters['state'] })}>
+                  <DropdownMenuRadioItem value="all">Any state</DropdownMenuRadioItem>
+                  {STATES.map(s => <DropdownMenuRadioItem key={s} value={s}>{STATUS_LABEL[s]}</DropdownMenuRadioItem>)}
+                </DropdownMenuRadioGroup>
+              </DropdownMenuSubContent>
+            </DropdownMenuSub>
+            {FLAGS.map(([k, label]) => <DropdownMenuCheckboxItem key={k} checked={filters[k]} onCheckedChange={c => v.setFilters({ [k]: !!c } as Partial<Filters>)} onSelect={e => e.preventDefault()}>{label}</DropdownMenuCheckboxItem>)}
+            <DropdownMenuSeparator />
+            <DropdownMenuCheckboxItem checked={filters.split} onCheckedChange={c => v.setFilters({ split: !!c })} onSelect={e => e.preventDefault()}>Split by thread</DropdownMenuCheckboxItem>
+            {changed && <DropdownMenuItem onSelect={v.resetFilters}>Clear filters</DropdownMenuItem>}
+          </FilterMenu>
+        </ViewTabs>
+        {filters.split && <div className="flex flex-wrap gap-1.5" role="tablist" aria-label="Threads">
+          {threads.map(t => {
+            const n = filtered.filter(d => inThread(d, t.id)).length
+            return <Button key={t.id} size="sm" role="tab" aria-selected={tab === t.id} variant={tab === t.id ? 'secondary' : 'ghost'} className={cn('rounded-full', tab !== t.id && 'text-muted-foreground')} onClick={() => setTab(t.id)}>
+              {t.name}<span className="text-xs text-muted-foreground tabular-nums">{n}</span>
+            </Button>
+          })}
+        </div>}
       </div>
-      <div className="flex flex-wrap items-center gap-2">
-        <label className="relative"><Search className="absolute top-2.5 left-3 size-4 text-muted-foreground" /><Input aria-label="Find a decision" placeholder="Search decisions…" value={search} onChange={e => setSearch(e.target.value)} className="w-64 max-w-full pl-9" /></label>
-        <select aria-label="Section" value={section} onChange={e => setSection(e.target.value)} className="h-9 max-w-56 rounded-md border bg-background px-3 text-sm"><option value="all">All sections</option>{sections.map(s => <option key={s.id} value={s.id}>{sectionPath(sections, s.id).map(x => x.name).join(' / ')}</option>)}</select>
-        <select aria-label="State" value={state} onChange={e => setState(e.target.value as typeof state)} className="h-9 rounded-md border bg-background px-3 text-sm"><option value="all">Any state</option>{(['conf', 'inf', 'open', 'chg'] as Status[]).map(s => <option key={s} value={s}>{STATUS_LABEL[s]}</option>)}</select>
-        <span className="ml-auto text-xs text-muted-foreground">{rows.length} of {all.length}</span>
-      </div>
-      {asked && <div className="flex items-center gap-2 rounded-lg border bg-muted/30 px-3 py-2 text-sm"><Sparkles className="size-3.5 shrink-0" /><span className="min-w-0 flex-1 truncate">Filtered by Ask · “{asked.question}”</span><Button variant="ghost" size="sm" className="h-7" onClick={() => setAsked(null)}><X />Clear</Button></div>}
-      <div className="rounded-lg border"><Table><TableHeader><TableRow>
-        <TableHead className="w-[38%] pl-4">Decision</TableHead><TableHead>State</TableHead><TableHead>Part</TableHead><TableHead>Decided by</TableHead><TableHead>Date</TableHead><TableHead className="pr-4">Artifacts affected</TableHead>
+      {asked && <div className="flex items-center gap-2 rounded-xl bg-muted px-3 py-2 text-sm"><Sparkles className="size-3.5 shrink-0" /><span className="min-w-0 flex-1 truncate">Filtered by Ask · “{asked.question}”</span><Button variant="ghost" size="sm" onClick={() => setAsked(null)}><X />Clear</Button></div>}
+      <div><Table><TableHeader><TableRow>
+        {!filters.split && <SortableHead id="part" sort={sort} onSort={toggle} className="pl-4">Thread</SortableHead>}
+        <SortableHead id="title" sort={sort} onSort={toggle} className={cn('w-[38%]', filters.split && 'pl-4')}>Decision</SortableHead><SortableHead id="state" sort={sort} onSort={toggle}>State</SortableHead><SortableHead id="by" sort={sort} onSort={toggle}>Decided by</SortableHead><SortableHead id="date" sort={sort} onSort={toggle}>Date</SortableHead><SortableHead id="artifacts" sort={sort} onSort={toggle} className="pr-4">Artifacts affected</SortableHead>
       </TableRow></TableHeader><TableBody>
         {rows.map(d => {
           const reach = reachOf(d.id, tasks)
           const pending = reach.filter(r => r.needsUpdate).length
           const status = statusOf(d)
           return <TableRow key={d.id} className="cursor-pointer" onClick={() => navigate(`/p/${project.id}/decisions/${d.id}`)}>
-            <TableCell className="min-w-64 py-3 pl-4 whitespace-normal"><button className="text-left font-medium hover:underline" onClick={e => { e.stopPropagation(); navigate(`/p/${project.id}/decisions/${d.id}`) }}>{d.title}</button></TableCell>
+            {!filters.split && <TableCell className="pl-4 text-xs text-muted-foreground">{d.part}</TableCell>}
+            <TableCell className={cn('min-w-64 py-3 whitespace-normal', filters.split && 'pl-4')}><button className="text-left font-medium hover:underline" onClick={e => { e.stopPropagation(); navigate(`/p/${project.id}/decisions/${d.id}`) }}>{d.title}</button></TableCell>
             <TableCell><span className="flex items-center gap-1.5 text-xs"><StatusIcon status={status} className="size-3.5 text-muted-foreground" />{STATUS_LABEL[status]}</span></TableCell>
-            <TableCell className="text-xs text-muted-foreground">{d.part}</TableCell>
             <TableCell className="text-xs text-muted-foreground">{d.by ?? PEOPLE[d.owner]?.name}</TableCell>
             <TableCell className="text-xs text-muted-foreground">{d.when ?? (d.due ? `Due ${d.due}` : '—')}</TableCell>
             <TableCell className="pr-4 text-xs">{reach.length ? <span className="flex items-center gap-1.5"><span className="tabular-nums">{reach.length}</span>{pending > 0 && <Badge variant="outline" className="font-normal">{pending} {pending === 1 ? 'needs' : 'need'} update</Badge>}</span> : <span className="text-muted-foreground">—</span>}</TableCell>
           </TableRow>
         })}
-        {!rows.length && <TableRow><TableCell colSpan={6} className="py-12 text-center text-sm text-muted-foreground">No matches.</TableCell></TableRow>}
+        {!rows.length && <TableRow><TableCell colSpan={cols} className="py-12 text-center text-sm text-muted-foreground">{all.length ? 'No matches.' : 'No decisions yet.'}</TableCell></TableRow>}
       </TableBody></Table></div>
     </div>
+    <footer className="sticky bottom-0 mt-auto border-t bg-background px-6 py-2.5 sm:px-8"><StatusLegend /></footer>
   </div>
 }

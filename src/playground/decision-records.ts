@@ -26,7 +26,7 @@ export type DecisionRecord = {
 export const DECISION_EXAMPLES: DecisionRecord[] = [
   {
     "id": "move",
-    "title": "Every element should move to catch a cat's attention",
+    "title": "Use motion to catch a cat's attention",
     "why": "Luna ignored the static card for five minutes, then pounced the moment a notification slid in.",
     "owner": "TR",
     "decidedBy": [
@@ -78,7 +78,7 @@ export const DECISION_EXAMPLES: DecisionRecord[] = [
   },
   {
     "id": "short",
-    "title": "The promo video runs 15 seconds",
+    "title": "Keep the promo video to 15 seconds",
     "why": "Cats lose interest fast.",
     "reasonInferred": true,
     "owner": "MC",
@@ -127,7 +127,7 @@ export const DECISION_EXAMPLES: DecisionRecord[] = [
   },
   {
     "id": "pounce",
-    "title": "Open the video on Luna's real pounce",
+    "title": "Open the promo video on our test cat pouncing",
     "why": "Real footage of a cat catching the dot shows the idea in the first second.",
     "owner": "MC",
     "decidedBy": [
@@ -179,7 +179,7 @@ export const DECISION_EXAMPLES: DecisionRecord[] = [
   },
   {
     "id": "nored",
-    "title": "Drop red from the brand; use blue and yellow",
+    "title": "Swap brand red for blue and yellow, which cats can see",
     "why": "Cats see red as a dull gray. Blue and yellow are the colors they see best.",
     "owner": "TR",
     "decidedBy": [
@@ -238,12 +238,12 @@ export const DECISION_EXAMPLES: DecisionRecord[] = [
     ],
     "confirmedBy": "TR",
     "confirmedAt": "Oct 23 · 11:05 AM",
-    "was": "Tuna red as the primary color",
+    "was": "Use tuna red as the main brand color",
     "flag": "The poster campaign still uses tuna red."
   },
   {
     "id": "red",
-    "title": "Tuna red as the primary color",
+    "title": "Use tuna red as the main brand color",
     "why": "It felt playful and food-related to the team.",
     "owner": "TR",
     "decidedBy": [
@@ -271,7 +271,7 @@ export const DECISION_EXAMPLES: DecisionRecord[] = [
     ],
     "source": {
       "title": "Brand kickoff",
-      "kind": "Meeting notes",
+      "kind": "Workshop notes",
       "author": "TR",
       "quote": "Let's go with tuna red.",
       "context": "Recorded at the brand kickoff."

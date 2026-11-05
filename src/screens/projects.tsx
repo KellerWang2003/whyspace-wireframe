@@ -8,7 +8,7 @@ import { useNeedsYou } from "@/lib/work"
 import { useStore } from "@/lib/store"
 
 function ProjectCard({ project }: { project: Project }) {
-  const ask = `#/p/${project.id}/catch-up`
+  const ask = `#/p/${project.id}/home`
   const summary = WEEK_SUMMARY[project.id]?.match(/^.*?[.!?](\s|$)/)?.[0].trim() ?? "No updates yet."
   const waiting = useNeedsYou(project.id).length
   const next = nextMilestone(project.id)
@@ -21,7 +21,7 @@ function ProjectCard({ project }: { project: Project }) {
       </a>
       <div className="space-y-3 p-5">
         <div className="flex items-center justify-between gap-3">
-          <h2 className="min-w-0 text-xl font-semibold tracking-tight"><a href={ask} className="block truncate hover:underline">{project.name}</a></h2>
+          <h2 className="min-w-0 type-heading"><a href={ask} className="block truncate hover:underline">{project.name}</a></h2>
           <span className="shrink-0 text-xs text-muted-foreground">{project.updated}</span>
         </div>
         <p className="flex gap-1.5 text-sm leading-relaxed text-muted-foreground"><Sparkles className="mt-1 size-3 shrink-0" />{summary}</p>
@@ -40,7 +40,7 @@ export function Projects() {
 
   return (
     <AppShell crumbs={[{ label: current?.name ?? "" }, { label: "All projects" }]}>
-      <div className="flex flex-1 flex-col gap-6 p-4 md:p-8">
+      <div className="flex flex-1 flex-col gap-6 p-6 sm:p-8">
         <PageHeader title="All projects" actions={<Button size="sm" onClick={() => setNewProjectOpen(true)}><Plus />New project</Button>} />
         {projects.length === 0 ? (
           <Empty className="flex-1 border border-dashed">
@@ -48,7 +48,7 @@ export function Projects() {
               <EmptyMedia variant="icon"><FolderKanban /></EmptyMedia>
               <EmptyTitle>No projects yet</EmptyTitle>
             </EmptyHeader>
-            <EmptyContent><Button onClick={() => setNewProjectOpen(true)}><Plus />New project</Button></EmptyContent>
+            <EmptyContent><Button size="sm" onClick={() => setNewProjectOpen(true)}><Plus />New project</Button></EmptyContent>
           </Empty>
         ) : (
           <div className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,380px),1fr))] items-start gap-6">

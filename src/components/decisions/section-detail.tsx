@@ -20,7 +20,7 @@ export function ArtifactStage({ artifact }: { artifact: SectionArtifact }) {
     </div>
   )
   if (artifact.kind.includes('Video')) return <div className="flex min-h-72 flex-col items-center justify-center rounded-lg bg-muted/60 p-8"><div className="mb-6 rounded-2xl border bg-background p-6 text-center"><p className="text-xs text-muted-foreground">Whiskr</p><p className="mt-2 text-xl font-medium">Follow the dot. Find a playmate.</p></div><div className="flex size-12 items-center justify-center rounded-full border bg-background"><Play className="size-5" /></div><p className="mt-4 text-xs text-muted-foreground">Video storyboard preview · 00:15</p></div>
-  return <div className="min-h-72 rounded-lg bg-muted/40 p-5"><div className="mx-auto max-w-md rounded border bg-background p-6 shadow-xs"><FileText className="mb-4 size-5 text-muted-foreground" /><p className="font-medium">{artifact.name.replace('.md', '')}</p><p className="mt-4 text-xs font-medium">The direction</p><p className="mt-2 text-xs leading-relaxed text-muted-foreground">Open on a real pounce, let the purring dot lead a swipe, and end on blue and yellow.</p><div className="mt-5 space-y-2">{[100, 90, 96, 60].map((width, i) => <div key={i} className="h-1.5 rounded bg-muted" style={{ width: `${width}%` }} />)}</div></div></div>
+  return <div className="min-h-72 rounded-lg bg-muted/40 p-5"><div className="mx-auto max-w-md rounded border bg-background p-6 shadow-xs"><FileText className="mb-4 size-5 text-muted-foreground" /><p className="font-medium">{artifact.name.replace('.md', '')}</p><p className="mt-4 text-xs font-medium">The direction</p><p className="mt-2 text-xs leading-relaxed text-muted-foreground">Start with a real cat clip, let the moving dot lead a swipe, and end on blue.</p><div className="mt-5 space-y-2">{[100, 90, 96, 60].map((width, i) => <div key={i} className="h-1.5 rounded bg-muted" style={{ width: `${width}%` }} />)}</div></div></div>
 }
 
 export function SectionDetail({ section, sections, onDecision, onSection }: {
@@ -36,7 +36,7 @@ export function SectionDetail({ section, sections, onDecision, onSection }: {
   return <div className="space-y-7" data-section-detail={section.id}>
     <div className="border-b pb-5">
       <p className="mb-2 text-xs text-muted-foreground">{sectionPath(sections, section.id).map(s => s.name).join(' / ')}</p>
-      <h2 className="text-2xl font-semibold tracking-tight">{section.name}</h2>
+      <h2 className="type-title">{section.name}</h2>
       <p className="mt-2 text-xs text-muted-foreground">{section.owner} · {section.artifacts.length} artifacts · {section.decisions.length} decisions</p>
     </div>
     <div className="max-w-3xl space-y-2"><p className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground"><Sparkles className="size-3.5" />Current direction</p><p className="text-sm leading-relaxed">{section.summary}</p></div>

@@ -29,7 +29,7 @@ export function SignUp() {
     <AuthLayout>
       <Card>
         <CardHeader className="text-center">
-          <CardTitle className="text-xl">Create your account</CardTitle>
+          <CardTitle className="type-display">Create your account</CardTitle>
           <CardDescription>Keep the why behind your team’s work.</CardDescription>
         </CardHeader>
         <CardContent>
@@ -81,7 +81,7 @@ export function LogIn() {
     <AuthLayout>
       <Card>
         <CardHeader className="text-center">
-          <CardTitle className="text-xl">Welcome back</CardTitle>
+          <CardTitle className="type-display">Welcome back</CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={submit}>

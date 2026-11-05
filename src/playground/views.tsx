@@ -270,7 +270,7 @@ export function TreeView({ m, onDecision, onArtifact }: ViewProps) {
   return (
     <div className="flex h-full flex-col gap-3">
       <div className="flex items-center gap-3">
-        <p className="text-sm text-muted-foreground">Sections nest like Figma sections: project, parts, then subsections as deep as you need. Inside each, work runs left to right in time. Drag items between sections; use ⋯ to add a subsection.</p>
+        <p className="text-sm text-muted-foreground">Sections nest like Figma sections: project, threads, then subsections as deep as you need. Inside each, work runs left to right in time. Drag items between sections; use ⋯ to add a subsection.</p>
         <Label className="ml-auto flex shrink-0 items-center gap-2 text-sm font-normal">
           <Switch checked={links} onCheckedChange={(v) => (setLinks(v), setFocus(null))} />
           Show connections

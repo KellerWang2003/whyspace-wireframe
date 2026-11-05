@@ -23,7 +23,7 @@ export function DecisionSheet({ m, id, onClose, onDecision, onArtifact }: { m: M
   const d = id ? m.byId(id) : undefined
   return (
     <Sheet open={!!d} onOpenChange={(o) => !o && onClose()}>
-      <SheetContent className="w-[420px] gap-0 overflow-y-auto sm:max-w-[420px]">
+      <SheetContent resizeKey="playground" className="w-[420px] gap-0 overflow-y-auto sm:max-w-[420px]">
         {d && (
           <>
             <SheetHeader className="gap-2">
@@ -31,7 +31,7 @@ export function DecisionSheet({ m, id, onClose, onDecision, onArtifact }: { m: M
                 <StatusBadge status={d.status} />
                 {isNew(d) && <Badge variant="outline" className="font-normal">New since your last visit</Badge>}
               </div>
-              <SheetTitle className="text-lg leading-snug">{d.title}</SheetTitle>
+              <SheetTitle className="type-heading">{d.title}</SheetTitle>
               <SheetDescription className="flex items-center gap-2">
                 <PersonAvatar id={d.owner} className="size-5" />
                 {isAI(d)
@@ -131,7 +131,7 @@ function Focus({ m, a, onDecision }: { m: Model; a: Artifact; onDecision: (id: s
     <>
       <div className="flex items-center gap-3 border-b px-5 py-3 pr-12">
         <div>
-          <DialogTitle className="text-base">{a.name}</DialogTitle>
+          <DialogTitle>{a.name}</DialogTitle>
           <DialogDescription>{a.kind} · {a.part} · {PEOPLE[a.owner]?.name} · updated {a.updated}</DialogDescription>
         </div>
       </div>

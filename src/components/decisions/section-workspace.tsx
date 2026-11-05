@@ -5,6 +5,8 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Input } from '@/components/ui/input'
 import { Switch } from '@/components/ui/switch'
 import { cn } from '@/lib/utils'
+import { ResizeHandle } from "@/components/app/resize-handle"
+import { usePanelWidth } from "@/lib/use-panel-width"
 import { STATUS_LABEL, type Project } from '@/data'
 import { SectionMap } from './section-map'
 import { SectionWindow } from './section-window'
@@ -25,6 +27,7 @@ export function SectionWorkspace({ project, initialSections, selectedId, onDecis
   const traced = traceDecision ? initialSections.find(s => s.decisions.some(d => d.id === traceDecision)) : undefined
   const [sections, setSections] = useState<WorkSection[]>(initialSections)
   const [outlineOpen, setOutlineOpen] = useState(false)
+  const [outlineWidth, setOutlineWidth] = usePanelWidth("section-outline", 272)
   const [navigation, setNavigation] = useState<{ id: string; serial: number } | null>(traced ? { id: traced.id, serial: 0 } : null)
   const navigationSerial = useRef(0)
   const [showDecisions, setShowDecisions] = useState(!!traced)
@@ -170,7 +173,7 @@ export function SectionWorkspace({ project, initialSections, selectedId, onDecis
     const minimal = isMinimized(s.id)
     return <section className={cn('@container rounded-xl border bg-background shadow-xs', !related(s) && 'opacity-35')}>
       <div className={cn('flex items-center gap-1 border-b px-3 py-3', minimal && 'border-b-0')}>
-        <span {...dragEvents(s.id)} title={`Drag ${s.name} to move it`} aria-label={`Drag ${s.name}`} className="touch-none cursor-grab select-none rounded p-1 text-muted-foreground active:cursor-grabbing"><GripVertical className="size-3.5" /></span>
+        <span {...dragEvents(s.id)} aria-label={`Drag ${s.name}`} className="touch-none cursor-grab select-none rounded p-1 text-muted-foreground active:cursor-grabbing"><GripVertical className="size-3.5" /></span>
         <button className="min-w-0 flex-1 truncate text-left text-sm font-semibold" onClick={() => focus(s.id)}>{s.name}</button>
         <button aria-label={`${minimal ? 'Restore' : 'Minimize'} ${s.name}`} title={minimal ? 'Show section content' : 'Title only'} className="rounded p-1.5 text-muted-foreground hover:bg-muted" onClick={() => toggleMinimized(s.id)}>{minimal ? <ChevronDown className="size-3.5" /> : <Minimize2 className="size-3.5" />}</button>
         <button aria-label={`Expand ${s.name} details`} title="Expand section" className="rounded p-1.5 text-muted-foreground hover:bg-muted" onClick={() => focus(s.id)}><Maximize2 className="size-3.5" /></button>
@@ -199,7 +202,8 @@ export function SectionWorkspace({ project, initialSections, selectedId, onDecis
   return <>
     <div className="relative flex min-h-0 min-w-0 flex-1 overflow-hidden [contain:inline-size]">
       <h1 className="sr-only">{project.name} Decisions</h1>
-      {outlineOpen && <aside id="section-outline" aria-label="Section outline" className="flex h-full w-68 max-w-[45%] shrink-0 flex-col overflow-hidden border-r bg-background">
+      {outlineOpen && <aside id="section-outline" aria-label="Section outline" style={{ width: outlineWidth }} className="relative flex h-full max-w-[45%] shrink-0 flex-col border-r bg-background">
+        <ResizeHandle edge="right" getWidth={() => outlineWidth} onWidth={setOutlineWidth} min={200} max={480} reset={272} />
         <div className="flex items-center justify-between gap-3 border-b px-4 py-4"><div><p className="text-[10px] text-muted-foreground">{project.name}</p><h2 className="mt-0.5 text-sm font-semibold">Decisions</h2></div><Button variant="ghost" size="icon" className="size-7" aria-label="Close outline" onClick={() => setOutlineOpen(false)}><PanelLeft /></Button></div>
         <div className="min-h-0 flex-1 overflow-auto p-3"><p className="mb-2 px-2 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Outline</p><button data-section-drop="__project__" className="mb-2 w-full rounded-md px-2 py-2 text-left text-xs font-medium hover:bg-muted" onDragOver={event => { if (dragged) event.preventDefault() }} onDrop={event => drop(event, null)} onClick={() => navigateSection('__project__')}>{project.name}</button>{treeNav(null)}</div>
       </aside>}

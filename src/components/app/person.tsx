@@ -2,11 +2,15 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { cn } from "@/lib/utils"
 import { PEOPLE, initials } from "@/data"
 
-export function PersonAvatar({ id, className }: { id: string; className?: string }) {
+// Keller and Kelly share a first letter, so avatars use two letters where one would collide.
+const AVATAR: Record<string, string> = { MC: "Ke", KL: "Kl" }
+
+// agent: the person's AI, drawn as the same face with a dashed edge.
+export function PersonAvatar({ id, className, agent }: { id: string; className?: string; agent?: boolean }) {
   const p = PEOPLE[id]
   return (
     <Avatar className={cn("size-6", className)}>
-      <AvatarFallback className="text-[10px]">{initials(p?.name ?? id)}</AvatarFallback>
+      <AvatarFallback className={cn("text-[10px]", agent && "border border-dashed border-foreground/60 bg-background")}>{AVATAR[id] ?? initials(p?.name ?? id)}</AvatarFallback>
     </Avatar>
   )
 }

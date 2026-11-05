@@ -1,4 +1,7 @@
 import { DecisionPlayground } from "@/screens/decision-playground"
+import { DecisionLayouts } from "@/screens/decision-layouts"
+import { NavPlayground } from "@/screens/nav-playground"
+import { PillPlayground } from "@/screens/pill-playground"
 import { useState, type ReactNode } from "react"
 import { SectionPlayground } from "@/playground/section-playground"
 import { SECTION_LAYOUTS } from "@/components/decisions/section-model"
@@ -14,12 +17,15 @@ import { BoardView, TreeView, type ViewProps } from "@/playground/views"
 // Prototype playground: a few ways to draw the same decisions, side by side, so we can pick.
 // Every view shares the decision sheet, the artifact focus view and the bottom-right chat.
 const VIEWS: [string, string, (p: ViewProps) => ReactNode][] = [
-  ["board", "Board by parts", BoardView],
+  ["board", "Board by threads", BoardView],
   ["tree", "Decision tree", TreeView],
 ]
 
 export function Playground({ project = "whiskr", view = "board" }: { project?: string; view?: string }) {
   if (project === "decisions") return <DecisionPlayground />
+  if (project === "layouts") return <DecisionLayouts layout={view} />
+  if (project === "nav") return <NavPlayground option={view} />
+  if (project === "pill") return <PillPlayground view={view} />
   if (SECTION_LAYOUTS.some(([id]) => id === view) || ["columns", "bands", "expand", "outline"].includes(view)) return <SectionPlayground />
   // Keyed by project so open sheets and chat history reset when you switch.
   return <PlaygroundFor key={project} project={project} view={view} />

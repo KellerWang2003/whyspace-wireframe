@@ -7,7 +7,9 @@ import { Field, FieldDescription, FieldGroup, FieldLabel, FieldSet } from "@/com
 import { Input } from "@/components/ui/input"
 import { Progress } from "@/components/ui/progress"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components/ui/table"
+import { SortableHead } from "@/components/app/sortable-table"
+import { useSort } from "@/lib/use-sort"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { AppShell, PageHeader } from "@/components/app/app-shell"
 import { PersonAvatar } from "@/components/app/person"
@@ -21,7 +23,7 @@ export function WorkspaceSettings({ tab }: { tab: string }) {
   const { current } = useStore()
   return (
     <AppShell crumbs={[{ label: current?.name ?? "" }, { label: "Workspace settings" }]}>
-      <div className="flex flex-col gap-6 p-8">
+      <div className="mx-auto flex w-full max-w-4xl flex-col gap-6 p-6 sm:p-8">
         <PageHeader title="Workspace settings" />
         <Tabs value={tab} onValueChange={(v) => navigate(`/settings/${v}`)}>
           <TabsList>
@@ -64,23 +66,28 @@ function General() {
 function Members() {
   const { current, setInviteOpen } = useStore()
   const people = current?.example ? Object.values(PEOPLE) : [ME]
+  const { sorted, sort, toggle } = useSort(people, {
+    name: (p) => p.name,
+    email: (p) => p.email,
+    role: (p) => (p.id === "MC" ? "Owner" : "Member"),
+  })
   return (
     <div className="space-y-4">
       <div className="flex items-center">
         <span className="text-sm text-muted-foreground">{people.length} members</span>
         <Button size="sm" className="ml-auto" onClick={() => setInviteOpen(true)}><Plus />Invite people</Button>
       </div>
-      <div className="rounded-lg border">
+      <div>
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Name</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead className="w-40">Role</TableHead>
+              <SortableHead id="name" sort={sort} onSort={toggle}>Name</SortableHead>
+              <SortableHead id="email" sort={sort} onSort={toggle}>Email</SortableHead>
+              <SortableHead id="role" sort={sort} onSort={toggle} className="w-40">Role</SortableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {people.map((p) => (
+            {sorted.map((p) => (
               <TableRow key={p.id}>
                 <TableCell><div className="flex items-center gap-2"><PersonAvatar id={p.id} />{p.name}</div></TableCell>
                 <TableCell className="text-muted-foreground">{p.email}</TableCell>
@@ -129,7 +136,7 @@ function Billing() {
       </Card>
       <div className="grid gap-4 md:grid-cols-3">
         {PLANS.map((p) => (
-          <Card key={p.name} className={cn(current?.plan === p.name && "border-foreground")}>
+          <Card key={p.name} className={cn(current?.plan === p.name && "ring-1 ring-foreground")}>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">{p.name}{current?.plan === p.name && <Badge variant="secondary">Current</Badge>}</CardTitle>
               <CardDescription><span className="text-2xl font-semibold text-foreground">{p.price}</span> {p.blurb.toLowerCase()}</CardDescription>

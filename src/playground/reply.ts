@@ -8,7 +8,8 @@ export type ChatContext = Pick<Model, "decisions" | "artifacts"> & { scopeName: 
 
 const STOP = new Set(["why", "what", "the", "and", "for", "how", "who", "are", "was", "there", "this", "that", "with", "about"])
 
-export function reply(q: string, m: ChatContext): Msg {
+// `fallback` is what it says when no decision answers the question.
+export function reply(q: string, m: ChatContext, fallback = "No decision found. Try “What's open?”"): Msg {
   const t = q.toLowerCase()
   if (t.includes("open")) {
     const ds = m.decisions.filter((d) => d.status === "open")
@@ -31,5 +32,5 @@ export function reply(q: string, m: ChatContext): Msg {
   const score = (d: Decision) => words.filter((w) => new RegExp(`\\b${w}`).test(`${d.title} ${d.why ?? ""}`.toLowerCase())).length
   const hit = m.decisions.filter((d) => score(d) > 0).sort((a, b) => score(b) - score(a))
   if (hit.length) return { who: "ai", text: hit[0].why ? `${hit[0].title}: ${hit[0].why}` : `Here's what I found.`, refs: hit.slice(0, 4) }
-  return { who: "ai", text: "No decision found. Try “What's open?”" }
+  return { who: "ai", text: fallback }
 }

@@ -20,7 +20,7 @@ export function DecisionList({ decisions, basePath, showProject }: ViewProps) {
           <TableRow>
             <TableHead>Decision</TableHead>
             {showProject && <TableHead>Project</TableHead>}
-            <TableHead>Part</TableHead>
+            <TableHead>Thread</TableHead>
             <TableHead>Owner</TableHead>
             <TableHead>Source</TableHead>
             <TableHead>When</TableHead>

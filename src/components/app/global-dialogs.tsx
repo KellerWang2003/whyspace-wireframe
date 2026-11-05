@@ -30,13 +30,16 @@ import { DECISIONS, MY_PROJECTS, PLANS, TASKS, projectName } from "@/data"
 import { navigate } from "@/lib/router"
 import { useStore, type Plan } from "@/lib/store"
 import { cn } from "@/lib/utils"
+import { DESIGN } from "@/lib/design"
+import { SearchPanelB } from "@/design-b/search"
+import { SearchC } from "@/design-c/search"
 
 // Everything the nav opens on top of the current screen lives here,
 // so Search, New project, Invite and Upgrade work from any page.
 export function GlobalDialogs() {
   return (
     <>
-      <SearchDialog />
+      {DESIGN === "c" ? <SearchC /> : DESIGN === "b" ? <SearchPanelB /> : <SearchDialog />}
       <NewProjectDialog />
       <InviteDialog />
       <UpgradeDialog />
@@ -83,7 +86,7 @@ function SearchDialog() {
             <CommandSeparator />
             <CommandGroup heading="Projects">
               {MY_PROJECTS.map((p) => (
-                <CommandItem key={p.id} onSelect={() => go(`/p/${p.id}/catch-up`)}>
+                <CommandItem key={p.id} onSelect={() => go(`/p/${p.id}/home`)}>
                   <FolderKanban />
                   {p.name}
                 </CommandItem>
@@ -144,7 +147,7 @@ function NewProjectDialog() {
           <Button
             onClick={() => {
               setNewProjectOpen(false)
-              navigate("/p/whiskr/catch-up")
+              navigate("/p/whiskr/home")
               toast("Project created")
             }}
           >
