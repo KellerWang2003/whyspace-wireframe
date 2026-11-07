@@ -1,25 +1,27 @@
 import type { Preset } from "../data"
-import { FOLLOWS, FOLLOW_LINKS, ZOOM } from "../tools/runway-script"
+import { FOLLOWS, FOLLOW_LINKS, STAR } from "../tools/runway-script"
 import { onWeek } from "../week"
 
 // Scenario 3: Keller, Thursday Oct 29. The video went out of Runway yesterday. Overnight two
-// teammates asked his Duet things: Christine asked something none of his decisions covers, Kelly
-// asked about the purr, which is still his guess. He also asks his Duet what changed in the app.
+// teammates asked his Duet things none of his decisions covers: Kelly wants the video's exact blue
+// to match the app prototype, Christine wants to know how many more days the video needs. He also
+// asks his Duet what changed in the app.
 
 export const S3_LINES = [
-  "Yes. The posters go up on Monday, the video follows on launch day.",
+  "#2F6BFF. It’s the blue on the title and end cards.",
+  "Three more days. The sound still needs to go in.",
   "What changed in the app this week?",
 ]
-export const S3_LABELS = ["Say to Christine", "Ask your Duet"]
+export const S3_LABELS = ["Say to Kelly", "Say to Christine", "Ask your Duet"]
 
 const yesterday = { when: "Wed Oct 28" }
 
 export const S3: Preset = onWeek({
-  // What Runway recorded yesterday: the cut follows the plan and Trevor's brand, and the zoom is confirmed.
+  // What Runway recorded yesterday: the cut follows the plan and Trevor's brand, and Luna as the main character is confirmed.
   add: {
-    decisions: [...FOLLOWS.map((d) => ({ ...d, ...yesterday })), { ...ZOOM, ...yesterday, status: "conf", why: "So the eye lands on Luna first." }],
+    decisions: [...FOLLOWS.map((d) => ({ ...d, ...yesterday })), { ...STAR, ...yesterday, status: "conf", why: "Luna looks the best on camera." }],
     duet: [
-      { id: "du11", owner: "MC", kind: "asked", who: "KL", text: "whether the video uses the dot’s purr", decision: "vpurr", project: "whiskr", when: "17:40", day: "yesterday" },
+      { id: "du11", owner: "MC", kind: "asked", who: "KL", text: "for the exact hex of the blue in the promo video, to match the app prototype", project: "whiskr", when: "17:40", day: "yesterday" },
       { id: "du12", owner: "MC", kind: "answered", who: "CH", text: "the video is blue, following Trevor’s decision", decision: "bluecard", project: "whiskr", when: "14:20", day: "yesterday" },
     ],
   },
@@ -35,10 +37,11 @@ export const S3: Preset = onWeek({
       du1: { day: "earlier" },
       du2: { day: "earlier" },
       du3: { kind: "answered", text: "the promo video is 15 seconds", when: "9:40", day: "earlier" },
-      du10: { when: "8:30", day: "today" },
+      du10: { text: "how many more days the video needs, to push the launch back a little", when: "8:30", day: "today" },
     },
   },
-  hide: ["i1"],
+  // Jordan's studio line is another project: it only distracts here.
+  hide: ["i1", "du4"],
   week: { whiskr: "The video is out of Runway, following the blue brand. Your posters are still red." },
   answers: [{
     words: ["changed", "app"],

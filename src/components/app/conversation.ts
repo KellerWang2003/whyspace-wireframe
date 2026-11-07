@@ -72,10 +72,11 @@ export function useConversation(): Conversation {
     if (!q.trim()) return
     if (DESIGN === "b") {
       // A teammate's question nothing of yours covers: you answer it here, the Duet passes it on.
+      // The Duet is the one asking, so the question sits on its side of the conversation.
       const ask = DUET_LOG.find((l) => l.id === (askId ?? pendingAsk))
       if (askId && ask) {
         setPendingAsk(askId)
-        pushMsgs({ who: "me", text: q }, { who: "ai", text: `No decision of yours covers it. Tell me the answer and I’ll pass it to ${first(ask.who)}.` })
+        pushMsgs({ who: "ai", text: `${first(ask.who)} asked ${ask.text}. No decision of yours covers it. What should I tell ${first(ask.who)}?` })
         return
       }
       if (pendingAsk && ask) {

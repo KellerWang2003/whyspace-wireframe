@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils"
 import { CatMark } from "../artifacts/brand-deck"
 import { Ai, Composer, Me, Tool } from "./chat"
 import type { ToolEvent } from "./events"
-import { FOLLOWED_BY, FOLLOWS, FOLLOW_LINKS, READ, SHOTS, TASK, ZOOM, exported, replyParts, turnOf, type Part, type Turn } from "./runway-script"
+import { FOLLOWED_BY, FOLLOWS, FOLLOW_LINKS, READ, SHOTS, STAR, STAR_NOTES, TASK, exported, replyParts, turnOf, type Part, type Turn } from "./runway-script"
 import { markSent } from "./sent"
 import { useStickToEnd } from "./use-stick"
 
@@ -19,7 +19,7 @@ type Exchange = { me: string; turn: Turn }
 export function RunwayApp({ onEvent, person = "Keller" }: { onEvent: (e: ToolEvent) => void; person?: string }) {
   const [xs, setXs] = useState<Exchange[]>([])
   const [pending, setPending] = useState(false)
-  const [zoomed, setZoomed] = useState(false)
+  const [starred, setStarred] = useState(false)
   const [shared, setShared] = useState(false)
   const [toast, setToast] = useState<string | null>(null)
   const emit = useRef(onEvent)
@@ -29,7 +29,7 @@ export function RunwayApp({ onEvent, person = "Keller" }: { onEvent: (e: ToolEve
   const send = (text: string) => {
     if (pending) return
     markSent("runway")
-    setXs((all) => [...all, { me: text, turn: turnOf(text, all.length, zoomed) }])
+    setXs((all) => [...all, { me: text, turn: turnOf(text, all.length, starred) }])
     setPending(true)
   }
 
@@ -39,17 +39,17 @@ export function RunwayApp({ onEvent, person = "Keller" }: { onEvent: (e: ToolEve
     const turn = xs[xs.length - 1]?.turn
     const t = setTimeout(() => {
       if (turn === "setup") emit.current({ type: "record", decisions: FOLLOWS, links: FOLLOW_LINKS })
-      if (turn === "zoom") { setZoomed(true); emit.current({ type: "record", decisions: [ZOOM], links: [] }) }
+      if (turn === "star") { setStarred(true); emit.current({ type: "record", decisions: [STAR], links: [] }) }
       if (turn === "export") {
         setShared(true)
         setToast("Exported and shared to Whiskr · Marketing")
-        emit.current({ type: "share", artifact: exported(zoomed), check: zoomed ? [ZOOM.id] : [] })
+        emit.current({ type: "share", artifact: exported(starred), check: starred ? [STAR.id] : [] })
         emit.current({ type: "done", task: TASK })
       }
       setPending(false)
     }, 1100)
     return () => clearTimeout(t)
-  }, [pending, xs, zoomed])
+  }, [pending, xs, starred])
 
   useEffect(() => {
     if (!toast) return
@@ -96,12 +96,12 @@ export function RunwayApp({ onEvent, person = "Keller" }: { onEvent: (e: ToolEve
               {SHOTS.map((sh, i) => (
                 <div key={sh.at} className="flex flex-col gap-2">
                   <div className="relative aspect-[9/16] max-h-80 overflow-hidden rounded-md bg-neutral-800 ring-1 ring-white/10">
-                    <ShotArt i={i} zoom={zoomed && i === 0} />
+                    <ShotArt i={i} />
                     <span className="absolute top-2 left-2 rounded bg-black/40 px-1 text-[10px] text-white/80 tabular-nums">{sh.at}</span>
-                    {zoomed && i === 0 && <span className="absolute top-2 right-2 rounded bg-white/90 px-1.5 text-[10px] font-medium text-neutral-900">Slow zoom</span>}
+                    {starred && i > 0 && <span className="absolute top-2 right-2 rounded bg-white/90 px-1.5 text-[10px] font-medium text-neutral-900">Luna</span>}
                   </div>
                   <div className="text-[12px]">{sh.title}</div>
-                  <div className="-mt-1.5 text-[11px] text-neutral-400">{sh.note}</div>
+                  <div className="-mt-1.5 text-[11px] text-neutral-400">{starred ? STAR_NOTES[i] : sh.note}</div>
                 </div>
               ))}
             </div>
@@ -128,9 +128,9 @@ function PartView({ part }: { part: Part }) {
   if (part.kind === "text") return <p className={cn("mt-3 first:mt-0", part.muted && "text-neutral-500")}>{part.text}</p>
   if (part.kind === "read") return <ReadTool />
   if (part.kind === "follows") return <FollowsTool />
-  if (part.kind === "zoom") return (
+  if (part.kind === "star") return (
     <Tool dark name="record_decision" meta="Promo video · 1">
-      <p className="flex items-start gap-2"><MarkIcon mark="empty" className="mt-[3px] size-3.5 shrink-0" /><span className="min-w-0 flex-1">{ZOOM.title}</span></p>
+      <p className="flex items-start gap-2"><MarkIcon mark="empty" className="mt-[3px] size-3.5 shrink-0" /><span className="min-w-0 flex-1">{STAR.title}</span></p>
     </Tool>
   )
   return (
@@ -176,10 +176,10 @@ function Row({ title, mark, who }: { title: string; mark: "filled" | "ringed" | 
 }
 
 // A sketch of each shot, enough to tell them apart.
-function ShotArt({ i, zoom }: { i: number; zoom: boolean }) {
+function ShotArt({ i }: { i: number }) {
   if (i === 0) return (
     <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_60%,#6b6b6b_0%,#2a2a2a_70%)]">
-      <svg viewBox="0 0 90 160" className={cn("absolute inset-0 h-full w-full text-neutral-200 transition-transform duration-[3000ms]", zoom && "scale-125")} aria-hidden>
+      <svg viewBox="0 0 90 160" className="absolute inset-0 h-full w-full text-neutral-200" aria-hidden>
         <ellipse cx="45" cy="104" rx="22" ry="14" fill="currentColor" opacity="0.85" />
         <circle cx="62" cy="88" r="11" fill="currentColor" />
         <path d="M54 80 L57 70 L62 79 Z M66 79 L72 70 L72 81 Z" fill="currentColor" />

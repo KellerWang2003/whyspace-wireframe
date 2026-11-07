@@ -24,7 +24,7 @@ export type AppSnapshot = {
   confirmed: Record<string, boolean>
   clashes: Record<string, Settled>
   // The Duet: questions you answered for teammates (by Duet line id), and what you asked it, in order.
-  duet: { answered: Record<string, string>; asks: string[] }
+  duet: { answered: Record<string, string>; asks: string[]; pending: string | null }
 }
 export type AppApi = {
   // Decisions a tool recorded, with the decisions they follow as LINKS edges [followed, follower].
@@ -69,7 +69,7 @@ export function publishApp(snapshot: AppSnapshot, api: AppApi) {
 let appWindow: AppWindow | null = null
 const listeners = new Set<() => void>()
 const notify = () => listeners.forEach((l) => l())
-const EMPTY: AppSnapshot = { decisions: [], status: {}, confirmed: {}, clashes: {}, duet: { answered: {}, asks: [] } }
+const EMPTY: AppSnapshot = { decisions: [], status: {}, confirmed: {}, clashes: {}, duet: { answered: {}, asks: [], pending: null } }
 
 export function attachApp(w: Window | null) {
   appWindow = w as AppWindow | null

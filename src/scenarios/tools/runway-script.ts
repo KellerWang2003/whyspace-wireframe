@@ -9,7 +9,7 @@ export const TITLE = "Runway — Whiskr promo"
 export const PROMPT = "Use the Whyspace MCP to read Whiskr’s Marketing thread: the promo video plan, its decisions and brand guidelines v3. Set up the 15-second video from the plan’s shot list: open on Luna’s clip at 0:42, blue title and end cards, no red, end on the dot darting like prey. Ask me before changing anything already decided."
 export const LINES = [
   PROMPT,
-  "Add a slow zoom on Luna’s pounce in the opening shot, so the eye lands on her first.",
+  "Use Luna as the main character in every shot.",
   "Export it and share it to the Marketing thread.",
 ]
 export const LABEL = "Say to Runway"
@@ -49,15 +49,17 @@ export const FOLLOW_LINKS: [string, string][] = [
 ]
 export const FOLLOWED_BY: Record<string, string> = { "rw-len": "MC", "rw-luna": "MC", "rw-blue": "TR", "rw-dot": "MC", "rw-dart": "TR", "rw-logo": "TR" }
 
-// The tester's own touch: a guess until Keller says why.
-export const ZOOM: Decision = made("rw-zoom", "Add a slow zoom on Luna’s pounce", "So the eye lands on Luna first.", {
-  evidence: [{ kind: "chat", label: "Keller’s chat with Runway", detail: "“Add a slow zoom on Luna’s pounce in the opening shot, so the eye lands on her first.”" }],
-})
+// The tester's own call, said without a reason: a guess until Keller says why, so the check asks.
+export const STAR: Decision = {
+  id: "rw-star", project: "whiskr", part: "Marketing", title: "Make Luna the main character of the promo video",
+  status: "inf", owner: "MC", by: "Keller", tool: "Runway", when: "Today",
+  evidence: [{ kind: "chat", label: "Keller’s chat with Runway", detail: "“Use Luna as the main character in every shot.”" }],
+}
 
 // The video, once exported and shared to the Marketing thread.
-export const exported = (zoom: boolean): Item => ({
+export const exported = (star: boolean): Item => ({
   id: "w8", project: "whiskr", part: "Marketing", name: "Promo video", kind: "Video", owner: "MC", updated: "Today",
-  decisions: FOLLOWS.length + (zoom ? 1 : 0), meta: "Runway · 15 s · 9:16 and 16:9",
+  decisions: FOLLOWS.length + (star ? 1 : 0), meta: "Runway · 15 s · 9:16 and 16:9",
   source: "Runway", where: "Whiskr promo", url: "https://runwayml.com",
 })
 
@@ -68,21 +70,23 @@ export const SHOTS: Shot[] = [
   { at: "0:08", title: "The swipe card", note: "The dot darts, with stops" },
   { at: "0:13", title: "End card", note: "Blue, the logo with the dot" },
 ]
+// With Luna as the main character, she is in the other three shots too.
+export const STAR_NOTES = ["Test clip, 0:42", "Luna behind the blue title", "Luna chases the darting dot", "Luna beside the logo"]
 
-export type Turn = "setup" | "zoom" | "export" | "more"
+export type Turn = "setup" | "star" | "export" | "more"
 // The reply follows the turn: the first line sets the cut up, a line about exporting or sharing
 // ships it, anything else in between is the tester's own touch.
-export function turnOf(text: string, i: number, hadZoom: boolean): Turn {
+export function turnOf(text: string, i: number, hadStar: boolean): Turn {
   if (i === 0) return "setup"
   if (/export|share|send/i.test(text)) return "export"
-  return hadZoom ? "more" : "zoom"
+  return hadStar ? "more" : "star"
 }
 
 export type Part =
   | { kind: "text"; text: string; muted?: boolean }
   | { kind: "read" }
   | { kind: "follows" }
-  | { kind: "zoom" }
+  | { kind: "star" }
   | { kind: "export" }
 
 export function replyParts(turn: Turn): Part[] {
@@ -92,9 +96,9 @@ export function replyParts(turn: Turn): Part[] {
     { kind: "follows" },
     { kind: "text", muted: true, text: "Nothing in it is new. Say what to change, or export." },
   ]
-  if (turn === "zoom") return [
-    { kind: "text", text: "Added a slow push-in on Luna over the first four seconds. The rest of the cut is unchanged." },
-    { kind: "zoom" },
+  if (turn === "star") return [
+    { kind: "text", text: "Luna is now the main character: she sits behind the title, chases the dot on the swipe card and ends beside the logo. Still 15 seconds." },
+    { kind: "star" },
   ]
   if (turn === "export") return [
     { kind: "export" },

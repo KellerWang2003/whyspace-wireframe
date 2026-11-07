@@ -27,7 +27,7 @@ export function AppLink() {
         status: Object.fromEntries(DECISIONS.map((d) => [d.id, statusOf(d)])),
         confirmed: store.confirmed,
         clashes: store.clashes,
-        duet: { answered: { ...duet.answered }, asks: duet.msgs.filter((m) => m.who === "me").map((m) => m.text) },
+        duet: { answered: { ...duet.answered }, asks: duet.msgs.filter((m) => m.who === "me").map((m) => m.text), pending: duet.pendingAsk },
       },
       {
         record: (decisions, links) => {
