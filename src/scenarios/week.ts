@@ -13,7 +13,7 @@ export const WEEK_DECISIONS = {
   // The decision dart replaced: added and hidden, so "What it replaced" still finds it.
   glide: { ...brand, id: "glide", title: "Move the dot in a smooth glide", status: "conf", when: "Oct 22", tool: "Figma", why: "Smooth motion is easy for a paw to follow." },
   dart: {
-    ...brand, id: "dart", title: "Make the dot dart like prey, with short stops", status: "chg", when: "Mon Oct 26", tool: "User testing workshop",
+    ...brand, id: "dart", title: "Make the dot dart like prey, with short stops", status: "chg", when: "Mon Oct 26", tool: "Figma",
     was: "Move the dot in a smooth glide",
     why: "In the second cat test, all three cats pounced on the darting dot and ignored the gliding one.",
     replaces: "glide",

@@ -1,6 +1,6 @@
 // Geometry for the hand-made shape kit (see paint.tsx).
 export const PIGMENT = {
-  forest: "#445332",
+  forest: "#40542E",
   leaf: "#6A854C",
   apricot: "#F19D57",
   sky: "#75A6C4",

@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from "react"
-import { CalendarPlus, ListTodo, Plus, Radio, Spline } from "lucide-react"
+import { CalendarPlus, ListTodo, Plus, Spline } from "lucide-react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
@@ -8,9 +8,8 @@ import { Field, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { ScheduleMeetingDialog } from "@/components/app/schedule-meeting"
 import { NewTaskDialog } from "@/components/app/tasks"
-import { navigate } from "@/lib/router"
 
-// One New menu for the whole project: start or schedule a meeting, add a task, add a thread.
+// One New menu for the whole project: schedule a meeting, add a task, add a thread.
 // Shown beside the project name on Home, and as + on the project's sidebar row.
 export function ProjectNewMenu({
   project,
@@ -31,7 +30,6 @@ export function ProjectNewMenu({
       <DropdownMenu>
         <DropdownMenuTrigger asChild>{trigger ?? <Button variant="outline" size="sm"><Plus />New</Button>}</DropdownMenuTrigger>
         <DropdownMenuContent side={side} align={align} className="w-44">
-          <DropdownMenuItem onSelect={() => navigate(`/p/${project.id}/sessions/new`)}><Radio />Start meeting</DropdownMenuItem>
           <DropdownMenuItem onSelect={() => setDialog("schedule")}><CalendarPlus />Schedule meeting</DropdownMenuItem>
           <DropdownMenuItem onSelect={() => setDialog("task")}><ListTodo />New task</DropdownMenuItem>
           <DropdownMenuItem onSelect={() => setDialog("thread")}><Spline />New thread</DropdownMenuItem>

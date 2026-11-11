@@ -18,8 +18,8 @@ import { useStore } from '@/lib/store'
 import { useStatusOf, useTasks } from '@/lib/work'
 import { ArtifactPicture } from '@/playground/artifact'
 import { DESIGN } from '@/lib/design'
-import { DecisionCard, MarksRow } from '@/design-b/card'
-import { decisionsOf } from '@/design-b/card-model'
+import { DecisionCard, MarksRow } from '@/app/card'
+import { decisionsOf } from '@/app/card-model'
 import { PRESET } from '@/scenarios/data'
 import { BrandDeckDialog } from '@/scenarios/artifacts/brand-deck'
 
@@ -164,7 +164,7 @@ export function Tile({ artifact: a, needsUpdate, onOpen }: { artifact: Item; nee
   </button>
 }
 
-// Design B: the card's marks on the tile, so a shelf reads what is confirmed before anything opens.
+// Main design: the card's marks on the tile, so a shelf reads what is confirmed before anything opens.
 function TileMarks({ artifact }: { artifact: Item }) {
   const tasks = useTasks()
   return <MarksRow decisions={decisionsOf(artifact, tasks)} className="pt-0.5" />

@@ -2,21 +2,10 @@ import { ProjectDecisions } from "@/screens/project-decisions"
 import { Overview } from "@/screens/overview"
 import { projectSections } from "@/components/decisions/section-data"
 import { ProjectArtifacts } from "@/screens/project-artifacts"
-import { useState } from "react"
 import { toast } from "sonner"
-import {
-  MoreHorizontal,
-  Plus,
-  StickyNote,
-  Radio,
-  UserPlus,
-} from "lucide-react"
-import { Badge } from "@/components/ui/badge"
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { WorkshopDetails } from "@/components/app/workshop-details"
+import { UserPlus } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty"
+import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/ui/empty"
 import { Field, FieldDescription, FieldGroup, FieldLabel, FieldSet } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { Item, ItemActions, ItemContent, ItemDescription, ItemGroup, ItemMedia, ItemTitle } from "@/components/ui/item"
@@ -24,18 +13,16 @@ import { Separator } from "@/components/ui/separator"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Textarea } from "@/components/ui/textarea"
 import { AppShell } from "@/components/app/app-shell"
-import { ProBadge } from "@/components/app/global-dialogs"
-import { AvatarStack, PersonAvatar } from "@/components/app/person"
+import { PersonAvatar } from "@/components/app/person"
+import { AI_TOOLS as TOOL_LOGOS, ToolLogo } from "@/components/app/tool-logo"
+import { DESIGN } from "@/lib/design"
+import { PROJECT_TABS } from "@/lib/project-tabs"
 import { TasksView } from "@/components/app/tasks"
 import {
   AI_TOOLS,
-  SETTINGS_TABS,
   DECISIONS,
   PEOPLE,
   PROJECTS,
-  SESSIONS,
-  WORKSHOPS,
-  type Workshop,
   TASKS,
   TIMELINE,
 } from "@/data"
@@ -45,30 +32,18 @@ import { cn } from "@/lib/utils"
 
 type Project = (typeof PROJECTS)[number]
 
-const PAGE: Record<string, string> = { home: "Home", tasks: "Tasks", decisions: "Decisions", artifacts: "Artifacts", sessions: "Workshops", settings: "Settings" }
+const PAGE: Record<string, string> = { home: "Home", tasks: "Tasks", decisions: "Decisions", artifacts: "Artifacts", settings: "Settings" }
 
-// Project navigation: Home, Tasks, Decisions, Artifacts, Workshops.
-// Settings and Archive sit behind the project's ⋯ in the sidebar. Workshops open a shared canvas.
+// Project navigation: Home, Tasks, Decisions, Artifacts.
+// Settings and Archive sit behind the project's ⋯ in the sidebar.
 export function Project({ id, section: asked, sub }: { id: string; section: string; sub?: string }) {
   const project = PROJECTS.find((p) => p.id === id) ?? PROJECTS[0]
-  const { current, setUpgradeOpen } = useStore()
-  const free = current?.plan === "Free"
   const decisions = DECISIONS.filter((d) => d.project === project.id)
   // Catch up, Ask and Overview became Home; old links still land there.
   const section = ["catch-up", "ask", "overview"].includes(asked) ? "home" : asked
-  const live = SESSIONS.find((s) => s.project === project.id && s.status === "Live")
 
   return (
-    <AppShell
-      crumbs={[{ label: project.name, to: `/p/${project.id}/home` }, { label: PAGE[section] ?? "Home" }]}
-      actions={<>
-        {live && (
-          <Badge asChild variant="secondary" className="gap-1.5 font-normal">
-            <a href={`#/p/${project.id}/sessions/${live.id}`}><Radio className="size-3" />Live · {live.title}</a>
-          </Badge>
-        )}
-      </>}
-    >
+    <AppShell crumbs={[{ label: project.name, to: `/p/${project.id}/home` }, { label: PAGE[section] ?? "Home" }]}>
       {section === "tasks" ? (
         <div className="flex flex-col gap-6 p-6 sm:p-8">
           <TasksView key={project.id} title="Tasks" tasks={TASKS.filter((t) => t.project === project.name)} defaultProject={project.name} />
@@ -81,101 +56,12 @@ export function Project({ id, section: asked, sub }: { id: string; section: stri
         )
       ) : section === "artifacts" ? (
         <ProjectArtifacts key={project.id} project={project} selectedId={sub} />
-      ) : section === "sessions" ? (
-        <Workshops project={project} free={free} onUpgrade={() => setUpgradeOpen(true)} />
       ) : section === "settings" ? (
         <ProjectSettings project={project} tab={sub ?? "general"} />
       ) : (
         <Overview key={project.id} project={project} variant={sub} />
       )}
     </AppShell>
-  )
-}
-
-/* ---------------- Sessions ---------------- */
-
-// Workshops are lasting canvases, shown like files: a place to work on something, any time.
-// Meetings don't show here; a meeting can link a workshop, and that shows only in the workshop's details.
-function Workshops({ project, free, onUpgrade }: { project: Project; free: boolean; onUpgrade: () => void }) {
-  const workshops = WORKSHOPS.filter((w) => w.project === project.id)
-  const [creating, setCreating] = useState(false)
-  const [name, setName] = useState("")
-  const [details, setDetails] = useState<Workshop | null>(null)
-  const create = () => (free ? onUpgrade() : setCreating(true))
-
-  return (
-    <div className="flex min-w-0 flex-col gap-6 p-6 sm:p-8">
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <h1 className="type-title">Workshops</h1>
-        <Button size="sm" onClick={create}><Plus />New workshop{free && <ProBadge />}</Button>
-      </div>
-
-      {workshops.length ? (
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          {workshops.map((w) => (
-            <div key={w.id} className="relative flex flex-col overflow-hidden rounded-xl bg-muted transition-colors hover:bg-muted/70">
-              <button onClick={() => navigate(`/p/${project.id}/sessions/${w.id}`)} className="text-left focus-visible:outline-2 focus-visible:outline-ring">
-                <WorkshopThumb seed={w.id} />
-                <div className="flex flex-col gap-2 border-t p-4 pr-12">
-                  <span className="truncate text-sm font-medium">{w.title}</span>
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="text-xs text-muted-foreground">Edited {w.edited}</span>
-                    <AvatarStack ids={w.people} max={3} />
-                  </div>
-                </div>
-              </button>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon-sm" className="absolute right-2 bottom-[52px]"><MoreHorizontal /><span className="sr-only">More</span></Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem onSelect={() => setDetails(w)}>Details</DropdownMenuItem>
-                  <DropdownMenuItem onSelect={() => toast("Rename workshop")}>Rename</DropdownMenuItem>
-                  <DropdownMenuItem onSelect={() => toast("Workshop duplicated")}>Duplicate</DropdownMenuItem>
-                  <DropdownMenuItem onSelect={() => toast("Workshop archived")}>Archive</DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-          ))}
-        </div>
-      ) : (
-        <Empty className="border border-dashed py-16">
-          <EmptyHeader>
-            <EmptyMedia variant="icon"><StickyNote /></EmptyMedia>
-            <EmptyTitle>No workshops yet</EmptyTitle>
-          </EmptyHeader>
-          <EmptyContent><Button size="sm" onClick={create}><Plus />New workshop</Button></EmptyContent>
-        </Empty>
-      )}
-
-      {details && <WorkshopDetails workshop={details} open onOpenChange={(o) => !o && setDetails(null)} />}
-
-      <Dialog open={creating} onOpenChange={setCreating}>
-        <DialogContent className="sm:max-w-sm">
-          <DialogHeader><DialogTitle>New workshop</DialogTitle></DialogHeader>
-          <Field>
-            <FieldLabel htmlFor="workshop-name">Name</FieldLabel>
-            <Input id="workshop-name" placeholder="Untitled workshop" value={name} onChange={(e) => setName(e.target.value)} autoFocus />
-          </Field>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setCreating(false)}>Cancel</Button>
-            <Button onClick={() => { toast(`${name.trim() || "Untitled workshop"} created`); setCreating(false); navigate(`/p/${project.id}/sessions/new`) }}>Create</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </div>
-  )
-}
-
-// A tiny grayscale canvas preview, like a file thumbnail.
-function WorkshopThumb({ seed }: { seed: string }) {
-  const n = [...seed].reduce((a, c) => a + c.charCodeAt(0), 0)
-  return (
-    <div className="relative h-36 bg-muted/40" style={{ backgroundImage: "radial-gradient(var(--border) 1px, transparent 1px)", backgroundSize: "12px 12px" }}>
-      {[0, 1, 2, 3].map((i) => (
-        <span key={i} className={cn("absolute h-9 w-14 rounded-sm shadow-sm", ["bg-neutral-100", "bg-neutral-200", "bg-neutral-300"][(i + n) % 3])} style={{ left: 20 + i * 52 + ((n * 7 + i * 13) % 18), top: 18 + ((n * 11 + i * 29) % 64) }} />
-      ))}
-    </div>
   )
 }
 
@@ -196,7 +82,11 @@ function NoDecisions() {
 }
 
 // Project settings, reached from the project's ⋯ in the sidebar.
-function ProjectSettings({ project, tab }: { project: Project; tab: string }) {
+// The tools each member works in, from the decisions they logged (main design only).
+const toolsOf = (person: string) => [...new Set(DECISIONS.filter((d) => d.owner === person && d.tool).map((d) => d.tool as string))].filter((t) => TOOL_LOGOS.includes(t) || t === "ChatGPT")
+
+function ProjectSettings({ project, tab: asked }: { project: Project; tab: string }) {
+  const tab = PROJECT_TABS.some(([key]) => key === asked) ? asked : "general"
   const { setInviteOpen } = useStore()
   const timeline = TIMELINE[project.id] ?? []
   const leads = projectSections(project.id).filter((s) => !s.parent)
@@ -208,7 +98,7 @@ function ProjectSettings({ project, tab }: { project: Project; tab: string }) {
       </div>
       <Tabs value={tab} onValueChange={(v) => navigate(`/p/${project.id}/settings/${v}`)}>
         <TabsList>
-          {SETTINGS_TABS.map(([key, label]) => <TabsTrigger key={key} value={key}>{label}</TabsTrigger>)}
+          {PROJECT_TABS.map(([key, label]) => <TabsTrigger key={key} value={key}>{label}</TabsTrigger>)}
         </TabsList>
       </Tabs>
       {tab === "general" && (
@@ -264,7 +154,10 @@ function ProjectSettings({ project, tab }: { project: Project; tab: string }) {
                       <ItemTitle>{PEOPLE[m].name}</ItemTitle>
                       <ItemDescription>{PEOPLE[m].email}</ItemDescription>
                     </ItemContent>
-                    <ItemActions><span className="text-sm text-muted-foreground">{m === project.members[0] ? "Project lead" : "Member"}</span></ItemActions>
+                    <ItemActions>
+                      {DESIGN === "b" && toolsOf(m).map((t) => <ToolLogo key={t} tool={t} className="size-3.5" />)}
+                      <span className="ml-2 text-sm text-muted-foreground">{m === project.members[0] ? "Project lead" : "Member"}</span>
+                    </ItemActions>
                   </Item>
                 </div>
               ))}

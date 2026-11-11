@@ -5,19 +5,18 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { MY_PROJECTS, PROJECTS, WORKSHOPS } from "@/data"
+import { MY_PROJECTS, PROJECTS } from "@/data"
 import { TODAY } from "@/playground/model"
 import { addEvent, dateOfDay, pad, startOfDay, updateEvent, type CalEvent } from "@/components/app/calendar/events"
 
 // What the dialog starts from: a slot picked on the calendar, or an existing meeting to edit.
-export type MeetingDraft = Partial<Pick<CalEvent, "id" | "project" | "title" | "start" | "end" | "workshop" | "people">>
+export type MeetingDraft = Partial<Pick<CalEvent, "id" | "project" | "title" | "start" | "end" | "people">>
 
-// Creating a meeting is where a workshop gets linked, optionally. Workshops are never made for a meeting.
-// Saving puts it on the calendar. Without a project, the dialog asks which one.
+// Saving puts the meeting on the calendar. Without a project, the dialog asks which one.
 export function ScheduleMeetingDialog({ project, open, onOpenChange, draft }: { project?: string; open: boolean; onOpenChange: (o: boolean) => void; draft?: MeetingDraft }) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-sm">
+      <DialogContent className="sm:max-w-[30rem]">
         {open && <MeetingForm project={project} draft={draft} close={() => onOpenChange(false)} />}
       </DialogContent>
     </Dialog>
@@ -47,8 +46,6 @@ function MeetingForm({ project: fixed, draft, close }: { project?: string; draft
   const [date, setDate] = useState(toDateInput(start))
   const [from, setFrom] = useState(toTimeInput(start))
   const [to, setTo] = useState(toTimeInput(end))
-  const [workshop, setWorkshop] = useState(draft?.workshop ?? "none")
-  const workshops = WORKSHOPS.filter((w) => w.project === project)
 
   const save = () => {
     const s = fromInputs(date, from)
@@ -59,7 +56,6 @@ function MeetingForm({ project: fixed, draft, close }: { project?: string; draft
       title: title.trim() || "Untitled meeting",
       start: s,
       end: e,
-      workshop: workshop === "none" ? undefined : workshop,
     }
     if (editing) {
       updateEvent(draft!.id!, fields)
@@ -83,7 +79,7 @@ function MeetingForm({ project: fixed, draft, close }: { project?: string; draft
         {!fixed && (
           <Field>
             <FieldLabel>Project</FieldLabel>
-            <Select value={project} onValueChange={(v) => { setProject(v); setWorkshop("none") }}>
+            <Select value={project} onValueChange={setProject}>
               <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
               <SelectContent>
                 {MY_PROJECTS.map((p) => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
@@ -91,7 +87,7 @@ function MeetingForm({ project: fixed, draft, close }: { project?: string; draft
             </Select>
           </Field>
         )}
-        <div className="grid grid-cols-[1fr_auto_auto] gap-2">
+        <div className="grid grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)_minmax(0,1fr)] gap-2">
           <Field>
             <FieldLabel htmlFor="meeting-date">Date</FieldLabel>
             <Input id="meeting-date" type="date" value={date} onChange={(e) => setDate(e.target.value)} required />
@@ -105,16 +101,6 @@ function MeetingForm({ project: fixed, draft, close }: { project?: string; draft
             <Input id="meeting-to" type="time" step={900} value={to} onChange={(e) => setTo(e.target.value)} required />
           </Field>
         </div>
-        <Field>
-          <FieldLabel>Link a workshop</FieldLabel>
-          <Select value={workshop} onValueChange={setWorkshop}>
-            <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="none">None</SelectItem>
-              {workshops.map((w) => <SelectItem key={w.id} value={w.id}>{w.title}</SelectItem>)}
-            </SelectContent>
-          </Select>
-        </Field>
       </FieldGroup>
       <DialogFooter>
         <Button type="button" variant="outline" onClick={close}>Cancel</Button>

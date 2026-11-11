@@ -12,7 +12,9 @@ import { useStatusOf } from "@/lib/work"
 import { cn } from "@/lib/utils"
 import { ResizeGrip, ResizeHandle } from "@/components/app/resize-handle"
 import { usePanelWidth } from "@/lib/use-panel-width"
-import { DuetSide } from "@/design-b/duet-lines"
+import { DuetSide } from "@/app/duet-lines"
+import { CaughtList } from "@/app/caught"
+import { ThinkingLoop } from "@/components/brand/ribbons"
 import { ArtifactThumb } from "@/playground/artifact"
 import type { Msg } from "@/playground/reply"
 import { ALL, MODELS, NAME, useAskEvents, useConversation, type ComposerControls, type Conversation, type Jumpstart } from "./conversation"
@@ -40,7 +42,7 @@ export function AskWhyspace() {
   const [wasDecisions, setWasDecisions] = useState(false)
   if (decisionsTab !== wasDecisions) {
     setWasDecisions(decisionsTab)
-    // Design B keeps Decisions as one of Home's tabs, so Ask stays where you left it.
+    // The main design keeps Decisions as one of Home's tabs, so Ask stays where you left it.
     if (decisionsTab && mode === "closed" && DESIGN !== "b") setMode("dock")
   }
   const send = (q: string, askId?: string) => {
@@ -64,7 +66,9 @@ export function Messages({ msgs }: { msgs: Msg[] }) {
   // Citations open the decision sheet over the page you're on.
   return msgs.map((msg, i) => (
     <div key={i} className={cn("space-y-1.5", msg.who === "me" && "flex justify-end")}>
-      <div className={cn("text-sm", msg.who === "me" && "max-w-[80%] rounded-2xl bg-muted px-3 py-1.5")}>{msg.text}</div>
+      {msg.thinking && !msg.text
+        ? <span role="status" className="flex items-center gap-2 text-sm"><ThinkingLoop className="h-6 w-11" /><span className="font-medium">Your Duet</span><span className="text-muted-foreground">Thinking</span></span>
+        : <div className={cn("text-sm whitespace-pre-line", msg.who === "me" && "max-w-[80%] rounded-2xl bg-muted px-3 py-1.5")}>{msg.text}</div>}
       {msg.refs?.map((d) => (
         <button key={d.id} onClick={() => openDecision(d.id)} className="flex w-full items-center gap-2 rounded-md border px-2.5 py-1.5 text-left text-xs hover:bg-muted">
           <StatusIcon status={statusOf(d)} className="size-3.5 text-muted-foreground" />
@@ -73,6 +77,7 @@ export function Messages({ msgs }: { msgs: Msg[] }) {
         </button>
       ))}
       {msg.arts && <div className="grid grid-cols-2 gap-2">{msg.arts.map((a) => <ArtifactThumb key={a.id} artifact={a} onOpen={() => navigate(`/p/${a.project}/artifacts/${a.id}`)} />)}</div>}
+      {msg.caught && <div className="pt-1.5"><CaughtList projectId={msg.caught.project} compact /></div>}
     </div>
   ))
 }
@@ -219,7 +224,7 @@ function AttachMenu({ controls: c }: { controls: ComposerControls }) {
   )
 }
 
-// The corner button opens a panel docked on the right, or floating. In Design B the empty panel
+// The corner button opens a panel docked on the right, or floating. In the main design the empty panel
 // also shows what your Duet handled and who is waiting on you, condensed; the page has it all.
 function SidePanel({ convo, mode, setMode, onSend, children }: {
   convo: Conversation

@@ -1,9 +1,9 @@
 import { useState } from "react"
 import { toast } from "sonner"
-import { ArrowUpRight, Bell, BellOff, CalendarDays, Check, Copy, X, Inbox as InboxIcon, Mail, MailOpen, RotateCcw } from "lucide-react"
+import { Bell, BellOff, CalendarDays, Check, Copy, X, Inbox as InboxIcon, Mail, MailOpen, RotateCcw } from "lucide-react"
 import { ProjectLabel } from "@/components/app/project-mark"
 import { DESIGN } from "@/lib/design"
-import { InboxWhereB } from "@/design-b/where"
+import { InboxWhere } from "@/app/where"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Empty, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty"
@@ -19,10 +19,9 @@ import { KIND_ICON } from "@/playground/artifact"
 import { cn } from "@/lib/utils"
 import { ResizeHandle } from "@/components/app/resize-handle"
 import { usePanelWidth } from "@/lib/use-panel-width"
-import { navigate } from "@/lib/router"
 import { TODAY } from "@/playground/model"
 import { Calendar } from "@/components/app/calendar/calendar"
-import { dateOfDay, fmtDay, fmtTime, meetingPath, useEvents } from "@/components/app/calendar/events"
+import { dateOfDay, fmtDay, fmtTime, useEvents } from "@/components/app/calendar/events"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 
 // The Inbox only gets items that touch your work: you own the affected artifact, lead the part,
@@ -37,7 +36,7 @@ const CATEGORIES = [
 ] as const
 
 const KIND_LABEL: Record<InboxKind, string> = {
-  review: "Decision review", change: "Project update", alert: "Possible misalignment", invite: "Session invitation", mention: "Mention",
+  review: "Decision review", change: "Project update", alert: "Possible misalignment", invite: "Meeting invitation", mention: "Mention",
 }
 const labelOf = (item: InboxItem) => (item.need === "do" ? "Do" : item.need === "decide" ? "Decide" : KIND_LABEL[item.kind])
 
@@ -113,7 +112,7 @@ export function Inbox() {
                   <div className="mb-1.5 flex items-center justify-between gap-2 text-[11px] text-muted-foreground"><span>{item.need ? <span className="font-medium text-foreground">{labelOf(item)}</span> : item.author.kind === "person" ? item.author.name : labelOf(item)}{item.need === "do" && taskOf(item) && ` · due ${taskOf(item)!.due}`}</span><span className="shrink-0">{item.time}</span></div>
                   <p className={cn("text-sm leading-5", isUnread(item) ? "font-semibold" : "font-medium")}>{item.summary}</p>
                   {item.touches && <p className="mt-1 truncate text-xs text-muted-foreground">Touches {item.touches.charAt(0).toLowerCase() + item.touches.slice(1)}</p>}
-                  {DESIGN === "b" ? <InboxWhereB item={item} className="mt-2.5 max-w-full text-[11px] text-muted-foreground" /> : <ProjectLabel project={item.project} className="mt-2.5 max-w-full text-[11px] text-muted-foreground" />}
+                  {DESIGN === "b" ? <InboxWhere item={item} className="mt-2.5 max-w-full text-[11px] text-muted-foreground" /> : <ProjectLabel project={item.project} className="mt-2.5 max-w-full text-[11px] text-muted-foreground" />}
                 </div>
               </button>
             ))}
@@ -143,7 +142,7 @@ export function Inbox() {
                     {selected.touches && <p className="text-sm text-muted-foreground">Touches {selected.touches.charAt(0).toLowerCase() + selected.touches.slice(1)}</p>}
                   </header>
                   {selected.meeting ? (
-                    <section aria-label="Session invitation" className="space-y-4">
+                    <section aria-label="Meeting invitation" className="space-y-4">
                       <div className="space-y-1.5 text-sm text-muted-foreground">
                         <p className="flex items-start gap-2"><CalendarDays className="mt-0.5 size-4 shrink-0" />{new Intl.DateTimeFormat("en-US", { weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit", timeZoneName: "short", timeZone: selected.meeting.timezone }).format(new Date(selected.meeting.startsAt))} · {Math.round((Date.parse(selected.meeting.endsAt) - Date.parse(selected.meeting.startsAt)) / 60000)} min</p>
                         <p>Invited by {PEOPLE[selected.from].name}</p>
@@ -152,7 +151,6 @@ export function Inbox() {
                       <div className="flex flex-wrap items-center gap-2">
                         <Button size="sm" variant={response === "accepted" ? "secondary" : "default"} aria-pressed={response === "accepted"} onClick={() => setInviteResponse(selected.id, "accepted")}><Check />{response === "accepted" ? "Accepted" : "Accept"}</Button>
                         <Button size="sm" variant={response === "declined" ? "secondary" : "outline"} aria-pressed={response === "declined"} onClick={() => setInviteResponse(selected.id, "declined")}><X />{response === "declined" ? "Declined" : "Decline"}</Button>
-                        {session && <a href={`#/p/${session.project}/sessions/${session.id}`} className="ml-1 inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground">View session<ArrowUpRight className="size-3" /></a>}
                       </div>
                     </section>
                   ) : <p className="text-sm leading-7">{selected.body}</p>}
@@ -257,13 +255,13 @@ export function ComingUp({ className }: { className?: string }) {
         <div key={day} className="flex flex-col gap-1">
           <p className="text-xs text-muted-foreground">{day}</p>
           {events.map((e) => (
-            <button key={e.id} onClick={() => navigate(meetingPath(e))} className="flex gap-3 rounded-md px-2 py-1.5 text-left text-sm hover:bg-muted">
+            <div key={e.id} className="flex gap-3 px-2 py-1.5 text-sm">
               <span className="w-10 shrink-0 tabular-nums text-muted-foreground">{e.status === "Live" ? "Live" : fmtTime(e.start)}</span>
               <span className="min-w-0 flex-1">
                 <span className="block truncate font-medium">{e.title}</span>
                 <ProjectLabel project={e.project} className="text-xs text-muted-foreground" />
               </span>
-            </button>
+            </div>
           ))}
         </div>
       ))}

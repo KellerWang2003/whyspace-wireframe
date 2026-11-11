@@ -9,6 +9,8 @@ import type { ToolEvent } from "./tools/events"
 
 export type View = "needs" | "alert" | "check"
 export type Asked = "none" | "duet-wait" | "duet" | "person"
+// The last why you gave in the pill, with the reason the decision had before, for Undo.
+export type Saved = { id: string; why: string; before?: string }
 export type Desk = {
   caught: string[]
   pill: { open: boolean; view: View }
@@ -20,9 +22,14 @@ export type Desk = {
   toast: string | null
   // Something the pill does by itself a moment later.
   auto: "alert" | "check" | "collapse" | null
+  // A guess that arrived without a reason: the pill peeks out and asks why.
+  peek: string | null
+  saved: Saved | null
+  // Counts the clashes that arrived, so the pill's yellow trace runs once for each.
+  trace: number
 }
 
-const INITIAL: Desk = { caught: [], pill: { open: false, view: "needs" }, check: [], shared: false, checkClosed: false, asked: "none", toast: null, auto: null }
+const INITIAL: Desk = { caught: [], pill: { open: false, view: "needs" }, check: [], shared: false, checkClosed: false, asked: "none", toast: null, auto: null, peek: null, saved: null, trace: 0 }
 let desk = INITIAL
 const listeners = new Set<() => void>()
 export const useDesk = () => useSyncExternalStore((l) => { listeners.add(l); return () => listeners.delete(l) }, () => desk)
@@ -38,7 +45,14 @@ export function emit(e: ToolEvent) {
     api?.record(e.decisions, e.links)
     const ids = e.decisions.map((d) => d.id)
     const clash = e.decisions.some((d) => d.status === "flag")
-    setDesk((d) => ({ caught: [...d.caught.filter((x) => !ids.includes(x)), ...ids], auto: clash ? "alert" : d.auto }))
+    // A guess with no reason yet: the pill asks why as it arrives, instead of a quiet count.
+    const ask = e.decisions.find((d) => !["flag", "prec", "conf", "chg"].includes(d.status) && !d.why)
+    setDesk((d) => ({
+      caught: [...d.caught.filter((x) => !ids.includes(x)), ...ids],
+      auto: clash ? "alert" : d.auto,
+      trace: clash ? d.trace + 1 : d.trace,
+      peek: !clash && ask ? ask.id : d.peek,
+    }))
   } else if (e.type === "share") {
     api?.addArtifact(e.artifact)
     setDesk({ shared: true, check: e.check, checkClosed: false, auto: e.check.length ? "check" : null })
@@ -55,6 +69,7 @@ export const setPill = (open: boolean, view?: View) => setDesk((d) => ({
   pill: { open, view: view ?? d.pill.view },
   checkClosed: d.checkClosed || (!open && d.pill.open && d.pill.view === "check"),
   auto: null,
+  peek: open ? null : d.peek,
 }))
 
 // Taking the other side of a clash, in the pill or on Today, records what follows from it once.

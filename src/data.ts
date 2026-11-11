@@ -51,7 +51,7 @@ export const initials = (name: string) =>
     .join("")
     .slice(0, 2)
 
-// "prec" (from precedent) is never stored: Design B derives it for an inferred decision that builds on a confirmed one.
+// "prec" (from precedent) is never stored: the main design derives it for an inferred decision that builds on a confirmed one.
 export type Status = "conf" | "prec" | "inf" | "open" | "chg" | "flag"
 
 export const STATUS_LABEL: Record<Status, string> = {
@@ -83,14 +83,14 @@ export type Decision = {
   options?: { title: string; why: string }[]
   // The decision this one replaced (an id, so the sheet can show who decided it and when).
   replaces?: string
-  // A clash: the confirmed decision this one contradicts (its id). Design B shows ▲ until one side changes.
+  // A clash: the confirmed decision this one contradicts (its id). The main design shows ▲ until one side changes.
   clashes?: string
   // Visual changes get a before and after on the decision sheet.
   visual?: { before: string; after: string }
   replies?: Reply[]
 }
 
-export type Evidence = { kind: "clip" | "research" | "test" | "chat" | "feedback"; label: string; detail?: string; artifact?: string; workshop?: string }
+export type Evidence = { kind: "clip" | "research" | "test" | "chat" | "feedback"; label: string; detail?: string; artifact?: string }
 export type Reply = { who: string; text: string; when: string }
 
 const ALL_DECISIONS: Decision[] = [
@@ -103,11 +103,11 @@ const ALL_DECISIONS: Decision[] = [
     "owner": "TR",
     "by": "Trevor",
     "when": "Oct 22",
-    "tool": "User testing workshop",
+    "tool": "Claude",
     "why": "In user testing, all 3 cats ignored the still card and chased anything that moved.",
     "snippet": "She only looks when something moves.",
     "evidence": [
-      { "kind": "test", "label": "User testing workshop", "detail": "3 cats, Oct 21", "workshop": "testing" },
+      { "kind": "test", "label": "User testing", "detail": "3 cats, Oct 21" },
       { "kind": "clip", "label": "Luna pounces · 0:42", "artifact": "w3" }
     ],
     "visual": { "before": "Still swipe card", "after": "Moving swipe card" }
@@ -123,7 +123,7 @@ const ALL_DECISIONS: Decision[] = [
     "when": "Oct 22",
     "tool": "Claude Code",
     "why": "Cats follow a moving dot, so it shows them where to swipe.",
-    "evidence": [{ "kind": "test", "label": "Kelly's 2 prototypes", "detail": "The dot beat the wiggling card.", "workshop": "testing" }],
+    "evidence": [{ "kind": "test", "label": "Kelly's 2 prototypes", "detail": "The dot beat the wiggling card." }],
     "options": [
       { "title": "Wiggle the whole card", "why": "Hard for a paw to hit" },
       { "title": "A feather toy", "why": "Covered the cat's photo" }
@@ -401,8 +401,8 @@ export type Task = {
   decision?: string
   description?: string
   comments?: { who: string; text: string; when: string }[]
-  // Context the task came from: meetings, workshops, decisions and artifacts. Hidden until opened.
-  related?: { meetings?: string[]; workshops?: string[]; decisions?: string[]; artifacts?: string[] }
+  // Context the task came from: meetings, decisions and artifacts. Hidden until opened.
+  related?: { meetings?: string[]; decisions?: string[]; artifacts?: string[] }
   // Every task suggests a tool and a prompt to start it there. The prompt tells the tool to read
   // the context from Whyspace over MCP, then says how to do the task. Update tasks (added when a
   // decision changes something you own) are done once the work is updated.
@@ -465,7 +465,7 @@ const ALL_TASKS: Task[] = [
     "id": "t3",
     "tool": "Claude Code",
     "prompt": "Use the Whyspace MCP to read Whiskr's App thread.\n\nThen add the dot to the swipe card: it moves toward the swipe direction and purrs. Use the blue color tokens.",
-    "related": {"decisions": ["dot"], "workshops": ["testing"], "meetings": ["s1", "s2"], "artifacts": ["w5", "w4"]},
+    "related": {"decisions": ["dot"], "meetings": ["s1", "s2"], "artifacts": ["w5", "w4"]},
     "description": "The dot moves toward the swipe and purrs.",
     "title": "Add the moving dot to the swipe card",
     "project": "Whiskr (Demo project)",
@@ -510,7 +510,7 @@ const ALL_TASKS: Task[] = [
     "id": "t6",
     "tool": "Claude",
     "prompt": "Use the Whyspace MCP to read Whiskr's Research thread.\n\nThen summarize the cat test videos: what each cat reacted to, with timestamps.",
-    "related": {"meetings": ["s1"], "workshops": ["testing"], "artifacts": ["w3", "w2"]},
+    "related": {"meetings": ["s1"], "artifacts": ["w3", "w2"]},
     "description": "Note what each cat reacted to.",
     "title": "Review the cat test videos",
     "project": "Whiskr (Demo project)",
@@ -525,7 +525,7 @@ const ALL_TASKS: Task[] = [
       "id": "t11",
       "tool": "Claude Code",
       "prompt": "Use the Whyspace MCP to read Recall's Prototype thread and the decision \"Build one working upload-to-feedback flow\".\n\nThen connect the upload, quiz and feedback screens to Jordan's endpoint, with loading, failure and retry states.",
-      "related": {"workshops": ["recall"], "meetings": ["s9"], "artifacts": ["a15", "a16"]},
+      "related": {"meetings": ["s9"], "artifacts": ["a15", "a16"]},
       "title": "Connect Recall’s upload, quiz, and feedback screens",
       "project": "AI Studio · Recall",
       "part": "Prototype",
@@ -630,7 +630,7 @@ export const INBOX_KIND_LABEL: Record<InboxKind, string> = {
   review: "Decisions to review",
   change: "Changes for you",
   alert: "Misalignment alerts",
-  invite: "Live session invites",
+  invite: "Meeting invites",
   mention: "Mentions",
 }
 
@@ -727,7 +727,7 @@ const ALL_INBOX: InboxItem[] = [
     ],
     "author": { "kind": "ai", "name": "Whyspace AI" },
     "to": ["MC", "CH"],
-    "source": "User testing workshop",
+    "source": "Trevor's chat with Claude",
     "kind": "change",
     "from": "TR",
     "project": "Whiskr (Demo project)",
@@ -804,14 +804,6 @@ export type Session = {
   status: "Live" | "Scheduled" | "Ended"
   when: string
   length?: string
-  decisions: number
-  summary?: string
-  // A past workshop leads with what it decided, its outcomes and each person's next steps.
-  decisionIds?: string[]
-  outcomes?: string[]
-  nextSteps?: { who: string; text: string }[]
-  // The workshop this meeting happens in.
-  workshop?: string
 }
 
 const ALL_SESSIONS: Session[] = [
@@ -823,15 +815,7 @@ const ALL_SESSIONS: Session[] = [
     "people": ["TR", "KL"],
     "status": "Ended",
     "when": "Oct 22",
-    "length": "16 min",
-    "decisions": 3,
-    "summary": "Cats only reacted to things that moved, so Kelly added a moving dot that shows them where to swipe. Trevor's research added a purring sound.",
-    "decisionIds": ["move", "dot", "purr"],
-    "outcomes": ["Cats only react to things that move", "A moving dot beat a wiggling card", "Trevor marked movement as important for the team"],
-    "nextSteps": [
-      { "who": "KL", "text": "Add the moving dot to the swipe card" },
-      { "who": "TR", "text": "Add the swipe dot to the logo" }
-    ]
+    "length": "16 min"
   },
   {
     "id": "s2",
@@ -841,10 +825,7 @@ const ALL_SESSIONS: Session[] = [
     "people": ["KL", "TR"],
     "status": "Ended",
     "when": "Oct 21",
-    "length": "40 min",
-    "decisions": 0,
-    "outcomes": ["Cats ignored the still swipe card", "Videos saved for review"],
-    "nextSteps": [{ "who": "TR", "text": "Review the videos before Thursday" }]
+    "length": "40 min"
   },
   {
     "id": "s3",
@@ -853,8 +834,7 @@ const ALL_SESSIONS: Session[] = [
     "host": "MC",
     "people": ["MC", "CH", "TR", "KL"],
     "status": "Scheduled",
-    "when": "Fri Oct 30, 10:00",
-    "decisions": 0
+    "when": "Fri Oct 30, 10:00"
   },
   {
       "id": "s9",
@@ -866,8 +846,7 @@ const ALL_SESSIONS: Session[] = [
         "JK"
       ],
       "status": "Scheduled",
-      "when": "Wed Oct 28, 18:00",
-      "decisions": 0
+      "when": "Wed Oct 28, 18:00"
     },
   {
       "id": "s4",
@@ -880,15 +859,7 @@ const ALL_SESSIONS: Session[] = [
       ],
       "status": "Ended",
       "when": "Oct 21",
-      "length": "45 min",
-      "decisions": 1,
-      "summary": "Build one real PDF-to-practice loop. Keller owns interaction design and testing; Jordan owns extraction, generation, and evaluation.",
-      "decisionIds": ["figma"],
-      "outcomes": ["One real loop instead of a clickable mock", "Roles split by interaction and generation"],
-      "nextSteps": [
-        { "who": "MC", "text": "Connect the upload, quiz and feedback screens" },
-        { "who": "JK", "text": "Evaluate questions on three course PDFs" }
-      ]
+      "length": "45 min"
     }
 ]
 
@@ -1156,7 +1127,7 @@ export const AI_TOOLS = [
 
 export const PLANS: { name: Plan; price: string; blurb: string; features: string[] }[] = [
   { name: "Free", price: "$0", blurb: "For trying it with a small team", features: ["Up to 5 people", "5 projects", "Decision log and inbox", "Connect 2 AI tools each"] },
-  { name: "Pro", price: "$12", blurb: "Per person, per month", features: ["Unlimited projects", "Live sessions", "Team view", "Misalignment alerts"] },
+  { name: "Pro", price: "$12", blurb: "Per person, per month", features: ["Unlimited projects", "Team view", "Misalignment alerts", "Your Duet answers in Slack"] },
   { name: "Business", price: "$24", blurb: "Per person, per month", features: ["Everything in Pro", "SSO and audit log", "Admin roles", "Priority support"] },
 ]
 
@@ -1235,8 +1206,8 @@ const UNTIL: Record<string, number> = { red: 2 }
 const EARLIER: Record<string, { until: number; patch: object }[]> = {
   t6: [{ until: 1, patch: { status: "todo" } }],
   s1: [
-    { until: 1, patch: { status: "Scheduled", when: "Thu Oct 22, 3:30 PM", length: undefined, decisions: 0, summary: undefined } },
-    { until: 2, patch: { status: "Live", when: "Now", length: "8 min so far", decisions: 3, summary: undefined } },
+    { until: 1, patch: { status: "Scheduled", when: "Thu Oct 22, 3:30 PM", length: undefined } },
+    { until: 2, patch: { status: "Live", when: "Now", length: "8 min so far" } },
   ],
   w1: [{ until: 2, patch: { updated: "Oct 8", decisions: 1, version: "v2", meta: "Red brand color · 16 frames" } }],
   w4: [{ until: 2, patch: { updated: "Oct 20", meta: "Still swipe card, no dot · 20 frames" } }],
@@ -1301,16 +1272,7 @@ export function addLinks(links: [string, string][]) {
 }
 export const TASKS = inScenario(staged(ALL_TASKS), PRESET.patch?.tasks)
 export const INBOX = inScenario(staged(ALL_INBOX), PRESET.patch?.inbox).filter((item) => (item.to ?? ["MC"]).includes(VIEWER))
-// A workshop is a lasting shared canvas, like a design file: open it any time, alone or together.
-// Meetings are times the team meets inside one; each leaves a record in the workshop's History.
-export type Workshop = { id: string; project: string; title: string; thread?: string; canvas?: "whiskr" | "studio" | "testing"; edited: string; people: string[]; notes?: string[] }
-export const WORKSHOPS: Workshop[] = [
-  // Starts empty; Listen in plays the demo: cat test videos, notes as people talk, decisions caught.
-  { id: "testing", project: "whiskr", thread: "Research", title: "User testing", canvas: "testing", edited: "Oct 22", people: ["TR", "KL", "MC"] },
-  { id: "recall", project: "studio", thread: "Prototype", title: "Unsupported question handling", canvas: "studio", edited: "Oct 21", people: ["JK", "MC"] },
-]
-const SESSION_WORKSHOP: Record<string, string> = { s1: "testing", s2: "testing", s4: "recall", s9: "recall" }
-export const SESSIONS = staged(ALL_SESSIONS).map((s) => ({ ...s, workshop: s.workshop ?? SESSION_WORKSHOP[s.id] }))
+export const SESSIONS = staged(ALL_SESSIONS)
 export const ARTIFACTS = inScenario(staged(ALL_ARTIFACTS), PRESET.patch?.artifacts)
 
 // Where each artifact lives. Whyspace links out to it; "Whyspace" means it is stored here.
@@ -1441,7 +1403,7 @@ export function needsYou(projectId: string, tasks: Task[] = TASKS, confirmed: Re
   const asked = INBOX.filter((i) => i.project === name && i.need === "decide").map((i) => i.decision)
   const decide = DECISIONS.filter((d) => d.project === projectId && !confirmed[d.id] && (
     (d.status === "inf" && (d.owner === VIEWER || asked.includes(d.id))) || (d.status === "open" && d.owner === VIEWER) || (d.status !== "open" && d.status !== "inf" && asked.includes(d.id)) ||
-    // Design B: a clash of yours waits on you until you take theirs or keep yours.
+    // Main design: a clash of yours waits on you until you take theirs or keep yours.
     (DESIGN === "b" && d.status === "flag" && d.owner === VIEWER)
   ))
   const day = (t: Task) => Number(t.due.match(/\d+/)?.[0] ?? 99) + (t.due.includes("Nov") ? 31 : 0)

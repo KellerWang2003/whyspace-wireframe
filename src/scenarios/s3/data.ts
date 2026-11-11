@@ -6,6 +6,9 @@ import { onWeek } from "../week"
 // teammates asked his Duet things none of his decisions covers: Kelly wants the video's exact blue
 // to match the app prototype, Christine wants to know how many more days the video needs. He also
 // asks his Duet what changed in the app.
+// With Slack (the chat plan's rows 1 to 3): both asks came in Slack, where his Duet answers while
+// he's away (the workspace is on Pro). Kelly's touches Trevor's brand decision, so the Duet brought
+// Trevor in. Whiskr's Home shows what it caught for him, and so does its DM in Slack.
 
 export const S3_LINES = [
   "#2F6BFF. It’s the blue on the title and end cards.",
@@ -19,13 +22,20 @@ const yesterday = { when: "Wed Oct 28" }
 export const S3: Preset = onWeek({
   // What Runway recorded yesterday: the cut follows the plan and Trevor's brand, and Luna as the main character is confirmed.
   add: {
-    decisions: [...FOLLOWS.map((d) => ({ ...d, ...yesterday })), { ...STAR, ...yesterday, status: "conf", why: "Luna looks the best on camera." }],
+    decisions: [
+      ...FOLLOWS.map((d) => ({ ...d, ...yesterday })),
+      { ...STAR, ...yesterday, status: "conf", why: "Luna looks the best on camera." },
+      // Caught in Slack: Christine set the launch date in #marketing yesterday afternoon.
+      { id: "launch", project: "whiskr", part: "Marketing", title: "Launch Whiskr on Mon Nov 2", status: "conf", owner: "CH", by: "Christine", tool: "Slack", ...yesterday, why: "The pet expo is that week.", snippet: "Let’s launch Mon Nov 2, the week of the pet expo." },
+      // Tuesday's clash, settled in Slack with both names: the red end card became blue.
+      { id: "endblue", project: "whiskr", part: "Marketing", title: "Make the end card blue, like the brand", status: "conf", owner: "MC", by: "Keller and Trevor", tool: "Slack", when: "Tue Oct 27", why: "Cats see red as gray, so a red end card would disappear for them.", replaces: "redcard" },
+    ],
     duet: [
-      { id: "du11", owner: "MC", kind: "asked", who: "KL", text: "for the exact hex of the blue in the promo video, to match the app prototype", project: "whiskr", when: "17:40", day: "yesterday" },
-      { id: "du12", owner: "MC", kind: "answered", who: "CH", text: "the video is blue, following Trevor’s decision", decision: "bluecard", project: "whiskr", when: "14:20", day: "yesterday" },
+      { id: "du11", owner: "MC", kind: "asked", who: "KL", text: "for the exact hex of the blue in the promo video, to match the app prototype", message: "What’s the exact hex of the blue in the promo video? I want the app prototype to match.", project: "whiskr", when: "17:40", day: "yesterday", where: "Slack · DM", touches: "nored" },
+      { id: "du12", owner: "MC", kind: "answered", who: "CH", text: "the video is blue, following Trevor’s decision", decision: "bluecard", project: "whiskr", when: "14:20", day: "yesterday", where: "Slack · DM" },
     ],
   },
-  links: FOLLOW_LINKS,
+  links: [...FOLLOW_LINKS, ["nored", "endblue"]],
   patch: {
     tasks: {
       t2: { title: "Plan the promo video", status: "done", due: "Tue Oct 27" },
@@ -37,9 +47,14 @@ export const S3: Preset = onWeek({
       du1: { day: "earlier" },
       du2: { day: "earlier" },
       du3: { kind: "answered", text: "the promo video is 15 seconds", when: "9:40", day: "earlier" },
-      du10: { text: "how many more days the video needs, to push the launch back a little", when: "8:30", day: "today" },
+      du10: { text: "how many more days the video needs, to push the launch back a little", message: "How many more days does the video need? I might push the launch back a little.", when: "8:30", day: "today", where: "Slack · #marketing", part: "Marketing", save: "The promo video needs three more days" },
     },
   },
+  // Kelly's question touches Trevor's brand decision: Trevor answers in the conversation the Duet started.
+  together: {
+    "a-du11": { reply: "That’s the brand blue. Kelly, use #2F6BFF in the app too.", save: "Use #2F6BFF for the brand blue", decisions: ["rw-blue", "nored"] },
+  },
+  plan: "Pro",
   // Jordan's studio line is another project: it only distracts here.
   hide: ["i1", "du4"],
   week: { whiskr: "The video is out of Runway, following the blue brand. Your posters are still red." },

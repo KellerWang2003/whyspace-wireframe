@@ -1,5 +1,5 @@
 import { Fragment } from "react"
-import { Win } from "@/design-b/desk/win"
+import { Win } from "@/app/desk/win"
 import { cn } from "@/lib/utils"
 import { TesterCard } from "../kit/app"
 import { Composer, DeskShell, WIN } from "../kit/desk"

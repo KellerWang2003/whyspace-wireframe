@@ -5,12 +5,13 @@ import { filterDecisions, onAskWhyspace } from "@/lib/ask"
 import { useRoute } from "@/lib/router"
 import { DESIGN } from "@/lib/design"
 import { useStore } from "@/lib/store"
-import { DUET_LOG } from "@/design-b/duet"
-import { answerAsk, first, pushMsgs, setModel, setPendingAsk, useConversationFor, useDuetState } from "@/design-b/duet-state"
+import { DUET_LOG } from "@/app/duet"
+import { askDuet } from "@/app/duet-claude"
+import { answerAsk, first, getDuetState, pushMsgs, setModel, setPendingAsk, useConversationFor, useDuetState } from "@/app/duet-state"
 import { reply, type Msg } from "@/playground/reply"
 import { PRESET } from "@/scenarios/data"
 
-// The conversation behind the corner panel (ask-whyspace.tsx) and, in Design B, the Duet page.
+// The conversation behind the corner panel (ask-whyspace.tsx) and, in the main design, the Duet page.
 // No components here, so both can import it.
 
 export type Attachment = { id: string; name: string }
@@ -18,7 +19,7 @@ export type Jumpstart = { icon: React.ElementType; label: string }
 
 export const MODELS = ["Auto", "Claude Opus 5.5", "Claude Sonnet 5.5", "Claude Haiku 5.5"]
 export const ALL = "all"
-// Design B: the one AI is your Duet. Design A keeps Ask Whyspace.
+// Main design: the one AI is your Duet. Archived Design A keeps Ask Whyspace.
 export const NAME = DESIGN === "b" ? "Duet" : "Ask Whyspace"
 
 export type ComposerControls = {
@@ -43,14 +44,14 @@ export type Conversation = {
   projectId?: string
 }
 
-// The conversation behind the corner panel and, in Design B, the Duet page: scoped to the project
+// The conversation behind the corner panel and, in the main design, the Duet page: scoped to the project
 // you are in (or a thread of it), answering from its decisions. Messages live in a shared store so
 // the panel and the page are one conversation.
 export function useConversation(): Conversation {
   const [first_, second, third] = useRoute()
-  const { current } = useStore()
-  const { msgs, model, pendingAsk } = useDuetState()
-  useConversationFor(current?.id)
+  const { current, confirmed } = useStore()
+  const { msgs, model } = useDuetState()
+  useConversationFor(current?.id, current?.example)
   const project = ["p", "playground"].includes(first_) ? PROJECTS.find((item) => item.id === second) : undefined
   const projectDecisions = current?.example ? DECISIONS.filter((item) => !project || item.project === project.id) : []
   const projectArtifacts = current?.example ? ARTIFACTS.filter((item) => !project || item.project === project.id) : []
@@ -71,6 +72,8 @@ export function useConversation(): Conversation {
   function send(q: string, askId?: string) {
     if (!q.trim()) return
     if (DESIGN === "b") {
+      // Read now, not at render: a new chat may have just been opened for this question.
+      const { pendingAsk } = getDuetState()
       // A teammate's question nothing of yours covers: you answer it here, the Duet passes it on.
       // The Duet is the one asking, so the question sits on its side of the conversation.
       const ask = DUET_LOG.find((l) => l.id === (askId ?? pendingAsk))
@@ -87,6 +90,19 @@ export function useConversation(): Conversation {
     }
     // A test scenario can script the answer to its question.
     const canned = PRESET.answers?.find((a) => a.words.every((w) => q.toLowerCase().includes(w)))
+    // Main design: what it caught while you were away, the same list as While you were away on Home.
+    if (DESIGN === "b" && !canned && CAUGHT.test(q)) {
+      pushMsgs({ who: "me", text: q }, { who: "ai", text: `Here’s what happened${project ? ` in ${project.name.replace(/\s*\(.*\)$/, "")}` : ""} while you were away.`, caught: { project: project?.id } })
+      setAttachments([])
+      return
+    }
+    // Main design: Claude answers (demo, dev server only), with the canned answer as its fallback.
+    if (DESIGN === "b" && !canned) {
+      pushMsgs({ who: "me", text: q }, { who: "ai", text: "", thinking: true })
+      setAttachments([])
+      void askDuet({ decisions: context.decisions, confirmed, scopeName: context.scopeName, fallback: () => reply(q, context, "No decision covers that yet.") })
+      return
+    }
     const answer: Msg = canned
       ? { who: "ai", text: canned.text, refs: canned.refs.map((id) => decisionById(id)).filter((d): d is Decision => !!d) }
       : reply(q, context, DESIGN === "b" ? "No decision covers that yet." : undefined)
@@ -111,18 +127,21 @@ export function useConversation(): Conversation {
 }
 
 // "Ask about this" on a page sends into whichever surface is mounted: the panel, or the Duet page.
-export function useAskEvents(send: Conversation["send"]) {
+// `fresh`: the question asks for a new chat (Ask Duet on a decision).
+export function useAskEvents(send: (q: string, askId?: string, fresh?: boolean) => void) {
   const latest = useRef(send)
   useEffect(() => { latest.current = send })
-  useEffect(() => onAskWhyspace((q, askId) => latest.current(q, askId)), [])
+  useEffect(() => onAskWhyspace((q, askId, fresh) => latest.current(q, askId, fresh)), [])
 }
+
+const CAUGHT = /\b(catch|caught|missed|away)\b/i
 
 // Starting points for what you're looking at: the page, the scope, and what needs you.
 function jumpstartsFor({ inProject, section, scope, projectId, decisions }: { inProject: boolean; section: string; scope: string; projectId?: string; decisions: typeof DECISIONS }): Jumpstart[] {
   const needsMe = decisions.filter((d) => d.status === "open" || (d.status === "inf" && d.owner === ME.id)).length
   const myTasks = TASKS.filter((t) => t.owner === ME.id && t.status !== "done" && (!projectId || t.project === projectId)).length
   const list: Jumpstart[] = []
-  list.push({ icon: History, label: scope !== ALL ? `Catch me up on ${scope}` : inProject ? "What changed since I was here?" : "Catch me up on everything" })
+  list.push({ icon: History, label: DESIGN === "b" ? "What happened while I was away?" : scope !== ALL ? `Catch me up on ${scope}` : inProject ? "What changed since I was here?" : "Catch me up on everything" })
   if (section === "decisions" || needsMe) list.push({ icon: CircleCheck, label: needsMe ? "Which decisions need me?" : "Which decisions need confirmation?" })
   if (section === "tasks" || section === "my-tasks" || myTasks) list.push({ icon: ListTodo, label: "What should I work on next?" })
   if (section === "artifacts") list.push({ icon: FileText, label: "Show me the latest design work" })

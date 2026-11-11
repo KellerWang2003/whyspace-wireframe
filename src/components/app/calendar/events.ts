@@ -15,8 +15,6 @@ export type CalEvent = {
   end: number
   people: string[]
   status: Session["status"]
-  workshop?: string
-  session?: string // the meeting's own page, when it has one
   repeats?: string // "Every Monday"
 }
 
@@ -32,7 +30,7 @@ export const dayOfDate = (ms: number) => {
 // Ended meetings only say the day; give them the time they actually ran.
 const PAST_TIME: Record<string, number> = { s1: 14 * 60, s2: 11 * 60, s4: 15 * 60 }
 
-function fromSession(s: Session & { workshop?: string }): CalEvent | null {
+function fromSession(s: Session): CalEvent | null {
   const day = dayOf(s.when) ?? (s.status === "Live" ? TODAY : undefined)
   if (day === undefined) return null
   const time = s.when.match(/(\d{1,2}):(\d{2})/)
@@ -46,8 +44,6 @@ function fromSession(s: Session & { workshop?: string }): CalEvent | null {
     end: dateOfDay(day, startMin + Math.max(length, 30)),
     people: s.people,
     status: s.status,
-    workshop: s.workshop,
-    session: s.id,
   }
 }
 
@@ -104,9 +100,6 @@ export function restoreEvent(e: CalEvent) {
   events = [...events.filter((x) => x.id !== e.id), e]
   emit()
 }
-
-// Where Join / Open goes: the meeting's page, else the linked workshop, else a fresh call.
-export const meetingPath = (e: CalEvent) => `/p/${e.project}/sessions/${e.session ?? e.workshop ?? "new"}`
 
 /* ---------------- Time helpers ---------------- */
 

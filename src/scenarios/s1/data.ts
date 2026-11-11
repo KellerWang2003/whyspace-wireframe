@@ -1,5 +1,5 @@
 import type { Decision, Task } from "@/data"
-import type { Item } from "@/design-b/work"
+import type { Item } from "@/app/work"
 import type { Preset } from "../data"
 
 // Scenario 1: Keller, Tuesday Oct 27, plans the promo video with Claude. Whiskr stands at stage 3

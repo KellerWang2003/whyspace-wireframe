@@ -12,25 +12,29 @@ import { LogIn, SignUp } from "@/screens/auth"
 import { Inbox } from "@/screens/inbox"
 import { Landing } from "@/screens/landing"
 import { Shapes } from "@/screens/shapes"
-import { LiveSession } from "@/screens/live-session"
 import { MyTasks } from "@/screens/my-tasks"
 import { Project } from "@/screens/project"
-import { ProjectB } from "@/design-b/project"
-import { TodayB } from "@/design-b/today"
-import { DuetPage } from "@/design-b/duet-page"
+import { ProjectPage } from "@/app/project"
+import { Today } from "@/app/today"
+import { DuetListener, DuetPage } from "@/app/duet-page"
+import { ChatsPage, lastChat } from "@/app/chats"
 import { ProjectC, ProjectsC } from "@/design-c/project"
 import { TodayC } from "@/design-c/today"
 import { DeskC } from "@/design-c/desk/desk"
-import { DeskB } from "@/design-b/desk/desk"
-import { AppShell } from "@/components/app/app-shell"
+import { Desk } from "@/app/desk/desk"
+import { AppShell, ShellHost } from "@/components/app/app-shell"
 import { DESIGN } from "@/lib/design"
 import { DesktopMode } from "@/screens/desktop-overlay"
 import { Playground } from "@/screens/playground"
 import { Projects } from "@/screens/projects"
+import { NoAccess, Opening, WentWrong } from "@/app/rare-states"
 import { WorkspaceSettings } from "@/screens/settings"
+import { SettingsPage, settingsPath } from "@/screens/settings-page"
 import { CreateWorkspaceStep, WorkspaceDialog } from "@/screens/welcome"
 import { Demo } from "@/demo/demo"
 import { HiFi } from "@/hifi/hifi"
+import { DesignSystem } from "@/design-system/design-system"
+import { ConnectFlow } from "@/app/connect/connect-flow"
 import { getDataVersion, subscribeData } from "@/data"
 import { SCENARIO, openScenario } from "@/lib/scenario"
 import { AppLink } from "@/scenarios/app-link"
@@ -49,6 +53,12 @@ function Screen() {
   if (first === "site") return second === "shapes" ? <Shapes /> : <Landing />
   // High-fi playground: Today and Whiskr's Home in three brand styles.
   if (first === "hifi") return <HiFi style={second} page={third} />
+  // Design system: the high-fi foundations and components, rendered from the real tokens and components.
+  if (first === "design-system") return <DesignSystem section={second} />
+  // Connecting an AI tool: the tool's tab in a browser, with Whyspace's consent page in the middle.
+  if (first === "connect") return <ConnectFlow tool={second?.split("?")[0]} step={third?.split("?")[0]} />
+  // Opening Whyspace: the loading ribbon, then Today.
+  if (first === "loading") return <Opening />
   if (first === "signup") return <SignUp />
   if (first === "login") return <LogIn />
   // No workspace yet (fresh sign up): create one on its own step before the app.
@@ -62,21 +72,28 @@ function Screen() {
     // "/desk" shows the Desk on top; Today sits behind it for when it closes.
     return <AppShell crumbs={[{ label: "Today" }]}><TodayC /></AppShell>
   }
-  // Design B: Today replaced Inbox and My tasks; their old links land on it.
-  if (first === "today") return DESIGN === "b" ? <TodayB /> : <Projects />
+  // Today replaced Inbox and My tasks (archived Design A keeps them); their old links land on it.
+  if (first === "today") return DESIGN === "b" ? <Today /> : <Projects />
+  // The Duet has its own tab. Chats is a separate tab for DMs and groups, and opens on the chat you had open last.
   if (first === "duet") return DESIGN === "b" ? <DuetPage /> : <Projects />
+  if (first === "chats") return DESIGN !== "b" ? <Projects /> : second === "duet" ? <Redirect to="/duet" /> : !second && lastChat() ? <Redirect to={`/chats/${lastChat()}`} /> : <ChatsPage id={second} item={third} />
   if (first === "inbox") return DESIGN === "b" ? <Redirect to="/today" /> : <Inbox />
   if (first === "my-tasks") return DESIGN === "b" ? <Redirect to="/today" /> : <MyTasks />
   // Old decision links open the decision sheet over All projects.
   if (first === "decisions") return <Projects />
-  if (first === "projects") return <Projects />
-  if (first === "p" && (third === "live" || (third === "sessions" && fourth))) return <LiveSession id={second} sessionId={fourth} />
-  // Design B (debug menu) tests projects organized around threads.
-  if (first === "p") return DESIGN === "b" ? <ProjectB /> : <Project id={second} section={third ?? "home"} sub={fourth} />
+  if (first === "projects") return <Projects empty={second === "empty"} />
+  // A link to a project you're not in.
+  if (first === "no-access") return <NoAccess id={second} />
+  if (first === "went-wrong") return <WentWrong />
+  // The main design organizes a project around threads; archived Design A keeps project-wide pages.
+  if (first === "p") return DESIGN === "b" ? <ProjectPage /> : <Project id={second} section={third ?? "home"} sub={fourth} />
   if (first === "playground") return <Playground project={second} view={third} />
+  // The main design has one Settings page for your account and the workspace; old Account links land in it.
+  if (DESIGN === "b" && first === "settings") return <SettingsPage tab={second} none={third === "none"} />
+  if (DESIGN === "b" && first === "account") return <Redirect to={`${settingsPath(second)}${third === "none" ? "/none" : ""}`} />
   if (first === "settings") return <WorkspaceSettings tab={second ?? "general"} />
-  if (first === "account") return <Account tab={second ?? "profile"} />
-  return DESIGN === "b" ? <TodayB /> : <Projects />
+  if (first === "account") return <Account tab={second ?? "profile"} none={third === "none"} />
+  return DESIGN === "b" ? <Today /> : <Projects />
 }
 
 function Redirect({ to }: { to: string }) {
@@ -90,15 +107,15 @@ function OpenScenario({ n }: { n: number }) {
 }
 
 function PersistentAssistant({ desktop }: { desktop: boolean }) {
-  const [page, , third, fourth] = useRoute()
+  const [page] = useRoute()
   const { current } = useStore()
-  if (desktop || !current || ["signup", "login", "onboarding", "site", "demo", "hifi"].includes(page)) return null
-  // Design C has no assistant in the app: the Duet lives in the profile and in people's own AI tools.
+  if (desktop || !current || ["signup", "login", "onboarding", "site", "demo", "hifi", "connect"].includes(page)) return null
+  // Archived Design C has no assistant in the app: the Duet lives in the profile and in people's own AI tools.
   if (DESIGN === "c") return null
-  // The Duet page is the conversation itself, full width.
-  if (DESIGN === "b" && page === "duet") return null
-  // Inside a workshop the AI lives in the canvas's own chat bar instead.
-  if (page === "p" && (third === "live" || (third === "sessions" && fourth))) return null
+  // The main design has no corner panel: the Duet has its own tab. Asks from anywhere else open it,
+  // and the Duet page itself listens while it's open.
+  if (DESIGN === "b") return page === "duet" ? null : <DuetListener key={current.id} />
+  // Archived Design A keeps the corner panel, Ask Whyspace.
   return <AskWhyspace key={current.id} />
 }
 
@@ -116,14 +133,14 @@ function FramedApp() {
     <StoreProvider>
       <TooltipProvider>
         <div className="flex h-svh w-full overflow-hidden">
-          <div className="min-w-0 flex-1"><Screen key={version} /></div>
+          <div className="min-w-0 flex-1"><ShellHost key={version}><Screen /></ShellHost></div>
           <PersistentAssistant desktop={false} />
         </div>
         <DecisionSheetHost key={version} />
         <GlobalDialogs />
         <WorkspaceDialog />
         <AppLink />
-        <Toaster position="bottom-center" />
+        <Toaster position="bottom-right" />
       </TooltipProvider>
     </StoreProvider>
   )
@@ -135,7 +152,7 @@ function ScenarioApp() {
       <TooltipProvider>
         <ScenarioDesktop />
         <FlowMenu desktop={false} onDesktop={() => {}} />
-        <Toaster position="bottom-center" />
+        <Toaster position="bottom-right" />
       </TooltipProvider>
     </StoreProvider>
   )
@@ -143,7 +160,7 @@ function ScenarioApp() {
 
 function PrototypeApp() {
   // Prototype toggle: pretend we're on Keller's desktop, outside Whyspace, with the overlay on top.
-  // ?desk in the URL opens on the Desk (Designs B and C), so a shared link can land there.
+  // ?desk in the URL opens on the Desk (main design and C), so a shared link can land there.
   const [desktopOn, setDesktopOn] = useState(() => DESIGN !== "a" && new URLSearchParams(window.location.search).has("desk"))
   // #/desk opens it too, so a task's "Open Claude" and a shared link can land there.
   const [first] = useRoute()
@@ -155,15 +172,15 @@ function PrototypeApp() {
     <StoreProvider>
       <TooltipProvider>
         <div className={desktop ? "hidden" : "flex h-svh w-full overflow-hidden"}>
-          {!desktop && <div className="min-w-0 flex-1"><Screen /></div>}
+          {!desktop && <div className="min-w-0 flex-1"><ShellHost><Screen /></ShellHost></div>}
           <PersistentAssistant desktop={desktop} />
         </div>
-        <div hidden={!desktop}>{DESIGN === "c" ? desktop && <DeskC onExit={exit} /> : DESIGN === "b" ? desktop && <DeskB onExit={exit} /> : <DesktopMode onExit={exit} />}</div>
+        <div hidden={!desktop}>{DESIGN === "c" ? desktop && <DeskC onExit={exit} /> : DESIGN === "b" ? desktop && <Desk onExit={exit} /> : <DesktopMode onExit={exit} />}</div>
         {!desktop && <DecisionSheetHost />}
         <GlobalDialogs />
         <WorkspaceDialog />
         <FlowMenu desktop={desktop} onDesktop={setDesktop} />
-        <Toaster position="bottom-center" />
+        <Toaster position="bottom-right" />
       </TooltipProvider>
     </StoreProvider>
   )

@@ -1,5 +1,6 @@
 import type { Activity, Artifact, ArtifactSource, Decision, InboxItem, Task } from "@/data"
-import type { DuetLine } from "@/design-b/duet"
+import type { DuetLine, TogetherScript } from "@/app/duet"
+import type { Plan } from "@/lib/store"
 import { SCENARIO } from "@/lib/scenario"
 import { S1 } from "./s1/data"
 import { S2 } from "./s2/data"
@@ -7,7 +8,7 @@ import { S3 } from "./s3/data"
 import { S4 } from "./s4/data"
 
 // What a test scenario changes in Whiskr's data at its moment, on top of the stage it pins
-// (lib/scenario.ts). data.ts and design-b/duet.ts apply it as they load. Only type imports from
+// (lib/scenario.ts). data.ts and app/duet.ts apply it as they load. Only type imports from
 // those, so loading has no cycle. Each scenario has its entry in PRESETS.
 
 type Lists = { decisions: Decision; tasks: Task; inbox: InboxItem; artifacts: Artifact; duet: DuetLine }
@@ -45,6 +46,10 @@ export type Preset = {
   // A scenario about one task: Today lists only these ids as yours (Needs you and My tasks), plus
   // what its flow records. Other work stays in the projects. Unset: Today lists everything.
   today?: string[]
+  // Conversations the Duet starts between two owners, by id (see app/together.ts).
+  together?: Record<string, TogetherScript>
+  // The workspace's plan. Unset: Free.
+  plan?: Plan
 }
 
 const PRESETS: Record<number, Preset> = { 1: S1, 2: S2, 3: S3, 4: S4 }

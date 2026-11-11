@@ -1,0 +1,28 @@
+/* Duet face motion (Keller picked Hop + grin, Nov 11). On hover of the face, or the button or link it sits in, it hops
+   and grins; it also blinks on its own every few seconds, each face at its own moment (--duet-delay from its seed).
+   Groups inside the face: .duet-all (everything), .duet-eyes, .duet-calm (usual face), .duet-joy (grin). */
+[data-duet] :is(.duet-all, .duet-eyes, .duet-calm, .duet-joy) { transform-box: view-box; }
+[data-duet] .duet-all { transform-origin: 32px 58px; }
+[data-duet] .duet-eyes { transform-origin: 32px 30px; animation: duet-idle 6s var(--duet-delay, 0s) infinite; }
+[data-duet] .duet-joy { transform-origin: 32px 36px; opacity: 0; }
+[data-duet] :is(.duet-calm, .duet-joy) { transition: opacity 120ms ease; }
+
+:is(button, a, [role="button"], [role="radio"]):hover [data-duet], [data-duet]:hover {
+  .duet-all { animation: duet-hop 640ms cubic-bezier(.3, .7, .4, 1); }
+  .duet-calm { opacity: 0; }
+  .duet-joy { opacity: 1; animation: duet-pop 320ms cubic-bezier(.3, 1.6, .5, 1); }
+}
+
+@keyframes duet-idle { 0%, 95%, 100% { transform: scaleY(1); } 96.5% { transform: scaleY(.1); } }
+@keyframes duet-hop {
+  0%, 100% { transform: translateY(0) scale(1, 1); }
+  14% { transform: translateY(0) scale(1.12, .86); }
+  42% { transform: translateY(-10px) scale(.93, 1.09); }
+  68% { transform: translateY(0) scale(1.1, .9); }
+  84% { transform: translateY(0) scale(.98, 1.03); }
+}
+@keyframes duet-pop { 0% { transform: scale(.7); } 60% { transform: scale(1.12); } 100% { transform: scale(1); } }
+
+@media (prefers-reduced-motion: reduce) {
+  [data-duet] * { animation: none !important; }
+}

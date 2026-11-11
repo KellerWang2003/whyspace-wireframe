@@ -34,7 +34,7 @@ export const DECISION_EXAMPLES: DecisionRecord[] = [
     ],
     "capture": {
       "kind": "person",
-      "tool": "Live session",
+      "tool": "Meeting notes",
       "onBehalfOf": "TR",
       "basis": "stated"
     },
@@ -54,10 +54,10 @@ export const DECISION_EXAMPLES: DecisionRecord[] = [
     ],
     "source": {
       "title": "Footage review",
-      "kind": "Live session",
+      "kind": "Meeting notes",
       "author": "TR",
       "quote": "She only cares when something moves. We need the element to move.",
-      "context": "Trevor logged this while the team watched Luna's clip on the live canvas."
+      "context": "Trevor logged this while the team watched Luna's clip."
     },
     "history": [
       {
@@ -271,7 +271,7 @@ export const DECISION_EXAMPLES: DecisionRecord[] = [
     ],
     "source": {
       "title": "Brand kickoff",
-      "kind": "Workshop notes",
+      "kind": "Meeting notes",
       "author": "TR",
       "quote": "Let's go with tuna red.",
       "context": "Recorded at the brand kickoff."

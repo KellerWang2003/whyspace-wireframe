@@ -1,5 +1,5 @@
 import type { Decision } from "@/data"
-import type { Item } from "@/design-b/work"
+import type { Item } from "@/app/work"
 
 // Scenario 2's Runway: what the tester says, what Runway answers, and what it writes to Whyspace.
 // Ids it points at come from scenario 2's data: t20 (Make the promo video), the plan's decisions

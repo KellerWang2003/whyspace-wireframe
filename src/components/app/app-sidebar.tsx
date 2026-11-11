@@ -3,7 +3,6 @@ import { toast } from "sonner"
 import {
   Archive,
   Bell,
-  Blend,
   Bot,
   Check,
   ChevronRight,
@@ -17,7 +16,6 @@ import {
   LogOut,
   MoreHorizontal,
   Plus,
-  Radio,
   Search,
   Settings,
   UserPlus,
@@ -55,13 +53,12 @@ import {
   SidebarMenuSubButton,
   SidebarMenuSubItem,
 } from "@/components/ui/sidebar"
-import { INBOX, ME, MY_PROJECTS, PEOPLE, SESSIONS, SETTINGS_TABS } from "@/data"
+import { INBOX, ME, MY_PROJECTS, PEOPLE, SETTINGS_TABS } from "@/data"
 import { useNeedsYou } from "@/lib/work"
 import { navigate, useRoute } from "@/lib/router"
 import { useStore } from "@/lib/store"
 import { cn } from "@/lib/utils"
 import { DESIGN } from "@/lib/design"
-import { ProjectNavItemB } from "@/design-b/sidebar"
 
 export function AppSidebar() {
   const route = useRoute()
@@ -120,7 +117,7 @@ export function AppSidebar() {
           <SidebarGroupContent>
             <SidebarMenu>
               {projects.map((p) => (
-                DESIGN === "b" ? <ProjectNavItemB key={p.id} id={p.id} name={p.name} route={route} /> : <ProjectNavItem key={p.id} id={p.id} name={p.name} route={route} />
+                <ProjectNavItem key={p.id} id={p.id} name={p.name} route={route} />
               ))}
               {projects.length === 0 && (
                 <p className="px-2 py-1 text-xs text-muted-foreground">No projects yet</p>
@@ -170,7 +167,7 @@ export function AccountMenuContent({ side, align }: { side: "top" | "right"; ali
                   <span className="text-xs font-normal text-muted-foreground">{current.plan} plan · {members} members</span>
                 </div>
               </DropdownMenuLabel>
-              <DropdownMenuItem onSelect={() => navigate("/settings/general")}>
+              <DropdownMenuItem onSelect={() => navigate(DESIGN === "b" ? "/settings/profile" : "/settings/general")}>
                 <Settings />
                 Settings
               </DropdownMenuItem>
@@ -181,18 +178,18 @@ export function AccountMenuContent({ side, align }: { side: "top" | "right"; ali
               <DropdownMenuSeparator />
             </>
           )}
-          <DropdownMenuSub>
+          {/* The main design keeps everything about you in Settings, so the email is just the label over your workspaces. */}
+          {DESIGN === "b" ? <DropdownMenuLabel className="truncate text-xs font-normal text-muted-foreground">{ME.email}</DropdownMenuLabel> : <DropdownMenuSub>
             <DropdownMenuSubTrigger className="text-xs text-muted-foreground [&>svg:last-child]:hidden">
               <span className="truncate">{ME.email}</span>
               <MoreHorizontal className="ml-auto" />
             </DropdownMenuSubTrigger>
             <DropdownMenuSubContent className="w-48">
               <DropdownMenuItem onSelect={() => navigate("/account/profile")}><CircleUser />Profile</DropdownMenuItem>
-              {DESIGN === "b" && <DropdownMenuItem onSelect={() => navigate("/duet")}><Blend />Duet</DropdownMenuItem>}
               <DropdownMenuItem onSelect={() => navigate("/account/ai-tools")}><Bot />My AI tools</DropdownMenuItem>
               <DropdownMenuItem onSelect={() => navigate("/account/notifications")}><Bell />Notifications</DropdownMenuItem>
             </DropdownMenuSubContent>
-          </DropdownMenuSub>
+          </DropdownMenuSub>}
           {workspaces.map((w) => (
             <DropdownMenuItem key={w.id} onSelect={() => { switchWorkspace(w.id); navigate("/projects") }}>
               <WorkspaceMark name={w.name} className="size-5 text-[10px]" />
@@ -232,14 +229,12 @@ const SECTIONS = [
   ["tasks", "Tasks"],
   ["decisions", "Decisions"],
   ["artifacts", "Artifacts"],
-  ["sessions", "Workshops"],
 ] as const
 
 function ProjectNavItem({ id, name, route }: { id: string; name: string; route: string[] }) {
   const inProject = route[0] === "p" && route[1] === id
   const [open, setOpen] = useState(inProject)
   const section = inProject ? (!route[2] || ["catch-up", "ask", "overview"].includes(route[2]) ? "home" : route[2]) : null
-  const live = SESSIONS.some((s) => s.project === id && s.status === "Live")
   const waiting = useNeedsYou(id).length
 
   return (
@@ -253,7 +248,6 @@ function ProjectNavItem({ id, name, route }: { id: string; name: string; route: 
         >
           <ProjectMark project={id} />
           <span>{name}</span>
-          {live && <Radio className="ml-auto size-3.5 text-muted-foreground group-hover/menu-item:hidden" />}
         </SidebarMenuButton>
         <ProjectNewMenu
           project={{ id, name }}
@@ -295,11 +289,7 @@ function ProjectNavItem({ id, name, route }: { id: string; name: string; route: 
                 <SidebarMenuSubButton asChild isActive={section === key}>
                   <a href={`#/p/${id}/${key}`}>
                     {label}
-                    {key === "sessions" && live ? (
-                      <span className="ml-auto flex items-center gap-1 text-xs text-muted-foreground"><Radio className="size-3" />Live</span>
-                    ) : (
-                      key === "home" && waiting > 0 && <span className="ml-auto text-xs tabular-nums text-muted-foreground">{waiting}</span>
-                    )}
+                    {key === "home" && waiting > 0 && <span className="ml-auto text-xs tabular-nums text-muted-foreground">{waiting}</span>}
                   </a>
                 </SidebarMenuSubButton>
               </SidebarMenuSubItem>

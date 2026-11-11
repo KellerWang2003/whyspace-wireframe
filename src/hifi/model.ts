@@ -59,7 +59,7 @@ export const TODAY = {
 
 export const DECISIONS = {
   project: { id: "seed", name: "Seed round" },
-  nav: ["Home", "Tasks", "Workshops", "Artifacts", "Decisions"],
+  nav: ["Home", "Tasks", "Artifacts", "Decisions"],
   title: "Decisions",
   count: 0,
   empty: "No decisions yet",

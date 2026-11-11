@@ -15,7 +15,6 @@ import {
   Kanban,
   LayoutList,
   Plus,
-  Shapes,
   Video,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -25,7 +24,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { SortableHead } from "@/components/app/sortable-table"
 import { useSort, type Sort } from "@/lib/use-sort"
 import { useSavedViews, type SavedView } from "@/lib/saved-views"
-import { FilterMenu, TablePageHeader, ViewTabs } from "@/components/app/view-tabs"
+import { FilterMenu, SearchToggle, TablePageHeader, ViewActions, ViewSegments } from "@/components/app/view-tabs"
 import {
   Dialog,
   DialogClose,
@@ -40,7 +39,6 @@ import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet"
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Textarea } from "@/components/ui/textarea"
 import { PersonAvatar } from "@/components/app/person"
 import { AI_TOOLS, ToolLogo } from "@/components/app/tool-logo"
@@ -54,7 +52,6 @@ import {
   PROJECTS,
   SESSIONS,
   TASK_STATUS_LABEL,
-  WORKSHOPS,
   type Task,
   type TaskStatus,
 } from "@/data"
@@ -65,7 +62,7 @@ import { cn } from "@/lib/utils"
 import { ResizeHandle } from "@/components/app/resize-handle"
 import { usePanelWidth } from "@/lib/use-panel-width"
 import { DESIGN } from "@/lib/design"
-import { TaskWhereB } from "@/design-b/where"
+import { TaskWhere } from "@/app/where"
 
 // Tasks, grouped by the thread they belong to. Each task suggests a tool and a ready prompt
 // that pulls its context from Whyspace over MCP; what it relates to stays folded away.
@@ -101,6 +98,7 @@ export function promptFor(t: Task) {
 type Props = { title: string; tasks: Task[]; showProject?: boolean; defaultProject?: string; headless?: boolean }
 
 export function TasksView({ title, tasks: initial, showProject = false, defaultProject, headless = false }: Props) {
+  const [renaming, setRenaming] = useState<string | null>(null)
   // Status changes go to the shared store, so finishing a task here clears it from Catch up and
   // the Inbox and marks the artifact updated on its decision. New tasks stay local to this view.
   const { taskPatches, patchTask } = useStore()
@@ -136,51 +134,60 @@ export function TasksView({ title, tasks: initial, showProject = false, defaultP
   const changed = JSON.stringify({ ...v.active.filters, layout: seed.layout }) !== JSON.stringify(seed)
   const filtering = thread !== "all" || status !== "all" || owner !== "all" || due !== "any"
 
+  // The ⋯ menu holds the layout, the filters and the open view's actions.
+  const menu = (
+    <FilterMenu active={filtering}>
+      <DropdownMenuRadioGroup value={layout} onValueChange={(x) => v.setFilters({ layout: x as TaskFilters["layout"] })}>
+        <DropdownMenuRadioItem value="list"><LayoutList />Table</DropdownMenuRadioItem>
+        <DropdownMenuRadioItem value="board"><Kanban />Board</DropdownMenuRadioItem>
+      </DropdownMenuRadioGroup>
+      <DropdownMenuSeparator />
+      <DropdownMenuSub>
+        <DropdownMenuSubTrigger>Thread</DropdownMenuSubTrigger>
+        <DropdownMenuSubContent>
+          <DropdownMenuRadioGroup value={thread} onValueChange={(x) => v.setFilters({ thread: x })}>
+            <DropdownMenuRadioItem value="all">All threads</DropdownMenuRadioItem>
+            {threads.map((x) => <DropdownMenuRadioItem key={x} value={x}>{x}</DropdownMenuRadioItem>)}
+          </DropdownMenuRadioGroup>
+        </DropdownMenuSubContent>
+      </DropdownMenuSub>
+      <DropdownMenuSub>
+        <DropdownMenuSubTrigger>Status</DropdownMenuSubTrigger>
+        <DropdownMenuSubContent>
+          <DropdownMenuRadioGroup value={status} onValueChange={(x) => v.setFilters({ status: x as TaskFilters["status"] })}>
+            <DropdownMenuRadioItem value="all">Any status</DropdownMenuRadioItem>
+            <DropdownMenuRadioItem value="open">Not done</DropdownMenuRadioItem>
+            {STATUS_ORDER.map((x) => <DropdownMenuRadioItem key={x} value={x}>{TASK_STATUS_LABEL[x]}</DropdownMenuRadioItem>)}
+          </DropdownMenuRadioGroup>
+        </DropdownMenuSubContent>
+      </DropdownMenuSub>
+      <DropdownMenuSub>
+        <DropdownMenuSubTrigger>Assignee</DropdownMenuSubTrigger>
+        <DropdownMenuSubContent>
+          <DropdownMenuRadioGroup value={owner} onValueChange={(x) => v.setFilters({ owner: x })}>
+            <DropdownMenuRadioItem value="all">Anyone</DropdownMenuRadioItem>
+            {owners.map((o) => <DropdownMenuRadioItem key={o} value={o}>{o === ME.id ? "Me" : PEOPLE[o]?.name}</DropdownMenuRadioItem>)}
+          </DropdownMenuRadioGroup>
+        </DropdownMenuSubContent>
+      </DropdownMenuSub>
+      <DropdownMenuCheckboxItem checked={due === "week"} onCheckedChange={(c) => v.setFilters({ due: c ? "week" : "any" })} onSelect={(e) => e.preventDefault()}>Due this week</DropdownMenuCheckboxItem>
+      {changed && <><DropdownMenuSeparator /><DropdownMenuItem onSelect={v.resetFilters}>Clear filters</DropdownMenuItem></>}
+      <DropdownMenuSeparator />
+      <ViewActions v={v} onRename={setRenaming} />
+    </FilterMenu>
+  )
+
   return (
     <div className="flex flex-col gap-4">
       {!headless && <TablePageHeader title={title} search={search} onSearch={setSearch} placeholder="Search tasks…" />}
-      <ViewTabs v={v}>
-        {headless && <Input aria-label="Search tasks" placeholder="Search tasks…" value={search} onChange={(e) => setSearch(e.target.value)} className="h-8 w-44" />}
-        <FilterMenu active={filtering}>
-          <DropdownMenuSub>
-            <DropdownMenuSubTrigger>Thread</DropdownMenuSubTrigger>
-            <DropdownMenuSubContent>
-              <DropdownMenuRadioGroup value={thread} onValueChange={(x) => v.setFilters({ thread: x })}>
-                <DropdownMenuRadioItem value="all">All threads</DropdownMenuRadioItem>
-                {threads.map((x) => <DropdownMenuRadioItem key={x} value={x}>{x}</DropdownMenuRadioItem>)}
-              </DropdownMenuRadioGroup>
-            </DropdownMenuSubContent>
-          </DropdownMenuSub>
-          <DropdownMenuSub>
-            <DropdownMenuSubTrigger>Status</DropdownMenuSubTrigger>
-            <DropdownMenuSubContent>
-              <DropdownMenuRadioGroup value={status} onValueChange={(x) => v.setFilters({ status: x as TaskFilters["status"] })}>
-                <DropdownMenuRadioItem value="all">Any status</DropdownMenuRadioItem>
-                <DropdownMenuRadioItem value="open">Not done</DropdownMenuRadioItem>
-                {STATUS_ORDER.map((x) => <DropdownMenuRadioItem key={x} value={x}>{TASK_STATUS_LABEL[x]}</DropdownMenuRadioItem>)}
-              </DropdownMenuRadioGroup>
-            </DropdownMenuSubContent>
-          </DropdownMenuSub>
-          <DropdownMenuSub>
-            <DropdownMenuSubTrigger>Assignee</DropdownMenuSubTrigger>
-            <DropdownMenuSubContent>
-              <DropdownMenuRadioGroup value={owner} onValueChange={(x) => v.setFilters({ owner: x })}>
-                <DropdownMenuRadioItem value="all">Anyone</DropdownMenuRadioItem>
-                {owners.map((o) => <DropdownMenuRadioItem key={o} value={o}>{o === ME.id ? "Me" : PEOPLE[o]?.name}</DropdownMenuRadioItem>)}
-              </DropdownMenuRadioGroup>
-            </DropdownMenuSubContent>
-          </DropdownMenuSub>
-          <DropdownMenuCheckboxItem checked={due === "week"} onCheckedChange={(c) => v.setFilters({ due: c ? "week" : "any" })} onSelect={(e) => e.preventDefault()}>Due this week</DropdownMenuCheckboxItem>
-          {changed && <><DropdownMenuSeparator /><DropdownMenuItem onSelect={v.resetFilters}>Clear filters</DropdownMenuItem></>}
-        </FilterMenu>
-        <Tabs value={layout} onValueChange={(x) => v.setFilters({ layout: x as TaskFilters["layout"] })}>
-          <TabsList>
-            <TabsTrigger value="list"><LayoutList />Table</TabsTrigger>
-            <TabsTrigger value="board"><Kanban />Board</TabsTrigger>
-          </TabsList>
-        </Tabs>
-        <Button size="sm" onClick={() => setCreating(true)}><Plus />New task</Button>
-      </ViewTabs>
+      <div className="flex flex-wrap items-center gap-2">
+        <ViewSegments v={v} renaming={renaming} onRename={setRenaming} />
+        <div className="ml-auto flex items-center gap-2">
+          {headless && <SearchToggle value={search} onChange={setSearch} placeholder="Search tasks…" />}
+          {menu}
+          <Button size="sm" onClick={() => setCreating(true)}><Plus />New task</Button>
+        </div>
+      </div>
 
       {layout === "list" ? (
         <Table>
@@ -248,7 +255,7 @@ function TaskRow({ task: t, thread, onOpen, onToggle }: { task: Task; thread: st
   return (
     <TableRow className="cursor-pointer" onClick={onOpen}>
       <TableCell className="pl-4" onClick={(e) => e.stopPropagation()}><Checkbox checked={done} onCheckedChange={(v) => onToggle(!!v)} /></TableCell>
-      <TableCell className="truncate text-xs text-muted-foreground">{DESIGN === "b" && thread !== t.part ? <TaskWhereB task={t} /> : thread}</TableCell>
+      <TableCell className="truncate text-xs text-muted-foreground">{DESIGN === "b" && thread !== t.part ? <TaskWhere task={t} /> : thread}</TableCell>
       <TableCell className={cn("max-w-0 truncate py-3", done ? "text-muted-foreground line-through" : "font-medium")}>{t.title}</TableCell>
       <TableCell><span className="flex items-center gap-1.5 text-xs"><TaskStatusIcon status={t.status} />{TASK_STATUS_LABEL[t.status]}</span></TableCell>
       <TableCell><span className="flex items-center gap-2 text-xs"><MiniStack ids={assigneesOf(t)} /><span className="truncate">{namesOf(assigneesOf(t))}</span></span></TableCell>
@@ -261,10 +268,9 @@ function TaskRow({ task: t, thread, onOpen, onToggle }: { task: Task; thread: st
 function relatedOf(t: Task) {
   const r = t.related ?? {}
   const decisions = [...new Set([t.decision, ...(r.decisions ?? [])])].flatMap((id) => DECISIONS.filter((d) => d.id === id))
-  const workshops = (r.workshops ?? []).flatMap((id) => WORKSHOPS.filter((w) => w.id === id))
   const meetings = (r.meetings ?? []).flatMap((id) => SESSIONS.filter((s) => s.id === id))
   const artifacts = (r.artifacts ?? []).flatMap((id) => ARTIFACTS.filter((a) => a.id === id))
-  return { decisions, workshops, meetings, artifacts, count: decisions.length + workshops.length + meetings.length + artifacts.length }
+  return { decisions, meetings, artifacts, count: decisions.length + meetings.length + artifacts.length }
 }
 
 // A task can have several assignees: the first is the owner, the rest are in `assignees`.
@@ -467,7 +473,8 @@ function StartWith({ task: t, onChange }: { task: Task; onChange: (patch: Partia
   )
 }
 
-// What the task came from, shown like email attachments: decisions, workshops, meetings, artifacts.
+// What the task came from, shown like email attachments: decisions, meetings, artifacts.
+// Meetings only name where it came from; they have no page to open.
 function Related({ task: t, onClose }: { task: Task; onClose: () => void }) {
   const { openDecision } = useStore()
   const [all, setAll] = useState(false)
@@ -476,10 +483,9 @@ function Related({ task: t, onClose }: { task: Task; onClose: () => void }) {
   const pid = projectId(t.project)
   const go = (path: string) => { onClose(); navigate(path) }
   const icon = "size-4 shrink-0 text-muted-foreground"
-  const items = [
+  const items: { key: string; icon: ReactNode; label: string; kind: string; onClick?: () => void }[] = [
     ...r.decisions.map((d) => ({ key: d.id, icon: <StatusIcon status={d.status} className={icon} />, label: d.title, kind: "Decision", onClick: () => { onClose(); openDecision(d.id) } })),
-    ...r.workshops.map((w) => ({ key: w.id, icon: <Shapes className={icon} />, label: w.title, kind: "Workshop", onClick: () => go(`/p/${pid}/sessions/${w.id}`) })),
-    ...r.meetings.map((m) => ({ key: m.id, icon: <Video className={icon} />, label: m.title, kind: "Meeting", onClick: () => go(`/p/${pid}/sessions/${m.id}`) })),
+    ...r.meetings.map((m) => ({ key: m.id, icon: <Video className={icon} />, label: m.title, kind: "Meeting" })),
     ...r.artifacts.map((a) => ({ key: a.id, icon: <FileText className={icon} />, label: a.name, kind: "Artifact", onClick: () => go(`/p/${pid}/artifacts/${a.id}`) })),
   ]
   const shown = all ? items : items.slice(0, 4)
@@ -487,15 +493,21 @@ function Related({ task: t, onClose }: { task: Task; onClose: () => void }) {
     <div className="space-y-2">
       <div className="text-xs text-muted-foreground">Related · {items.length}</div>
       <div className="grid grid-cols-2 gap-2">
-        {shown.map((x) => (
-          <button key={x.key} onClick={x.onClick} title={x.label} className="flex min-w-0 items-center gap-2.5 rounded-lg border px-3 py-2 text-left transition-colors hover:bg-accent/50">
-            {x.icon}
-            <span className="min-w-0 flex-1">
-              <span className="block truncate text-sm">{x.label}</span>
-              <span className="block text-xs text-muted-foreground">{x.kind}</span>
-            </span>
-          </button>
-        ))}
+        {shown.map((x) => {
+          const body = (
+            <>
+              {x.icon}
+              <span className="min-w-0 flex-1">
+                <span className="block truncate text-sm">{x.label}</span>
+                <span className="block text-xs text-muted-foreground">{x.kind}</span>
+              </span>
+            </>
+          )
+          const box = "flex min-w-0 items-center gap-2.5 rounded-lg border px-3 py-2 text-left"
+          return x.onClick
+            ? <button key={x.key} onClick={x.onClick} title={x.label} className={cn(box, "transition-colors hover:bg-accent/50")}>{body}</button>
+            : <div key={x.key} title={x.label} className={box}>{body}</div>
+        })}
       </div>
       {items.length > 4 && (
         <button onClick={() => setAll(!all)} className="text-xs text-muted-foreground hover:text-foreground">{all ? "Show less" : `Show ${items.length - 4} more`}</button>

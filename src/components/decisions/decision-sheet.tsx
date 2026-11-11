@@ -1,6 +1,6 @@
 import { useState, type ReactNode } from "react"
 import { toast } from "sonner"
-import { AppWindow, BookOpen, Check, CircleDot, FlaskConical, History, Maximize2, MessageSquare, PanelRight, Play, Shapes, Sparkles, Users } from "lucide-react"
+import { AppWindow, BookOpen, Check, CircleDot, FlaskConical, History, Maximize2, MessageSquare, PanelRight, Play, Sparkles, Users } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent } from "@/components/ui/dialog"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
@@ -15,11 +15,11 @@ import { useStore } from "@/lib/store"
 import { useReach, useStatusOf } from "@/lib/work"
 import { cn } from "@/lib/utils"
 import { DESIGN } from "@/lib/design"
-import { ThreadTag } from "@/design-b/thread-ui"
+import { ThreadTag } from "@/app/thread-ui"
 import { KIND_ICON } from "@/playground/artifact"
 
 // The one detailed view of a decision. Every touch point opens it: Catch up, the Inbox,
-// an artifact, the Decisions table, Ask's citations and a workshop summary.
+// an artifact, the Decisions table and Ask's citations.
 // On the Decisions tab it follows the route (/p/<id>/decisions/<decisionId>) so it can be linked;
 // everywhere else it opens over the current page.
 export function DecisionSheetHost() {
@@ -90,7 +90,7 @@ function DecisionBody({ decision: d, mode, onMode, onLeave, onClose }: { decisio
   const { replies: added, addReply, confirmDecision, clashes, settleClash } = useStore()
   const statusOf = useStatusOf()
   const status = statusOf(d)
-  // Design B: the confirmed decision this one clashes with, and how you settled it, if you did.
+  // Main design: the confirmed decision this one clashes with, and how you settled it, if you did.
   const clashWith = DESIGN === "b" && d.status === "flag" ? decisionById(d.clashes) : undefined
   const settled = clashes[d.id]
   const [reason, setReason] = useState("")
@@ -99,7 +99,7 @@ function DecisionBody({ decision: d, mode, onMode, onLeave, onClose }: { decisio
   const project = PROJECTS.find((p) => p.id === d.project)
   const replies = [...(d.replies ?? []), ...(added[d.id] ?? [])]
   const who = d.status === "open" ? PEOPLE[d.owner]?.name : d.by ?? PEOPLE[d.owner]?.name
-  // History: what this decision replaced, or (Design B) the confirmed decision it follows.
+  // History: what this decision replaced, or (main design) the confirmed decision it follows.
   const replaced = decisionById(d.replaces)
   const precedents = status === "prec" ? LINKS.flatMap(([a, b]) => (b === d.id ? [decisionById(a)] : [])).filter((x): x is Decision => !!x) : []
   const ModeIcon = OPEN_MODES.find(([m]) => m === mode)![2]
@@ -136,10 +136,10 @@ function DecisionBody({ decision: d, mode, onMode, onLeave, onClose }: { decisio
             {d.evidence.map((e) => (
               <Tile
                 key={e.label}
-                icon={e.workshop ? Shapes : EVIDENCE_ICON[e.kind]}
+                icon={EVIDENCE_ICON[e.kind]}
                 label={e.label}
                 sub={e.detail}
-                onClick={e.artifact ? () => onLeave(`/p/${d.project}/artifacts/${e.artifact}`) : e.workshop ? () => onLeave(`/p/${d.project}/sessions/${e.workshop}`) : undefined}
+                onClick={e.artifact ? () => onLeave(`/p/${d.project}/artifacts/${e.artifact}`) : undefined}
               />
             ))}
           </Row>
@@ -206,7 +206,7 @@ function DecisionBody({ decision: d, mode, onMode, onLeave, onClose }: { decisio
         }}>
           <Input value={reply} onChange={(e) => setReply(e.target.value)} placeholder="Reply…" className="h-8" />
           <Button type="submit" size="sm" variant="outline" disabled={!reply.trim()}>Reply</Button>
-          <Button type="button" size="sm" variant="ghost" className="text-muted-foreground" onClick={() => { onClose(); askWhyspace(`Why ${d.title.charAt(0).toLowerCase()}${d.title.slice(1)}?`) }}><Sparkles />{DESIGN === "b" ? "Ask Duet" : "Ask AI"}</Button>
+          <Button type="button" size="sm" variant="ghost" className="text-muted-foreground" onClick={() => { onClose(); askWhyspace(`Why ${d.title.charAt(0).toLowerCase()}${d.title.slice(1)}?`, undefined, true) }}><Sparkles />{DESIGN === "b" ? "Ask Duet" : "Ask AI"}</Button>
         </form>
       </Block>
     </div>

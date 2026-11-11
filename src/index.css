@@ -75,6 +75,61 @@
   --sidebar-ring: oklch(0.708 0 0);
 }
 
+/* High-fi colors, on top of the grays above while the High-fi switch in the debug panel is on (it starts on;
+   lib/hifi.ts puts data-hifi on <html>). The interface stays grayscale: text, secondary actions, borders and
+   surfaces keep their grays. Brand color goes only where the app marks something primary: Forest fills primary
+   buttons, checked controls and progress. Leaf marks focus, rose ink marks a delete, and the page is paper.
+   The other pigments (apricot, sky, rose and their washes) stay on the home page. */
+/* The rail's size (app/rail-sidebar.tsx): its width, each tab's tile, and the space between tabs. */
+:root {
+  --rail-w: 48px;
+  --rail-tile: 36px;
+  --rail-gap: 4px;
+  --rail-pad: calc((var(--rail-w) - var(--rail-tile)) / 2);
+}
+
+:root[data-hifi] {
+  --brand-forest: #40542e;
+  --brand-paper: #fdfdfc;
+  --brand-leaf: #6a854c;
+  --brand-rose-ink: #a8486a;
+
+  --background: var(--brand-paper);
+  --card: var(--brand-paper);
+  --popover: var(--brand-paper);
+  --primary: var(--brand-forest);
+  --primary-foreground: var(--brand-paper);
+  --destructive: var(--brand-rose-ink);
+  --ring: var(--brand-leaf);
+  --sidebar-primary: var(--brand-forest);
+  --sidebar-primary-foreground: var(--brand-paper);
+  --sidebar-ring: var(--brand-leaf);
+}
+
+
+/* High-fi shape: rounder corners and pill buttons, the rail as a gray layer behind, and the page (with a
+   project's panel) as one paper sheet in front of it. */
+:root[data-hifi] {
+  /* The rail: wider, with bigger tiles and more room between them. */
+  --rail-w: 52px;
+  --rail-tile: 40px;
+  --rail-gap: 4px;
+  --radius: 1rem;
+  --hifi-layer: #f0f0ec;
+  /* Count badges and needs-you dots: a deeper, more saturated green than Forest, so the paper number reads. */
+  --hifi-badge: #2a6527;
+  /* Buttons and segmented controls stay rounded rectangles; fields, cards and the page are the rounder ones. */
+  --hifi-button-radius: 10px;
+  /* Page titles (Today, project names) one step heavier. */
+  --text-title--stroke: 0.5px;
+  /* Roomier padding: navigation rows, and tiles in a list (a project's threads). */
+  --hifi-row-height: 2.25rem;
+  --hifi-row-x: 0.75rem;
+  --hifi-tile-y: 0.875rem;
+  --hifi-tile-x: 1rem;
+  --sidebar: var(--hifi-layer);
+}
+
 @theme inline {
   --font-sans: "Instrument Sans Variable", ui-sans-serif, system-ui, sans-serif;
   --font-serif: "Geist Serif", "Times New Roman", Times, serif;
@@ -127,6 +182,8 @@
   --text-title--line-height: 2.125rem;
   --text-title--letter-spacing: -0.01em;
   --text-title--font-weight: 400;
+  /* Geist Serif has one weight, so High-fi thickens titles with a thin stroke (see :root[data-hifi]). */
+  --text-title--stroke: 0px;
   --text-heading: 1.25rem;
   --text-heading--line-height: 1.625rem;
   --text-heading--letter-spacing: 0em;
@@ -169,6 +226,7 @@
   line-height: var(--text-title--line-height);
   letter-spacing: var(--text-title--letter-spacing);
   font-weight: var(--text-title--font-weight);
+  -webkit-text-stroke: var(--text-title--stroke) currentColor;
 }
 @utility type-heading {
   font-family: var(--font-serif);
@@ -253,3 +311,327 @@ html[data-resizing] * {
 @media (prefers-reduced-motion: reduce) {
   .shimmer-text { animation: none; background: none; color: var(--foreground); }
 }
+
+/* The pill's one alert: when a possible misalignment arrives, a short yellow line runs once around its edge. */
+@property --trace-turn {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+.pill-trace {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border-radius: inherit;
+  padding: 2px;
+  pointer-events: none;
+  background: conic-gradient(from var(--trace-turn), transparent 0 62%, #f2b705 90%, transparent 100%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+  opacity: 0;
+  animation: pill-trace 1.1s ease-in-out 1;
+}
+@keyframes pill-trace {
+  0% { --trace-turn: 0deg; opacity: 0; }
+  8% { opacity: 1; }
+  88% { opacity: 1; }
+  100% { --trace-turn: 360deg; opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pill-trace { background: #f2b705; animation: pill-trace-still 1.2s ease-out 1; }
+  @keyframes pill-trace-still { from { opacity: 1; } to { opacity: 0; } }
+}
+
+/* High-fi: the layers. Unlayered, so they win over the components' own utilities. Light by rule (Keller):
+   fills and layering carry the structure, with no drop shadows and as few strokes as possible. */
+:root[data-hifi] [data-button] { border-radius: var(--hifi-button-radius); }
+:root[data-hifi] :is([data-slot="toggle-group"], [data-slot="toggle"]) { border-radius: var(--hifi-button-radius); }
+:root[data-hifi] [data-slot="toggle-group-item"]:first-child { border-top-left-radius: var(--hifi-button-radius); border-bottom-left-radius: var(--hifi-button-radius); }
+:root[data-hifi] [data-slot="toggle-group-item"]:last-child { border-top-right-radius: var(--hifi-button-radius); border-bottom-right-radius: var(--hifi-button-radius); }
+/* Secondary buttons are a soft gray fill, not an outline. */
+:root[data-hifi] [data-button][data-variant="outline"] {
+  border-color: transparent;
+  box-shadow: none;
+  background: color-mix(in oklab, var(--foreground) 5%, transparent);
+}
+:root[data-hifi] [data-button][data-variant="outline"]:hover { background: color-mix(in oklab, var(--foreground) 9%, transparent); }
+:root[data-hifi] [data-slot="sidebar-wrapper"] { background: var(--hifi-layer); }
+:root[data-hifi] [data-slot="sidebar-container"] { border: 0; }
+:root[data-hifi] nav[aria-label="Rail"] { border-right-color: transparent; box-shadow: none; }
+/* Lucide draws at 2px; high-fi thins every icon to 1.5px. */
+:root[data-hifi] svg.lucide { stroke-width: 1.5px; }
+/* Fields: focus is a leaf border with a faint halo, not the heavy 3px ring. */
+:root[data-hifi] [data-slot="input"]:focus-visible,
+:root[data-hifi] [data-slot="textarea"]:focus-visible,
+:root[data-hifi] [data-slot="select-trigger"]:focus-visible {
+  border-color: var(--ring);
+  box-shadow: 0 0 0 2px color-mix(in oklab, var(--ring) 14%, transparent);
+}
+/* The rail's open tab, high-fi: a sheet tab. The tile is cut from the paper sheet beside the rail and runs into it,
+   with curves where they meet. Fills only: no strokes, no shadows. Hover is a faint gray. */
+:root[data-hifi] nav[aria-label="Rail"] {
+  border-right-width: 0;
+  --rail-hover: color-mix(in oklab, var(--foreground) 5%, var(--sidebar));
+  --rail-open: var(--background);
+}
+:root[data-hifi] nav[aria-label="Rail"] button:hover:not([aria-current="page"]),
+:root[data-hifi] nav[aria-label="Rail"] button[data-state="open"]:not([aria-current="page"]) { background: var(--rail-hover); }
+:root[data-hifi] nav[aria-label="Rail"] [aria-current="page"] { background: transparent; }
+/* The sheet tab itself is one piece (RailSheetTab in app/rail-sidebar.tsx) that slides to the open tab. It runs
+   from the tile's left edge into the paper sheet, with curves above and below where it meets the sheet. */
+:root[data-hifi] [data-rail-sheet] {
+  background: var(--rail-open);
+  border-radius: 12px 0 0 12px;
+}
+:root[data-hifi] [data-rail-sheet]::before,
+:root[data-hifi] [data-rail-sheet]::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  width: 12px;
+  height: 12px;
+}
+:root[data-hifi] [data-rail-sheet]::before {
+  top: -12px;
+  background: radial-gradient(circle 12px at 0 0, transparent 11.5px, var(--rail-open) 12px);
+}
+:root[data-hifi] [data-rail-sheet]::after {
+  bottom: -12px;
+  background: radial-gradient(circle 12px at 0 100%, transparent 11.5px, var(--rail-open) 12px);
+}
+:root[data-hifi] nav[aria-label="Rail"] [aria-current="page"]::before {
+  top: -12px;
+  background: radial-gradient(circle 12px at 0 0, transparent 11.5px, var(--rail-open) 12px);
+}
+:root[data-hifi] nav[aria-label="Rail"] [aria-current="page"]::after {
+  bottom: -12px;
+  background: radial-gradient(circle 12px at 0 100%, transparent 11.5px, var(--rail-open) 12px);
+}
+/* Room for the curves above and below a project in the scrolling list. */
+:root[data-hifi] nav[aria-label="Rail"] [data-rail-projects] { padding-block: 12px; margin-block: -12px; }
+/* Icons one step up to sit in the bigger tiles. */
+:root[data-hifi] nav[aria-label="Rail"] [data-rail-icon] > svg.lucide { width: 20px; height: 20px; }
+/* One line weight in the rail: every Lucide stroke draws at 1.5px whatever the icon's size (nav icons at 20px,
+   project icons at their mark size), matching the date glyph's and the logo's 1.5px borders. */
+:root[data-hifi] nav[aria-label="Rail"] svg.lucide :is(path, circle, rect, line, polyline, polygon, ellipse) { vector-effect: non-scaling-stroke; }
+:root[data-hifi] nav[aria-label="Rail"] [data-rail-icon] > [data-date-glyph] { width: 21px; height: 21px; }
+/* Badges cut out of whatever is behind them. */
+:root[data-hifi] nav[aria-label="Rail"] [data-rail-badge] { --tw-ring-color: var(--sidebar); }
+:root[data-hifi] nav[aria-label="Rail"] button:hover [data-rail-badge] { --tw-ring-color: var(--rail-hover); }
+:root[data-hifi] nav[aria-label="Rail"] [aria-current="page"] [data-rail-badge] { --tw-ring-color: var(--rail-open); }
+/* A project's hover card: paper with a faint ring, no shadow. */
+:root[data-hifi] [data-rail-card] { border-color: transparent; box-shadow: 0 0 0 1px oklch(0 0 0 / 0.06); border-radius: 16px; padding: 14px 16px; }
+/* Inside the sheet, the project's panel is paper too. */
+:root[data-hifi] [data-rail-panel] {
+  --sidebar: var(--background);
+  --sidebar-accent: var(--muted);
+  background: var(--background);
+}
+/* The panel's tabs: text sits further in from the rounded highlight. */
+:root[data-hifi] [data-rail-panel] [data-sidebar="menu-sub-button"] { padding-left: 12px; }
+:root[data-hifi] [data-rail-panel] [data-sidebar="menu-sub-button"]:not(.pr-7) { padding-right: 12px; }
+@media (min-width: 768px) {
+  :root[data-hifi] [data-slot="sidebar-inset"] {
+    margin: 8px 8px 8px 0;
+    border-radius: 20px;
+  }
+  :root[data-hifi] [data-rail-panel] {
+    margin: 8px 0;
+    border-right: 1px solid oklch(0 0 0 / 0.05);
+    border-radius: 20px 0 0 20px;
+  }
+  :root[data-hifi] [data-slot="sidebar-wrapper"]:has([data-rail-panel]) [data-slot="sidebar-inset"] {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+  }
+}
+
+/* Today's Needs you stack: how the next card arrives. Rise comes up from where it waited behind; fade just appears. */
+@keyframes hifi-rise {
+  from { transform: translateY(14px) scale(0.98); opacity: 0; }
+  to { transform: none; opacity: 1; }
+}
+@keyframes hifi-rise-out {
+  to { transform: translateY(-8px) scale(0.99); opacity: 0; }
+}
+@keyframes hifi-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes hifi-fade-out {
+  to { opacity: 0; }
+}
+.hifi-rise { animation: hifi-rise 320ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+.hifi-rise-out { animation: hifi-rise-out 160ms cubic-bezier(0.4, 0, 1, 1) forwards; }
+.hifi-fade { animation: hifi-fade 200ms ease-out both; }
+.hifi-fade-out { animation: hifi-fade-out 120ms ease-in forwards; }
+.hifi-rise, .hifi-rise-out, .hifi-fade, .hifi-fade-out { will-change: transform, opacity; }
+@media (prefers-reduced-motion: reduce) { .hifi-rise, .hifi-rise-out, .hifi-fade, .hifi-fade-out { animation: none; } }
+
+/* Design system page: the real rail held inside a box (design-system/app-parts.tsx). */
+.ds-rail [data-slot="sidebar-container"] { height: 100%; }
+.ds-rail [data-slot="sidebar-wrapper"] { min-height: 0; }
+
+/* One primary button under High-fi: every filled button with a label has the same height, padding and type, whatever
+   size the page asked for. Row actions (xs), icon-only buttons and the floating pill's small buttons keep their own size. */
+:root[data-hifi] [data-button]:is([data-variant="default"], [data-variant="destructive"]):is([data-size="default"], [data-size="sm"], [data-size="lg"]):not(.h-7) {
+  height: 2.25rem;
+  padding-inline: 1rem;
+  gap: 0.375rem;
+  font-size: 0.875rem;
+}
+:root[data-hifi] [data-button]:is([data-variant="default"], [data-variant="destructive"]):is([data-size="default"], [data-size="sm"], [data-size="lg"]):not(.h-7):has(> svg) {
+  padding-inline: 0.875rem 1rem;
+}
+
+/* Buttons beside a primary button (Cancel, a second answer) match its size under High-fi. */
+:root[data-hifi] :has(> [data-button][data-variant="default"]) > [data-button]:is([data-variant="outline"], [data-variant="secondary"], [data-variant="ghost"]):is([data-size="default"], [data-size="sm"], [data-size="lg"]):not(.h-7) {
+  height: 2.25rem;
+  padding-inline: 1rem;
+  font-size: 0.875rem;
+}
+
+/* High-fi padding: navigation rows are taller with more room at the sides; tiles in a list get more room inside. */
+:root[data-hifi] :is([data-slot="sidebar-menu-sub-button"], [data-slot="sidebar-menu-button"]):not([data-size="lg"]) {
+  height: var(--hifi-row-height);
+  padding-inline: var(--hifi-row-x);
+}
+:root[data-hifi] [data-slot="sidebar-menu-sub"] { gap: 2px; }
+:root[data-hifi] [data-tile] {
+  padding: var(--hifi-tile-y) var(--hifi-tile-x);
+  border-radius: 1rem;
+}
+:root[data-hifi] :has(> li > [data-tile]) { gap: 0.5rem; }
+
+/* ===== High-fi components (Keller's picks from #/playground/system, Nov 11) =====
+   Inputs: paper ring. Choices: soft fills, the chosen segment a painted gray pebble. Tabs, views and tables: one tray
+   (the Bars rule). Menus and dialogs: paper. Rows: tray. The decision card's pigment header lives in app/card.tsx. */
+:root[data-hifi] {
+  --hifi-hairline: oklch(0 0 0 / 0.07);
+  --hifi-fill: color-mix(in oklab, var(--foreground) 5%, transparent);
+  --hifi-halo: color-mix(in oklab, var(--ring) 16%, transparent);
+  --hifi-segment: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 28' preserveAspectRatio='none'><filter id='f'><feTurbulence type='fractalNoise' baseFrequency='0.6' numOctaves='2' seed='9'/><feDisplacementMap in='SourceGraphic' scale='1.8'/></filter><path filter='url(%23f)' fill='%23e2e2da' d='M8 2.2c14-.8 30-.7 44 .1 4.4.6 6.2 3.4 6.2 11.4 0 8.2-1.6 11.4-6.4 11.9-14.4.8-30 .8-44 0C3.6 25 1.8 22.4 1.8 14 1.8 5.6 3.6 2.8 8 2.2z'/></svg>");
+}
+
+/* Inputs: paper with a faint ring; focus draws the ring in leaf with a soft halo. */
+:root[data-hifi] :is([data-slot="input"], [data-slot="textarea"], [data-slot="select-trigger"]):not(.border-transparent, .border-0, .border-none, .shadow-none) {
+  border-color: transparent;
+  border-radius: 12px;
+  background: var(--background);
+  box-shadow: 0 0 0 1px oklch(0 0 0 / 0.1);
+}
+:root[data-hifi] :is([data-slot="input"], [data-slot="textarea"], [data-slot="select-trigger"]):not(.border-transparent, .border-0, .border-none, .shadow-none):hover { box-shadow: 0 0 0 1px oklch(0 0 0 / 0.16); }
+:root[data-hifi] :is([data-slot="input"], [data-slot="textarea"], [data-slot="select-trigger"]):not(.border-transparent, .border-0, .border-none, .shadow-none):focus-visible {
+  border-color: transparent;
+  box-shadow: 0 0 0 1px var(--ring), 0 0 0 4px var(--hifi-halo);
+}
+:root[data-hifi] [data-slot="textarea"]:not(.border-transparent, .border-0, .border-none, .shadow-none) { padding: 0.625rem 0.75rem; }
+
+/* Choices: gray fills when off, Forest when on. */
+:root[data-hifi] :is([data-slot="checkbox"], [data-slot="radio-group-item"]) {
+  width: 18px;
+  height: 18px;
+  border-color: transparent;
+  box-shadow: none;
+  background: color-mix(in oklab, var(--foreground) 9%, transparent);
+}
+:root[data-hifi] [data-slot="checkbox"] { border-radius: 6px; }
+:root[data-hifi] :is([data-slot="checkbox"], [data-slot="radio-group-item"])[data-state="checked"] { background: var(--primary); }
+:root[data-hifi] [data-slot="radio-group-item"][data-state="checked"] svg { fill: var(--primary-foreground); stroke: var(--primary-foreground); width: 7px; height: 7px; }
+:root[data-hifi] [data-slot="switch"][data-size="default"] { height: 22px; width: 38px; padding: 2px; border: 0; box-shadow: none; }
+:root[data-hifi] [data-slot="switch"][data-size="default"] [data-slot="switch-thumb"] { width: 18px; height: 18px; }
+:root[data-hifi] [data-slot="switch"][data-state="unchecked"] { background: color-mix(in oklab, var(--foreground) 13%, transparent); }
+/* Segments (toggle groups): no box; the chosen one sits on a painted gray pebble. */
+:root[data-hifi] [data-slot="toggle-group"] { gap: 2px; box-shadow: none; }
+:root[data-hifi] [data-slot="toggle-group-item"] { border: 0; box-shadow: none; border-radius: 10px; background: transparent; color: var(--muted-foreground); }
+:root[data-hifi] [data-slot="toggle-group-item"]:hover { background: var(--hifi-fill); color: var(--foreground); }
+:root[data-hifi] [data-slot="toggle-group-item"][data-state="on"] { background: var(--hifi-segment) center / 100% 100% no-repeat; color: var(--foreground); }
+
+/* Bars, tabs and views (Keller, Nov 11: "One tray", from #/playground/system/bars). Gray is a tray that holds things,
+   never a stripe: a table sits in the gray layer, and nothing stacked above it is gray. Views and segmented switches
+   are text with a soft ink tile on the open one; line tabs are text with a Forest marker under the open tab. Every
+   control in a toolbar row is 36px. */
+:root[data-hifi] {
+  --hifi-tile: color-mix(in oklab, var(--foreground) 7%, transparent);
+  --hifi-marker: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 10' preserveAspectRatio='none'><filter id='f' x='-5%' y='-60%' width='110%' height='220%'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' seed='4'/><feDisplacementMap in='SourceGraphic' scale='2.2'/></filter><path d='M4 6.2C24 4.4 50 5.6 74 4.5S106 5.4 116 4.1' fill='none' stroke='%2340542E' stroke-width='3.6' stroke-linecap='round' filter='url(%23f)'/></svg>");
+}
+:root[data-hifi] [data-slot="tabs-trigger"] { box-shadow: none; }
+:root[data-hifi] :is([data-slot="tabs-list"][data-variant="default"], [role="tablist"][aria-label="Views"]) { background: transparent; padding: 0; gap: 2px; height: 2.25rem; border-radius: 0; }
+:root[data-hifi] [data-slot="tabs-list"][data-variant="default"] [data-slot="tabs-trigger"] { height: 100%; border-radius: 10px; padding-inline: 0.625rem; }
+:root[data-hifi] [data-slot="tabs-list"][data-variant="default"] [data-slot="tabs-trigger"][data-state="active"] { background: var(--hifi-tile); }
+:root[data-hifi] [role="tablist"][aria-label="Views"] { width: fit-content; max-width: 100%; margin-bottom: 0; }
+:root[data-hifi] [role="tablist"][aria-label="Views"] > div { display: flex; align-items: center; height: 100%; padding-bottom: 0; border-bottom-width: 0; border-radius: 10px; }
+:root[data-hifi] [role="tablist"][aria-label="Views"] > div:has([aria-selected="true"]) { background: var(--hifi-tile); }
+:root[data-hifi] [role="tablist"][aria-label="Views"] [data-button] { height: 100%; border-radius: 10px; }
+:root[data-hifi] [role="tablist"][aria-label="Views"] input { height: 100%; }
+/* The older views row (ViewTabs) drops its rule and lines everything up on the middle. */
+:root[data-hifi] div:has(> [role="tablist"][aria-label="Views"]) { border-bottom-color: transparent; align-items: center; }
+:root[data-hifi] div:has(> [role="tablist"][aria-label="Views"]) > div:not([role]) { padding-bottom: 0; }
+:root[data-hifi] div:has(> [role="tablist"][aria-label="Views"]) > button { margin-bottom: 0; }
+/* 36px controls: icon buttons and fields in a views row or beside the primary button. */
+:root[data-hifi] div:has(> [role="tablist"][aria-label="Views"]) [data-button][data-size="icon-sm"],
+:root[data-hifi] :has(> [data-button][data-variant="default"]) > [data-button][data-size="icon-sm"] { width: 2.25rem; height: 2.25rem; }
+:root[data-hifi] div:has(> [role="tablist"][aria-label="Views"]) [data-slot="input"] { height: 2.25rem; }
+/* Line tabs: text; the open tab carries a hand-drawn Forest marker. No strip and no rule under the bar. */
+:root[data-hifi] [data-slot="tabs-list"][data-variant="line"] { height: auto; gap: 2px; padding: 0; background: transparent; border-radius: 0; }
+:root[data-hifi] [data-slot="tabs-list"][data-variant="line"] [data-slot="tabs-trigger"] { flex: none; height: 2.25rem; padding-inline: 0.5rem; margin-bottom: 0; border-radius: 10px; background: transparent; color: var(--muted-foreground); }
+:root[data-hifi] [data-slot="tabs-list"][data-variant="line"] [data-slot="tabs-trigger"]:is(:hover, [data-state="active"]) { color: var(--foreground); background: transparent; }
+:root[data-hifi] [data-slot="tabs-list"][data-variant="line"] [data-slot="tabs-trigger"]::after { display: block; background: var(--hifi-marker) center / 100% 100% no-repeat; height: 7px; left: 8px; right: 8px; opacity: 0; translate: 0 -5px; }
+:root[data-hifi] [data-slot="tabs-list"][data-variant="line"] [data-slot="tabs-trigger"][data-state="active"]::after { opacity: 1; }
+:root[data-hifi] .border-b:has(> [data-slot="tabs"] > [data-slot="tabs-list"][data-variant="line"]) { border-bottom-color: transparent; padding-bottom: 0; }
+
+/* Menus and dialogs: paper with a faint ring, like a project's hover card in the rail. No shadows. */
+:root[data-hifi] :is([data-slot="dropdown-menu-content"], [data-slot="dropdown-menu-sub-content"], [data-slot="context-menu-content"], [data-slot="context-menu-sub-content"], [data-slot="select-content"], [data-slot="popover-content"], [data-slot="hover-card-content"]) {
+  border: 0;
+  border-radius: 16px;
+  background: var(--background);
+  box-shadow: 0 0 0 1px var(--hifi-hairline);
+}
+:root[data-hifi] :is([data-slot="dropdown-menu-content"], [data-slot="dropdown-menu-sub-content"], [data-slot="context-menu-content"], [data-slot="select-content"]) { padding: 6px; }
+:root[data-hifi] :is([data-slot="dropdown-menu-item"], [data-slot="dropdown-menu-sub-trigger"], [data-slot="dropdown-menu-checkbox-item"], [data-slot="dropdown-menu-radio-item"], [data-slot="context-menu-item"], [data-slot="select-item"]) {
+  min-height: 2.125rem;
+  gap: 0.625rem;
+  border-radius: 10px;
+}
+:root[data-hifi] :is([data-slot="dropdown-menu-item"], [data-slot="dropdown-menu-sub-trigger"], [data-slot="context-menu-item"]):not([data-inset]) { padding-inline: 0.625rem; }
+:root[data-hifi] :is([data-slot="dropdown-menu-item"], [data-slot="dropdown-menu-sub-trigger"], [data-slot="dropdown-menu-checkbox-item"], [data-slot="dropdown-menu-radio-item"], [data-slot="context-menu-item"], [data-slot="select-item"]):is(:focus, [data-highlighted]) { background: var(--hifi-fill); }
+:root[data-hifi] :is([data-slot="dropdown-menu-separator"], [data-slot="context-menu-separator"], [data-slot="select-separator"]) { margin: 4px 10px; background: var(--hifi-hairline); }
+:root[data-hifi] [data-slot="tooltip-content"] { border-radius: 8px; padding: 6px 10px; }
+:root[data-hifi] :is([data-slot="dialog-overlay"], [data-slot="alert-dialog-overlay"]) { background: oklch(0.2 0 0 / 0.18); }
+:root[data-hifi] :is([data-slot="dialog-content"], [data-slot="alert-dialog-content"]) { border: 0; box-shadow: none; border-radius: 24px; padding: 28px; gap: 20px; }
+:root[data-hifi] :is([data-slot="dialog-title"], [data-slot="alert-dialog-title"]) { font-family: var(--font-serif); font-size: var(--text-heading); line-height: var(--text-heading--line-height); font-weight: 400; }
+
+/* Rows: paper rows held in the gray layer, rounder at the ends, with room to breathe. Lists opt in with data-rows. */
+:root[data-hifi] [data-rows] { background: var(--hifi-layer); border: 0; border-radius: 22px; padding: 5px; gap: 3px; }
+:root[data-hifi] [data-rows] > * { border: 0; }
+:root[data-hifi] [data-rows] > li { background: var(--background); border-radius: 7px; padding: 1rem 1.125rem; gap: 1rem; }
+:root[data-hifi] [data-rows] > li:first-child { border-top-left-radius: 18px; border-top-right-radius: 18px; }
+:root[data-hifi] [data-rows] > li:last-child { border-bottom-left-radius: 18px; border-bottom-right-radius: 18px; }
+
+/* Table: one tray. The table sits in the gray layer like the rows do; its labels sit in the tray and the rows are
+   paper, split by faint hairlines, rounder at the ends. */
+:root[data-hifi] [data-slot="table-container"] { background: var(--hifi-layer); border-radius: 22px; padding: 0 5px 5px; }
+:root[data-hifi] [data-slot="table"] { border-collapse: separate; border-spacing: 0; }
+:root[data-hifi] [data-slot="table-header"] tr { background: transparent !important; border: 0; }
+:root[data-hifi] [data-slot="table-head"] { height: 2.25rem; color: var(--muted-foreground); font-weight: 500; font-size: 0.75rem; border-radius: 0 !important; }
+:root[data-hifi] [data-slot="table-body"] [data-slot="table-row"] { border: 0; }
+:root[data-hifi] [data-slot="table-body"] [data-slot="table-cell"] { padding-block: 0.875rem; background: var(--background); border-bottom: 1px solid var(--hifi-hairline); }
+:root[data-hifi] [data-slot="table-body"] [data-slot="table-row"]:is(:hover, :focus-visible, [data-state="selected"]) [data-slot="table-cell"] { background: color-mix(in oklab, var(--foreground) 3%, var(--background)); }
+:root[data-hifi] [data-slot="table-body"] [data-slot="table-row"]:last-child [data-slot="table-cell"] { border-bottom: 0; }
+:root[data-hifi] [data-slot="table-body"] [data-slot="table-row"]:first-child [data-slot="table-cell"]:first-child { border-top-left-radius: 17px; }
+:root[data-hifi] [data-slot="table-body"] [data-slot="table-row"]:first-child [data-slot="table-cell"]:last-child { border-top-right-radius: 17px; }
+:root[data-hifi] [data-slot="table-body"] [data-slot="table-row"]:last-child [data-slot="table-cell"]:first-child { border-bottom-left-radius: 17px; }
+:root[data-hifi] [data-slot="table-body"] [data-slot="table-row"]:last-child [data-slot="table-cell"]:last-child { border-bottom-right-radius: 17px; }
+
+/* ===== High-fi overlay: the desktop pill and its panel (screens/desktop-overlay.tsx, scenarios/pill.tsx).
+   The rail's gray layer with paper rows on it, like the Rows tray; a faint ring instead of a shadow, no blur. */
+:root[data-hifi] [data-overlay] { background: var(--hifi-layer); border: 0; box-shadow: 0 0 0 1px var(--hifi-hairline); backdrop-filter: none; }
+:root[data-hifi] [data-overlay="pill"]:hover { background: color-mix(in oklab, var(--hifi-layer), var(--foreground) 4%); }
+:root[data-hifi] :is([data-overlay="open"], [data-overlay="peek"]) { border-radius: 24px; }
+:root[data-hifi] [data-overlay-head] { border-bottom: 0; }
+:root[data-hifi] [data-overlay] [data-rows] { background: transparent; padding: 0; gap: 3px; }
+:root[data-hifi] [data-overlay] [data-rows] > li { padding: 0.75rem 0.875rem; gap: 0.625rem; }
+:root[data-hifi] [data-overlay] [data-rows] > li:first-child { border-top-left-radius: 16px; border-top-right-radius: 16px; }
+:root[data-hifi] [data-overlay] [data-rows] > li:last-child { border-bottom-left-radius: 16px; border-bottom-right-radius: 16px; }
+:root[data-hifi] [data-overlay] [data-overlay-side] { background: var(--background); border: 0; border-radius: 16px; padding: 0.75rem 0.875rem; }

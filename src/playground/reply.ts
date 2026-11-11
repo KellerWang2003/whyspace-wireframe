@@ -2,7 +2,9 @@ import type { Artifact, Decision } from "@/data"
 import { isAI, isNew, type Model } from "@/playground/model"
 
 // Canned answers for the mock chats (Ask Whyspace and a project's Ask page).
-export type Msg = { who: "me" | "ai"; text: string; refs?: Decision[]; arts?: Artifact[] }
+// `caught`: the Duet's Caught for you list, for one project or all of them (main design).
+// `thinking`: the Duet's answer is still on its way (shows the Thinking loop until text arrives).
+export type Msg = { who: "me" | "ai"; text: string; refs?: Decision[]; arts?: Artifact[]; caught?: { project?: string }; thinking?: boolean }
 
 export type ChatContext = Pick<Model, "decisions" | "artifacts"> & { scopeName: string }
 

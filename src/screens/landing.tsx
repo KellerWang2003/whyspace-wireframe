@@ -14,7 +14,7 @@ import illPeople from "@/assets/landing/ill-people.webp"
 // The brand shows up in a few places only: the painted thread up top, painted washes under small
 // vignettes, and side pieces in just two sections, on opposite sides, so they never cluster.
 const C = {
-  forest: "#445332",
+  forest: "#40542E",
   forestDeep: "#2E3922",
   paper: "#FDFDFC",
   leaf: "#6A854C",
@@ -238,7 +238,7 @@ function ProductWindow() {
           <div className="flex items-center gap-2 px-2 py-1.5 font-medium"><YMark className="h-3.5 w-auto" color={C.forest} />Whiskr</div>
           <div className="mt-2 space-y-0.5">
             <div className="rounded-md bg-white px-2 py-1.5 font-medium" style={{ boxShadow: `0 0 0 1px ${C.line}` }}>Home</div>
-            <div className="px-2 py-1.5" style={{ color: C.muted }}>Workshops</div>
+            <div className="px-2 py-1.5" style={{ color: C.muted }}>Tasks</div>
           </div>
           <Label className="mt-5 mb-1.5 px-2 text-[10px]">Threads</Label>
           {THREADS.map(([name, color]) => (
@@ -294,7 +294,7 @@ function ProductWindow() {
 }
 
 const HOPS: { who: ReactNode; left: number }[] = [
-  { who: "Workshop", left: 100 },
+  { who: "Meeting", left: 100 },
   { who: "Designer", left: 65 },
   { who: "Engineer", left: 30 },
   { who: <span className="inline-flex items-center gap-1.5"><ToolLogo tool="Claude Code" className="size-3.5" />Claude Code</span>, left: 5 },
@@ -346,7 +346,7 @@ function HowItWorks() {
       </Reveal>
       <Reveal delay={120} className="mt-12">
         <div className="grid overflow-hidden rounded-2xl md:grid-cols-3" style={{ boxShadow: `inset 0 0 0 1px ${C.line}` }}>
-          <Step n="01" title="Catch" line="Whyspace listens in workshops and catches decisions as they happen." first wash={C.skyWash} seed={11}>
+          <Step n="01" title="Catch" line="Whyspace catches decisions as they happen." first wash={C.skyWash} seed={11}>
             <div className="space-y-2.5">
               <Line who="KL" t="12:04" text="What if the dot works on the billboard too?" />
               <Line who="TR" t="12:05" text="Then it's one system. Let's do it." mark />
@@ -478,7 +478,7 @@ function Together() {
 
 const PLANS = [
   { name: "Free", price: "$0", per: "", points: ["Up to 5 people", "5 projects", "Decisions and threads"], cta: "Start free", featured: false },
-  { name: "Pro", price: "$12", per: "per person / month", points: ["Unlimited projects", "Live workshops", "Hand off to AI tools"], cta: "Start Pro", featured: true },
+  { name: "Pro", price: "$12", per: "per person / month", points: ["Unlimited projects", "Misalignment alerts", "Hand off to AI tools"], cta: "Start Pro", featured: true },
   { name: "Business", price: "$24", per: "per person / month", points: ["Everything in Pro", "Admin and SSO", "Priority support"], cta: "Talk to us", featured: false },
 ]
 

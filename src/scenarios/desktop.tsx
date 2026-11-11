@@ -10,7 +10,7 @@ import { MENU_H, clampWins, dragWin, focusWin, frontOf, layOut, minimizeWin, tog
 
 // The scenario desktop: a menu bar, the dock on the left, and windows you can move, resize, minimize
 // and bring forward. Whyspace is one of them: the real app in an iframe (see frame.ts), on the
-// scenario's data. The scenario's tools (Claude, Runway, Claude Code) are the others, and the pill
+// scenario's data. The scenario's tools (Claude, Runway, Claude Code, Slack) are the others, and the pill
 // floats on top. What a tool records reaches the app through the bridge (desk-state.ts emit). The
 // test harness stays in the menu bar (the next line to say, the scenario switch and Exit), so a
 // window can take the full height.
@@ -194,6 +194,7 @@ export function AppIcon({ icon, className }: { icon: DockIcon; className?: strin
   if (icon === "whyspace") return <span className={cn(base, "bg-neutral-900 font-serif text-2xl text-white", className)}>Y</span>
   if (icon === "claude") return <span className={cn(base, "bg-[#f5f0e8] text-2xl text-[#c96442]", className)}>✳</span>
   if (icon === "runway") return <span className={cn(base, "bg-black text-lg font-semibold text-white", className)}>R</span>
+  if (icon === "slack") return <span className={cn(base, "bg-[#4a154b] text-2xl font-semibold text-white", className)}>#</span>
   return <span className={cn(base, "bg-neutral-900 font-mono text-sm text-green-400", className)}>&gt;_</span>
 }
 

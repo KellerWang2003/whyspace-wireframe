@@ -17,6 +17,7 @@ import { Item, ItemActions, ItemContent, ItemDescription, ItemMedia, ItemTitle }
 import { AuthLayout } from "@/screens/auth"
 import { navigate } from "@/lib/router"
 import { useStore } from "@/lib/store"
+import { Illo } from "@/components/brand/illo/pieces"
 
 // Onboarding step after sign up: create your workspace (starts on Free) before
 // you see the app, or accept a pending invite instead.
@@ -29,6 +30,7 @@ export function CreateWorkspaceStep() {
     <AuthLayout>
       <Card>
         <CardHeader className="text-center">
+          <Illo name="create-workspace" className="mx-auto mb-3 h-28" />
           <CardTitle className="type-display">Create your workspace</CardTitle>
           <CardDescription>Starts on the free plan.</CardDescription>
         </CardHeader>
@@ -107,6 +109,7 @@ export function WorkspaceDialog() {
         ) : (
           <>
             <DialogHeader>
+              <Illo name="join" className="-ml-1 mb-1 h-28 self-start" />
               <DialogTitle>Join a workspace</DialogTitle>
               <DialogDescription>Accept an invite or paste a link.</DialogDescription>
             </DialogHeader>

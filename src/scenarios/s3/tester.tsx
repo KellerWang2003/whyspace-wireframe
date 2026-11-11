@@ -2,9 +2,9 @@ import { useApp } from "../frame"
 import { TesterCard } from "../tester"
 import { S3_LABELS, S3_LINES } from "./data"
 
-// Scenario 3 has no tool window: the tester answers Kelly and Christine through the Duet, then asks
-// it what changed in the app. The card follows what the app publishes: the question being answered,
-// else the first one still open, else the line for the Duet.
+// Scenario 3: the tester answers Kelly and Christine, in Whyspace or in Slack, then asks the Duet what
+// changed in the app. The card follows what the app publishes: the question being answered, else the
+// first one still open, else the line for the Duet.
 export function S3Overlay() {
   const { duet } = useApp()
   const ask = duet.pending ?? ["du11", "du10"].find((id) => !duet.answered[id])

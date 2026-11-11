@@ -2,6 +2,11 @@ import { DecisionPlayground } from "@/screens/decision-playground"
 import { DecisionLayouts } from "@/screens/decision-layouts"
 import { NavPlayground } from "@/screens/nav-playground"
 import { PillPlayground } from "@/screens/pill-playground"
+import { RailPlayground } from "@/screens/rail-playground"
+import { SurePlayground } from "@/screens/sure-playground"
+import { FoldPlayground } from "@/screens/fold-playground"
+import { SystemPlayground } from "@/screens/system-playground"
+import { PaintPlayground } from "@/screens/paint-playground"
 import { useState, type ReactNode } from "react"
 import { SectionPlayground } from "@/playground/section-playground"
 import { SECTION_LAYOUTS } from "@/components/decisions/section-model"
@@ -26,6 +31,11 @@ export function Playground({ project = "whiskr", view = "board" }: { project?: s
   if (project === "layouts") return <DecisionLayouts layout={view} />
   if (project === "nav") return <NavPlayground option={view} />
   if (project === "pill") return <PillPlayground view={view} />
+  if (project === "rail") return <RailPlayground />
+  if (project === "sure") return <SurePlayground />
+  if (project === "fold") return <FoldPlayground version={view} />
+  if (project === "system") return <SystemPlayground part={view} />
+  if (project === "paint") return <PaintPlayground part={view} />
   if (SECTION_LAYOUTS.some(([id]) => id === view) || ["columns", "bands", "expand", "outline"].includes(view)) return <SectionPlayground />
   // Keyed by project so open sheets and chat history reset when you switch.
   return <PlaygroundFor key={project} project={project} view={view} />

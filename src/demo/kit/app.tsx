@@ -39,8 +39,7 @@ export function Rail({ viewer, projects, active, badge, onNav }: { viewer: Viewe
 
 function RailButton({ label, active, badge, onClick, children }: { label: string; active?: boolean; badge?: number; onClick?: () => void; children: ReactNode }) {
   return (
-    <button type="button" aria-label={label} title={label} aria-current={active ? "page" : undefined} onClick={onClick} className={cn("relative flex size-9 shrink-0 items-center justify-center rounded-lg text-sidebar-foreground outline-none hover:bg-sidebar-accent focus-visible:ring-2 focus-visible:ring-sidebar-ring", active && "bg-sidebar-accent")}>
-      {active && <span aria-hidden className="absolute top-2 -left-1.5 h-5 w-1 rounded-r-full bg-foreground" />}
+    <button type="button" aria-label={label} title={label} aria-current={active ? "page" : undefined} onClick={onClick} className={cn("relative flex size-9 shrink-0 items-center justify-center rounded-lg text-muted-foreground outline-none hover:bg-sidebar-accent hover:text-sidebar-foreground focus-visible:ring-2 focus-visible:ring-sidebar-ring", active && "bg-sidebar-foreground/[0.07] text-sidebar-foreground hover:bg-sidebar-foreground/[0.07]")}>
       {children}
       {badge ? <span className="absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-foreground px-1 text-[10px] text-background tabular-nums">{badge}</span> : null}
     </button>

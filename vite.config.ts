@@ -5,9 +5,11 @@ import tailwindcss from '@tailwindcss/vite'
 import Anthropic from '@anthropic-ai/sdk'
 import { defineConfig, loadEnv, type Plugin } from 'vite'
 
-// Dev-only endpoint for the mock desktop's chat (src/screens/mock-desktop.tsx).
-// The key stays on the dev server: put ANTHROPIC_API_KEY in .env.local (gitignored).
-// Without a key it answers 503 and the chat falls back to canned replies.
+// Dev-only endpoint for the mock desktop's chat (src/screens/mock-desktop.tsx) and the Duet chat
+// (src/app/duet-claude.ts). The key stays on the dev server: put ANTHROPIC_API_KEY in .env.local
+// (gitignored). Without a key it answers 503 and the chats fall back to canned replies.
+// The Duet asks for Sonnet; the mock desktop sends no model and gets Haiku.
+const MODELS = new Set(['claude-sonnet-5-5', 'claude-opus-5-5', 'claude-haiku-5-5'])
 function claudeChat(apiKey: string | undefined): Plugin {
   return {
     name: 'mock-desktop-claude-chat',
@@ -17,12 +19,12 @@ function claudeChat(apiKey: string | undefined): Plugin {
         if (!apiKey) { res.statusCode = 503; res.end('ANTHROPIC_API_KEY is not set'); return }
         let raw = ''
         for await (const chunk of req) raw += chunk
-        const { system, messages } = JSON.parse(raw) as { system: string; messages: Anthropic.MessageParam[] }
+        const { system, messages, model } = JSON.parse(raw) as { system: string; messages: Anthropic.MessageParam[]; model?: string }
         const client = new Anthropic({ apiKey })
         res.setHeader('Content-Type', 'text/plain; charset=utf-8')
         try {
           const stream = client.messages.stream({
-            model: 'claude-haiku-5-5',
+            model: model && MODELS.has(model) ? model : 'claude-haiku-5-5',
             max_tokens: 1024,
             system,
             messages,

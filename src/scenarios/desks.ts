@@ -10,7 +10,7 @@ import type { ToolEvent } from "./tools/events"
 // Each scenario's desktop: who is at the keyboard, the tools beside Whyspace, the tester's card,
 // and how the pill treats its decisions. src/scenarios/desktop.tsx draws it.
 
-export type DockIcon = "whyspace" | "claude" | "runway" | "terminal"
+export type DockIcon = "whyspace" | "claude" | "runway" | "terminal" | "slack"
 
 export type DeskTool = {
   id: string
@@ -37,6 +37,8 @@ export type DeskConfig = {
   takes?: Record<string, { decision: Decision; link: [string, string] }>
   // The tester's own words, offered as chips for a one-tap why when confirming a guess.
   hints?: Record<string, string[]>
+  // The question the pill asks when that guess arrives without a reason ("Why Luna?"). Unset: "Why?".
+  asks?: Record<string, string>
 }
 
 const DESKS: Record<number, DeskConfig> = { 1: S1_DESK, 2: S2_DESK, 3: S3_DESK, 4: S4_DESK }

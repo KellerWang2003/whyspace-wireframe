@@ -4,6 +4,7 @@ import { Field, FieldDescription, FieldGroup, FieldLabel, FieldSeparator } from 
 import { Input } from "@/components/ui/input"
 import { navigate } from "@/lib/router"
 import { useStore } from "@/lib/store"
+import { Illo } from "@/components/brand/illo/pieces"
 
 export function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -81,6 +82,7 @@ export function LogIn() {
     <AuthLayout>
       <Card>
         <CardHeader className="text-center">
+          <Illo name="welcome" className="mx-auto mb-3 h-16" />
           <CardTitle className="type-display">Welcome back</CardTitle>
         </CardHeader>
         <CardContent>

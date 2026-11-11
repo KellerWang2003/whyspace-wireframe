@@ -28,7 +28,7 @@ export function useReach(decisionId: string) {
   return reachOf(decisionId, useTasks())
 }
 
-// An inferred decision that builds on a confirmed one (LINKS) is from precedent: ◉ in Design B.
+// An inferred decision that builds on a confirmed one (LINKS) is from precedent: ◉ in the main design.
 const settled = (id: string, confirmed: Record<string, boolean>) => {
   const p = decisionById(id)
   return !!p && (p.status === "conf" || p.status === "chg" || !!confirmed[id])
@@ -45,7 +45,7 @@ export function useStatusOf() {
 }
 
 // "n of m confirmed": how much of a record someone stands behind. Confirmed and from precedent count;
-// a guess and a clash do not. The only number the merged design keeps.
+// a guess and a clash do not. The only number the main design keeps.
 export function useConfirmed(all: Decision[]) {
   const statusOf = useStatusOf()
   const withdrawn = useWithdrawn()

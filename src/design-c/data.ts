@@ -1,7 +1,7 @@
 // Design C mock content: a generic six-person product team ("Launch") shipping a new onboarding flow
 // and pricing page. Each person works in their own AI tool and shares through Drive, Figma, Slack and
 // GitHub. The week plays out as numbered scenes; the debug panel and the Desk step through them.
-// Whiskr stays Design A and B's showcase; this team is for testing how real teams would use Design C.
+// Whiskr stays the showcase for the main design and Design A; this team is for testing how real teams would use Design C.
 
 export type PersonC = { id: string; name: string; role: string; ai: string; away?: number[] }
 

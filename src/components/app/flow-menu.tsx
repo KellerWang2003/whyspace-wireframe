@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState } from "react"
-import { Bug, Check, ChevronDown, X } from "lucide-react"
+import { ArrowRight, Bug, Check, ChevronDown, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { Kbd } from "@/components/ui/kbd"
 import { Popover, PopoverAnchor, PopoverContent } from "@/components/ui/popover"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectSeparator, SelectTrigger, SelectValue } from "@/components/ui/select"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -19,9 +19,11 @@ import { useStore } from "@/lib/store"
 import { STAGE, STAGES, setStage } from "@/lib/stage"
 import { VIEWER, VIEWERS, setViewer } from "@/lib/viewer"
 import { DESIGN, setDesign, type Design } from "@/lib/design"
+import { setHifi, useHifi } from "@/lib/hifi"
 import { PEOPLE } from "@/data"
 import { PersonAvatar } from "@/components/app/person"
 import { cn } from "@/lib/utils"
+import { setOffline } from "@/lib/connection"
 import { SCENARIOS as DEMO_SCENARIOS } from "@/demo/scenarios"
 import { PINS, SCENARIO, exitScenario, openScenario } from "@/lib/scenario"
 import { PEOPLE_C, SCENES, VIEWERS_C } from "@/design-c/data"
@@ -30,27 +32,40 @@ import { Face } from "@/design-c/ui"
 
 // Prototype helper only, not part of the app: a debug tab that rests on any screen edge
 // and opens a small overlay for reviewing the flow.
-const SCREENS: [string, [string, string][]][] = [
-  ["Getting in", [["Home page", "/site"], ["Home page · shapes", "/site/shapes"], ["Sign up", "/signup"], ["Log in", "/login"], ["Create workspace", "/new"]]],
-  ["Workspace", [["All projects", "/projects"], ["Inbox", "/inbox"], ["My tasks", "/my-tasks"]]],
-  ["Project", [["Home", "/p/whiskr/home"], ["Tasks", "/p/whiskr/tasks"], ["Decisions", "/p/whiskr/decisions"], ["Decision detail", "/p/whiskr/decisions/nored"], ["Workshops", "/p/whiskr/sessions"], ["Workshop · user testing demo", "/p/whiskr/sessions/testing"], ["Workshop · in a meeting", "/p/studio/sessions/s9"], ["Project settings", "/p/whiskr/settings/general"], ["Project people", "/p/whiskr/settings/people"]]],
-  ["Playground", [["High-fi styles", "/hifi"], ["Left nav", "/playground/nav/drill"], ["Overlay pill", "/playground/pill/grid"], ["Expanded pill", "/playground/pill/expanded"], ["Decisions layouts", "/playground/layouts/sections"], ["Decision display states", "/playground/decisions/states"], ["Section map & outline", "/playground/whiskr/canvas"], ["Earlier decision views", "/playground/whiskr/board"]]],
-  ["Settings", [["Workspace settings", "/settings/general"], ["Plan and billing", "/settings/billing"], ["Profile", "/account/profile"], ["My AI tools", "/account/ai-tools"], ["Notifications", "/account/notifications"]]],
+type Group = [string, [string, string][]]
+const GETTING_IN: Group = ["Getting in", [["Home page", "/site"], ["Home page · shapes", "/site/shapes"], ["Sign up", "/signup"], ["Log in", "/login"], ["Create workspace", "/new"]]]
+const PLAYGROUND: Group = ["Playground", [["Design system", "/design-system"], ["High-fi styles", "/hifi"], ["Left nav", "/playground/nav/drill"], ["Rail on hover", "/playground/rail"], ["How sure your Duet is", "/playground/sure"], ["Duet replies in chats", "/playground/fold/1"], ["Overlay pill", "/playground/pill/grid"], ["Expanded pill", "/playground/pill/expanded"], ["Decisions layouts", "/playground/layouts/sections"], ["Decision display states", "/playground/decisions/states"], ["Section map & outline", "/playground/whiskr/canvas"], ["Earlier decision views", "/playground/whiskr/board"]]]
+const SETTINGS: Group = ["Settings", [["Workspace settings", "/settings/general"], ["Plan and billing", "/settings/billing"], ["Profile", "/account/profile"], ["My AI tools", "/account/ai-tools"], ["Connect Claude", "/connect/claude"], ["Connect ChatGPT", "/connect/chatgpt"], ["Notifications", "/account/notifications"]]]
+// The main design's one Settings page: your account and the workspace.
+const SETTINGS_B: Group = ["Settings", [["Profile", "/settings/profile"], ["Connectors", "/settings/connectors"], ["Connect Claude", "/connect/claude"], ["Connect ChatGPT", "/connect/chatgpt"], ["Duet", "/settings/duet"], ["Notifications", "/settings/notifications"], ["Workspace", "/settings/workspace"], ["Members", "/settings/members"], ["Plan and billing", "/settings/billing"]]]
+const SCREENS: Group[] = [
+  GETTING_IN,
+  ["Workspace", [["Today", "/today"], ["Duet", "/duet"], ["Chats", "/chats"], ["All projects", "/projects"], ["The Desk", "/desk"]]],
+  ["Project", [
+    ["Home", "/p/whiskr/home"], ["Home · Tasks", "/p/whiskr/tasks"], ["Home · Decisions", "/p/whiskr/decisions"], ["Home · Artifacts", "/p/whiskr/artifacts"],
+    ["Thread · Marketing", "/p/whiskr/t/marketing"], ["Thread · Brand decisions", "/p/whiskr/t/brand/decisions"], ["Thread · App artifacts", "/p/whiskr/t/app/artifacts"],
+    ["Decision detail", "/p/whiskr/decisions/nored"], ["Project settings", "/p/whiskr/settings/general"],
+  ]],
+  ["Rare moments", [["Opening Whyspace", "/loading"], ["No projects yet", "/projects/empty"], ["Invite people", "/invite"], ["No access", "/no-access/brand-refresh"], ["Something went wrong", "/went-wrong"], ["My AI tools · none connected", "/account/ai-tools/none"], ["Lost connection", "/offline"]]],
+  PLAYGROUND,
+  SETTINGS_B,
 ]
-// Design B (projects around threads) swaps in its own project screens.
-const SCREENS_B: [string, [string, string][]][] = SCREENS.map(([group, items]) => [group, group === "Workspace" ? [["Today", "/today"], ["Duet", "/duet"], ["All projects", "/projects"], ["The Desk", "/desk"]] : group !== "Project" ? items : [
-  ["Home", "/p/whiskr/home"], ["Home · Tasks", "/p/whiskr/tasks"], ["Home · Decisions", "/p/whiskr/decisions"], ["Home · Artifacts", "/p/whiskr/artifacts"],
-  ["Thread · Marketing", "/p/whiskr/t/marketing"], ["Thread · Brand decisions", "/p/whiskr/t/brand/decisions"], ["Thread · App artifacts", "/p/whiskr/t/app/artifacts"],
-  ["Decision detail", "/p/whiskr/decisions/nored"], ["Workshops", "/p/whiskr/sessions"], ["Workshop · user testing demo", "/p/whiskr/sessions/testing"], ["Project settings", "/p/whiskr/settings/general"],
-]])
-// Design C (handoffs) has far fewer screens: Today, projects, threads, talks, the Duet.
-const SCREENS_C: [string, [string, string][]][] = [
+// Archived Design A (project-wide pages) keeps Inbox, My tasks and its own project screens.
+const SCREENS_A: Group[] = [
+  GETTING_IN,
+  ["Workspace", [["All projects", "/projects"], ["Inbox", "/inbox"], ["My tasks", "/my-tasks"]]],
+  ["Project", [["Home", "/p/whiskr/home"], ["Tasks", "/p/whiskr/tasks"], ["Decisions", "/p/whiskr/decisions"], ["Decision detail", "/p/whiskr/decisions/nored"], ["Project settings", "/p/whiskr/settings/general"], ["Project people", "/p/whiskr/settings/people"]]],
+  PLAYGROUND,
+  SETTINGS,
+]
+// Archived Design C (handoffs) has far fewer screens: Today, projects, threads, talks, the Duet.
+const SCREENS_C: Group[] = [
   ["Getting in", [["Home page", "/site"], ["Sign up", "/signup"], ["Log in", "/login"], ["Create workspace", "/new"]]],
   ["Workspace", [["Today", "/today"], ["Projects", "/projects"], ["The Desk", "/desk"]]],
   ["Launch", [["Project", "/p/launch"], ["Thread · Onboarding", "/p/launch/t/onboarding"], ["Thread · Pricing", "/p/launch/t/pricing"], ["Thread · Launch comms", "/p/launch/t/comms"], ["Thread · API", "/p/launch/t/api"], ["Handoff · PRD v2", "/p/launch/t/onboarding/h/prd"], ["Talk · Onboarding steps", "/p/launch/talks/steps"], ["Talk · Kickoff", "/p/launch/talks/kickoff"], ["Project settings", "/p/launch/settings/general"]]],
   ["Settings", [["Workspace settings", "/settings/general"], ["Profile", "/account/profile"], ["Duet", "/account/duet"], ["My AI tools", "/account/ai-tools"], ["Notifications", "/account/notifications"]]],
 ]
-const SCREEN_LIST = DESIGN === "c" ? SCREENS_C : DESIGN === "b" ? SCREENS_B : SCREENS
+const SCREEN_LIST = DESIGN === "c" ? SCREENS_C : DESIGN === "a" ? SCREENS_A : SCREENS
 
 type Edge = "left" | "right" | "top" | "bottom"
 // Where the tab rests: an edge, and how far along it (0–1).
@@ -112,7 +127,7 @@ function useViewport() {
 }
 
 export function FlowMenu({ desktop, onDesktop }: { desktop: boolean; onDesktop: (on: boolean) => void }) {
-  const { joinWorkspace, startFresh, setUpgradeOpen } = useStore()
+  const { joinWorkspace, startFresh, setUpgradeOpen, setInviteOpen } = useStore()
   const [open, setOpen] = useState(false)
   const [spot, setSpot] = useState(readSpot)
   const [drag, setDrag] = useState<{ x: number; y: number } | null>(null)
@@ -122,6 +137,7 @@ export function FlowMenu({ desktop, onDesktop }: { desktop: boolean; onDesktop: 
   const tabRef = useRef<HTMLButtonElement>(null)
   const { w, h } = useViewport()
   const c = useC()
+  const hifi = useHifi()
   const here = "/" + useRoute().join("/")
   // The scenario running: on the real app, or still on its demo page (#/demo/N).
   const demoOn = SCENARIO || (here.startsWith("/demo/") ? Number(here.split("/")[2]) || 0 : 0)
@@ -167,6 +183,13 @@ export function FlowMenu({ desktop, onDesktop }: { desktop: boolean; onDesktop: 
 
   function go(path: string) {
     setOpen(false)
+    // Rare moments that aren't pages: the invite dialog, and a faked lost connection.
+    if (path === "/invite" || path === "/offline") {
+      joinWorkspace()
+      if (path === "/invite") setInviteOpen(true)
+      else { setOffline(true); navigate("/today") }
+      return
+    }
     if (path === "/new") {
       startFresh()
       navigate("/onboarding")
@@ -213,7 +236,7 @@ export function FlowMenu({ desktop, onDesktop }: { desktop: boolean; onDesktop: 
           )}
         >
           <Bug className="size-3.5" />
-          <span className={cn("text-[10px] font-medium tracking-wide", !drag && vertical && "[writing-mode:vertical-rl]")}>{DESIGN === "c" ? <>Debug · {SCENES[c.scene - 1]?.day} {SCENES[c.scene - 1]?.time} · {PEOPLE_C[c.viewer]?.name} · C</> : <>{SCENARIO ? `Scenario ${SCENARIO}` : "Debug"} · {STAGE} · {PEOPLE[VIEWER].name}{DESIGN === "b" && " · B"}</>}</span>
+          <span className={cn("text-[10px] font-medium tracking-wide", !drag && vertical && "[writing-mode:vertical-rl]")}>{DESIGN === "c" ? <>Debug · {SCENES[c.scene - 1]?.day} {SCENES[c.scene - 1]?.time} · {PEOPLE_C[c.viewer]?.name} · C</> : <>{SCENARIO ? `Scenario ${SCENARIO}` : "Debug"} · {STAGE} · {PEOPLE[VIEWER].name}{DESIGN === "a" && " · A"}</>}</span>
         </button>
       </PopoverAnchor>
 
@@ -239,11 +262,23 @@ export function FlowMenu({ desktop, onDesktop }: { desktop: boolean; onDesktop: 
                 <SelectValue />
               </SelectTrigger>
               <SelectContent className="z-[70]">
-                <SelectItem value="a" className="text-xs">A · Current</SelectItem>
-                <SelectItem value="b" className="text-xs">B · Projects around threads</SelectItem>
-                <SelectItem value="c" className="text-xs">C · Handoffs</SelectItem>
+                <SelectItem value="b" className="text-xs">Main</SelectItem>
+                <SelectSeparator />
+                <SelectGroup>
+                  <SelectLabel className="text-[11px]">Archived</SelectLabel>
+                  <SelectItem value="a" className="text-xs text-muted-foreground">A · Original</SelectItem>
+                  <SelectItem value="c" className="text-xs text-muted-foreground">C · Handoffs</SelectItem>
+                </SelectGroup>
               </SelectContent>
             </Select>
+            <Label className="flex items-center justify-between gap-2 pt-1 text-xs font-normal">
+              High-fi
+              <Switch checked={hifi} onCheckedChange={setHifi} />
+            </Label>
+            <Button variant="outline" size="sm" className="w-full justify-between text-xs font-normal" onClick={() => go("/design-system")}>
+              Design system
+              <ArrowRight className="opacity-50" />
+            </Button>
           </div>
 
           {DESIGN === "c" ? (
@@ -336,7 +371,7 @@ export function FlowMenu({ desktop, onDesktop }: { desktop: boolean; onDesktop: 
                 ))}
               </SelectContent>
             </Select>
-            {PINS && <p className="text-[11px] leading-snug text-muted-foreground">Runs on the real app: design B, {PEOPLE[PINS.viewer]?.name}, Whiskr at stage {PINS.stage}. The three above are pinned.</p>}
+            {PINS && <p className="text-[11px] leading-snug text-muted-foreground">Runs on the real app: the main design, {PEOPLE[PINS.viewer]?.name}, Whiskr at stage {PINS.stage}. The three above are pinned.</p>}
             {demoOn > 0 && <Button variant="outline" size="sm" className="w-full text-xs" onClick={exitScenario}><X />Exit scenario</Button>}
           </div>
 

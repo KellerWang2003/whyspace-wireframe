@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, type ReactNode } from "react"
 import type { Reply, Task } from "@/data"
+import { PRESET } from "@/scenarios/data"
 
 export type Plan = "Free" | "Pro" | "Business"
 export type Workspace = { id: string; name: string; plan: Plan; example: boolean }
@@ -13,7 +14,8 @@ type Store = {
   patchTask: (id: string, patch: Partial<Task>) => void
   confirmed: Record<string, boolean>
   confirmDecision: (id: string) => void
-  // Design B: how you settled a clash of yours. "theirs" withdraws your decision; "mine" keeps it, with your reason.
+  unconfirmDecision: (id: string) => void
+  // Main design: how you settled a clash of yours. "theirs" withdraws your decision; "mine" keeps it, with your reason.
   clashes: Record<string, { choice: "theirs" | "mine"; reason?: string }>
   settleClash: (id: string, choice: "theirs" | "mine", reason?: string) => void
   replies: Record<string, Reply[]>
@@ -48,7 +50,8 @@ type Store = {
   setWorkspaceOpen: (mode: "create" | "join" | null) => void
 }
 
-const DESIGN_WORKSPACE: Workspace = { id: "design-studio", name: "Keller’s workspace", plan: "Free", example: true }
+// A test scenario can start on another plan (scenario 3 is on Pro, so the Duet answers in Slack).
+const DESIGN_WORKSPACE: Workspace = { id: "design-studio", name: "Keller’s workspace", plan: PRESET.plan ?? "Free", example: true }
 
 const StoreContext = createContext<Store | null>(null)
 
@@ -82,6 +85,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     patchTask: (id, patch) => setTaskPatches((all) => ({ ...all, [id]: { ...all[id], ...patch } })),
     confirmed,
     confirmDecision: (id) => setConfirmed((all) => ({ ...all, [id]: true })),
+    unconfirmDecision: (id) => setConfirmed((all) => { const next = { ...all }; delete next[id]; return next }),
     clashes,
     settleClash: (id, choice, reason) => setClashes((all) => ({ ...all, [id]: { choice, reason } })),
     replies,

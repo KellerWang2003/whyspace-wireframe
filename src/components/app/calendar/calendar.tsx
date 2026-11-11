@@ -1,5 +1,5 @@
 import { useLayoutEffect, useRef, useState } from "react"
-import { ChevronLeft, ChevronRight, Layers, Pencil, Radio, Repeat, Shapes, Trash2, TriangleAlert } from "lucide-react"
+import { ChevronLeft, ChevronRight, Layers, Pencil, Radio, Repeat, Trash2, TriangleAlert } from "lucide-react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Popover, PopoverAnchor, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
@@ -9,8 +9,7 @@ import { PersonAvatar } from "@/components/app/person"
 import { ProjectLabel, ProjectMark } from "@/components/app/project-mark"
 import { ScheduleMeetingDialog, type MeetingDraft } from "@/components/app/schedule-meeting"
 import { StatusIcon } from "@/components/app/status-badge"
-import { DECISIONS, PEOPLE, PROJECTS, WORKSHOPS, partsOf, type Decision, type Project } from "@/data"
-import { navigate } from "@/lib/router"
+import { DECISIONS, PEOPLE, PROJECTS, partsOf, type Decision, type Project } from "@/data"
 import { useStore } from "@/lib/store"
 import { cn } from "@/lib/utils"
 import { nowMinutes } from "@/lib/scenario"
@@ -23,7 +22,6 @@ import {
   fmtDay,
   fmtRange,
   fmtTime,
-  meetingPath,
   minutesOf,
   overlapsOf,
   removeEvent,
@@ -585,10 +583,8 @@ function MoreInDay({ day, items, hidden, ctx }: { day: number; items: CalEvent[]
 /* ---------------- Details ---------------- */
 
 function EventDetail({ e, all, onEdit, onDelete }: { e: CalEvent; all: CalEvent[]; onEdit: () => void; onDelete: () => void }) {
-  const workshop = WORKSHOPS.find((w) => w.id === e.workshop)
   const clashes = e.status === "Ended" ? [] : overlapsOf(e, all)
   const editable = e.status !== "Ended"
-  const canOpen = e.status !== "Ended" || !!e.session
   return (
     <div className="space-y-3 p-4">
       <div className="flex items-start gap-1">
@@ -605,7 +601,6 @@ function EventDetail({ e, all, onEdit, onDelete }: { e: CalEvent; all: CalEvent[
       </div>
       <div className="space-y-1.5 text-xs">
         <ProjectLabel project={e.project} />
-        {workshop && <p className="flex items-center gap-1.5 text-muted-foreground"><Shapes className="size-3.5" />{workshop.title}</p>}
         {e.repeats && <p className="flex items-center gap-1.5 text-muted-foreground"><Repeat className="size-3.5" />{e.repeats}</p>}
         {clashes.length > 0 && (
           <p className="flex items-start gap-1.5">
@@ -614,15 +609,8 @@ function EventDetail({ e, all, onEdit, onDelete }: { e: CalEvent; all: CalEvent[
           </p>
         )}
       </div>
-      <div className="flex items-center gap-2">
-        <div className="flex -space-x-1.5">
-          {e.people.map((id) => <span key={id} title={PEOPLE[id]?.name}><PersonAvatar id={id} className="size-6 ring-2 ring-popover" /></span>)}
-        </div>
-        {canOpen && (
-          <Button size="sm" variant={e.status === "Ended" ? "outline" : "default"} className="ml-auto" onClick={() => navigate(meetingPath(e))}>
-            {e.status === "Ended" ? "Open" : "Join"}
-          </Button>
-        )}
+      <div className="flex -space-x-1.5">
+        {e.people.map((id) => <span key={id} title={PEOPLE[id]?.name}><PersonAvatar id={id} className="size-6 ring-2 ring-popover" /></span>)}
       </div>
     </div>
   )

@@ -40,7 +40,7 @@ export function WorkspaceSettings({ tab }: { tab: string }) {
   )
 }
 
-function General() {
+export function General() {
   const { current } = useStore()
   return (
     <FieldSet className="max-w-xl">
@@ -63,7 +63,7 @@ function General() {
   )
 }
 
-function Members() {
+export function Members() {
   const { current, setInviteOpen } = useStore()
   const people = current?.example ? Object.values(PEOPLE) : [ME]
   const { sorted, sort, toggle } = useSort(people, {
@@ -110,7 +110,7 @@ function Members() {
   )
 }
 
-function Billing() {
+export function Billing() {
   const { current, setUpgradeOpen } = useStore()
   const seats = current?.example ? 5 : 1
   return (

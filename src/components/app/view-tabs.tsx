@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { Copy, MoreHorizontal, Pencil, Plus, Search, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -9,13 +9,16 @@ import type { SavedView } from '@/lib/saved-views'
 // Shared top of a table page: title with search on the right, then the view tabs with the page's
 // own controls (the ⋯ filter menu, layout toggle, primary action) on the right.
 
-export function TablePageHeader({ title, search, onSearch, placeholder }: { title: string; search: string; onSearch: (q: string) => void; placeholder: string }) {
+export function TablePageHeader({ title, search, onSearch, placeholder, children }: { title: string; search: string; onSearch: (q: string) => void; placeholder: string; children?: ReactNode }) {
   return <header className="flex flex-wrap items-center justify-between gap-3">
     <h1 className="type-title">{title}</h1>
-    <label className="relative">
-      <Search className="absolute top-2.5 left-3 size-4 text-muted-foreground" />
-      <Input aria-label={placeholder} placeholder={placeholder} value={search} onChange={e => onSearch(e.target.value)} className="w-64 max-w-full pl-9" />
-    </label>
+    <div className="flex items-center gap-2">
+      <label className="relative">
+        <Search className="absolute top-2.5 left-3 size-4 text-muted-foreground" />
+        <Input aria-label={placeholder} placeholder={placeholder} value={search} onChange={e => onSearch(e.target.value)} className="w-64 max-w-full pl-9" />
+      </label>
+      {children}
+    </div>
   </header>
 }
 
@@ -75,6 +78,60 @@ export function FilterMenu({ active, children }: { active: boolean; children: Re
         {active && <span className="absolute top-1 right-1 size-1.5 rounded-full bg-foreground" />}
       </Button>
     </DropdownMenuTrigger>
-    <DropdownMenuContent align="end" className="w-56">{children}</DropdownMenuContent>
+    <DropdownMenuContent align="end" className="w-56" onCloseAutoFocus={e => e.preventDefault()}>{children}</DropdownMenuContent>
   </DropdownMenu>
+}
+
+/* ---------- Toolbar parts (Nov 11, tidier tasks toolbar) ---------- */
+
+// The open view's own actions, for whichever menu holds them.
+export function ViewActions({ v, onRename }: { v: Views; onRename: (id: string) => void }) {
+  return <>
+    <DropdownMenuItem onSelect={() => onRename(v.add())}><Plus />New view</DropdownMenuItem>
+    <DropdownMenuItem onSelect={() => onRename(v.active.id)}><Pencil />Rename view</DropdownMenuItem>
+    <DropdownMenuItem onSelect={() => v.duplicate(v.active.id)}><Copy />Duplicate view</DropdownMenuItem>
+    {!v.active.locked && <DropdownMenuItem variant="destructive" onSelect={() => v.remove(v.active.id)}><Trash2 />Delete view</DropdownMenuItem>}
+  </>
+}
+
+function RenameField({ name, onDone, className }: { name: string; onDone: (name: string) => void; className?: string }) {
+  // Focus after the menu that opened it has closed, so the menu doesn't take focus back.
+  const ref = useRef<HTMLInputElement>(null)
+  useEffect(() => { const t = setTimeout(() => { ref.current?.focus(); ref.current?.select() }, 0); return () => clearTimeout(t) }, [])
+  return <form onSubmit={e => { e.preventDefault(); onDone(new FormData(e.currentTarget).get('name')?.toString().trim() ?? '') }}>
+    <Input ref={ref} name="name" defaultValue={name} aria-label="View name" className={cn('h-8 w-40', className)}
+      onBlur={e => onDone(e.currentTarget.value.trim())} onKeyDown={e => e.key === 'Escape' && onDone('')} />
+  </form>
+}
+
+// Views as one segmented control: no per-view menu, no +. Double-click a view to rename it.
+export function ViewSegments({ v, renaming, onRename }: { v: Views; renaming: string | null; onRename: (id: string | null) => void }) {
+  return <div className="flex max-w-full min-w-0 items-center gap-0.5 overflow-x-auto rounded-lg bg-muted p-0.5 [scrollbar-width:none]" role="tablist" aria-label="Views">
+    {v.views.map(view => {
+      const selected = view.id === v.active.id
+      if (renaming === view.id) return <RenameField key={view.id} name={view.name} className="h-7" onDone={name => { if (name) v.rename(view.id, name); onRename(null) }} />
+      return <div key={view.id} className={cn('shrink-0 rounded-md', selected && 'bg-background')}>
+        <Button variant="ghost" size="sm" role="tab" aria-selected={selected} className={cn('h-7 hover:bg-transparent', !selected && 'text-muted-foreground hover:text-foreground')}
+          onClick={() => v.select(view.id)} onDoubleClick={() => onRename(view.id)}>{view.name}</Button>
+      </div>
+    })}
+  </div>
+}
+
+// Search as a magnifier that opens into a field, and folds back when left empty.
+export function SearchToggle({ value, onChange, placeholder }: { value: string; onChange: (q: string) => void; placeholder: string }) {
+  const [open, setOpen] = useState(false)
+  if (!open && !value) return <Button variant="ghost" size="icon-sm" className="text-muted-foreground" aria-label={placeholder} onClick={() => setOpen(true)}><Search /></Button>
+  return <SearchField value={value} onChange={onChange} placeholder={placeholder} autoFocus className="w-48"
+    onBlur={() => !value && setOpen(false)} onEscape={() => { onChange(''); setOpen(false) }} />
+}
+
+export function SearchField({ value, onChange, placeholder, className, autoFocus, onBlur, onEscape }: {
+  value: string; onChange: (q: string) => void; placeholder: string; className?: string; autoFocus?: boolean; onBlur?: () => void; onEscape?: () => void
+}) {
+  return <label className={cn('relative block', className)}>
+    <Search className="pointer-events-none absolute top-2 left-2.5 size-4 text-muted-foreground" />
+    <Input aria-label={placeholder} placeholder={placeholder} value={value} autoFocus={autoFocus} onChange={e => onChange(e.target.value)}
+      onBlur={onBlur} onKeyDown={e => e.key === 'Escape' && onEscape?.()} className="h-8 w-full pl-8" />
+  </label>
 }

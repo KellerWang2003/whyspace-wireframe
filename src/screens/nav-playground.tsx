@@ -1,7 +1,7 @@
 import { useState, type ReactNode } from "react"
 import {
   ArrowLeft, Bookmark, CalendarDays, Check, ChevronDown, ChevronRight, ChevronsUpDown, CircleDot, Columns2, PanelBottom,
-  Home, Inbox, LayoutGrid, ListChecks, PanelLeft, Plus, Radio, Search, Star, X, type LucideIcon,
+  Home, Inbox, LayoutGrid, ListChecks, PanelLeft, Plus, Search, Star, X, type LucideIcon,
 } from "lucide-react"
 import { ProjectMark } from "@/components/app/project-mark"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
@@ -9,8 +9,8 @@ import { Kbd } from "@/components/ui/kbd"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { navigate } from "@/lib/router"
 import { cn } from "@/lib/utils"
-import { THREAD_COLORS } from "@/design-b/threads"
-import { ThreadDot } from "@/design-b/thread-ui"
+import { THREAD_COLORS } from "@/app/threads"
+import { ThreadDot } from "@/app/thread-ui"
 
 // Playground: five left navs that hold up with many projects and many threads per project.
 // Shared rules: Search, Inbox and My tasks never leave. Opening a project hands the project area
@@ -57,14 +57,14 @@ const RULES: Record<Option, string[]> = {
 // ---------- Mock data: lots of projects, some with lots of threads ----------
 
 type MockThread = { id: string; name: string; color: string; pinned?: boolean; active?: boolean; waiting?: number }
-type MockProject = { id: string; name: string; pinned?: boolean; recent?: number; live?: boolean; needs?: number; threads: MockThread[] }
+type MockProject = { id: string; name: string; pinned?: boolean; recent?: number; needs?: number; threads: MockThread[] }
 
 const POOL = ["Research", "Brand", "App", "Marketing", "Pricing", "Onboarding", "Legal", "Hiring", "Partnerships", "Video shoot", "Website", "Support", "Analytics", "Fundraising", "Launch", "Content", "Ops", "Retail"]
 const threadsOf = (names: string[], pinned: string[] = [], active: string[] = [], waiting: Record<string, number> = {}): MockThread[] =>
   names.map((name, i) => ({ id: name.toLowerCase().replace(/\s+/g, "-"), name, color: THREAD_COLORS[i % THREAD_COLORS.length].value, pinned: pinned.includes(name), active: active.includes(name), waiting: waiting[name] }))
 
 const MANY: MockProject[] = [
-  { id: "whiskr", name: "Whiskr", pinned: true, recent: 1, live: true, needs: 3, threads: threadsOf(POOL.slice(0, 16), ["Brand", "Marketing"], ["App", "Research", "Video shoot", "Pricing"], { Brand: 1, App: 2 }) },
+  { id: "whiskr", name: "Whiskr", pinned: true, recent: 1, needs: 3, threads: threadsOf(POOL.slice(0, 16), ["Brand", "Marketing"], ["App", "Research", "Video shoot", "Pricing"], { Brand: 1, App: 2 }) },
   { id: "studio", name: "AI Studio · Recall", pinned: true, recent: 2, needs: 1, threads: threadsOf(["Interviews", "Concept", "Prototype", "Final crit"], [], ["Prototype"], { Concept: 1 }) },
   { id: "fern", name: "Fern website", pinned: true, recent: 3, threads: threadsOf(["Sitemap", "Copy", "Visual design", "Build", "SEO", "Launch"], [], ["Copy"]) },
   { id: "orbit", name: "Orbit mobile", recent: 4, needs: 2, threads: threadsOf(POOL.slice(2, 13), ["App"], ["Onboarding", "Analytics"], { Onboarding: 2 }) },
@@ -93,7 +93,7 @@ const VIEWS: { id: string; name: string; icon: LucideIcon; count?: number }[] = 
 
 // ---------- Where you are ----------
 
-type Page = "home" | "workshops" | "thread"
+type Page = "home" | "thread"
 type Loc =
   | { kind: "inbox" | "tasks" | "all" | "search" }
   | { kind: "view"; id: string }
@@ -108,7 +108,7 @@ const titleOf = (loc: Loc, projects: MockProject[]) => {
   if (loc.kind !== "project") return [""]
   const p = projects.find((x) => x.id === loc.project)
   const t = p?.threads.find((x) => x.id === loc.thread)
-  return [p?.name ?? "", loc.page === "thread" ? t?.name ?? "" : loc.page === "home" ? "Home" : "Workshops"]
+  return [p?.name ?? "", loc.page === "thread" ? t?.name ?? "" : "Home"]
 }
 
 type Nav = { projects: MockProject[]; loc: Loc; go: (l: Loc) => void }
@@ -253,7 +253,7 @@ function Universal({ loc, go, compact }: Pick<Nav, "loc" | "go"> & { compact?: b
   )
 }
 
-// One project's nav: Home, Workshops, then threads.
+// One project's nav: Home, then threads.
 // Threads scale like this: pinned first, then ones with recent activity, the rest folded
 // behind "N more". A filter shows once a project has more than 8 threads.
 function ProjectBody({ p, loc, go }: { p: MockProject } & Pick<Nav, "loc" | "go">) {
@@ -280,7 +280,6 @@ function ProjectBody({ p, loc, go }: { p: MockProject } & Pick<Nav, "loc" | "go"
   return (
     <div className="space-y-0.5">
       <Row icon={Home} label="Home" count={p.needs} active={at?.page === "home"} onClick={() => go({ kind: "project", project: p.id, page: "home" })} />
-      <Row icon={Radio} label="Workshops" active={at?.page === "workshops"} onClick={() => go({ kind: "project", project: p.id, page: "workshops" })} trail={p.live && <span className="text-xs text-muted-foreground">Live</span>} />
       <Label action={<IconButton icon={Plus} label="New thread" />}>Threads</Label>
       {p.threads.length > 8 && (
         <div className="px-1 pb-1">

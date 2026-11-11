@@ -1,0 +1,351 @@
+/* High-fi playground (screens/system-playground.tsx): three options per part, each scoped to [data-pg="<part>-<n>"].
+   Light by rule (Keller): fills and layering, no drop shadows, as few strokes as possible. The option Keller picks
+   moves into index.css under :root[data-hifi] with its scope dropped. */
+
+:root {
+  /* A marker stroke in Forest, hand-drawn with ragged edges. Stretches to any width. */
+  --pg-marker: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 10' preserveAspectRatio='none'><filter id='f' x='-5%' y='-60%' width='110%' height='220%'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' seed='4'/><feDisplacementMap in='SourceGraphic' scale='2.2'/></filter><path d='M4 6.2C24 4.4 50 5.6 74 4.5S106 5.4 116 4.1' fill='none' stroke='%2340542E' stroke-width='3.6' stroke-linecap='round' filter='url(%23f)'/></svg>");
+  /* A painted pebble in Forest, the count badge's cousin, for a checked box. */
+  --pg-pebble: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'><filter id='f'><feTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='2' seed='7'/><feDisplacementMap in='SourceGraphic' scale='1.3'/></filter><g filter='url(%23f)'><path fill='%2340542E' d='M4.4 2.2C8.2 1.6 12.8 1.8 16 2.5c1.6.5 1.9 2.2 2 4.9.1 3.4-.1 6.6-.8 8.8-.6 1.4-2.6 1.7-6.2 1.8-3.6.1-6.4-.2-7.9-.9-1-.9-1.3-3.3-1.3-6.8 0-3.6.4-6.4 2.6-8.1z'/><path fill='%23ffffff' opacity='.08' d='M6 5c2-.6 5-.4 7 .3.8 1.6.4 3.6-.6 4.6-2 .5-4.6.2-6.4-.5-.7-1.4-.6-3.1 0-4.4z'/></g></svg>");
+  /* A painted dot for a chosen radio. */
+  --pg-dot: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'><filter id='f'><feTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2' seed='3'/><feDisplacementMap in='SourceGraphic' scale='1.6'/></filter><path filter='url(%23f)' fill='%2340542E' d='M10.4 3.4c3.6.2 6.2 2.8 6.1 6.6-.1 3.8-2.9 6.4-6.6 6.4-3.6 0-6.4-2.8-6.3-6.5.1-3.8 3.1-6.7 6.8-6.5z'/></svg>");
+  /* A painted track for a switch that is on. */
+  --pg-track: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 22' preserveAspectRatio='none'><filter id='f'><feTurbulence type='fractalNoise' baseFrequency='0.6' numOctaves='2' seed='5'/><feDisplacementMap in='SourceGraphic' scale='1.6'/></filter><path filter='url(%23f)' fill='%2340542E' d='M11 1.6c6-.4 12.4-.3 18.4.1 5.6.6 9 4 8.9 9.4-.1 5.4-3.6 9-9.2 9.3-6 .3-12.2.4-18 0C5.4 19.9 1.7 16.4 1.7 11 1.8 5.6 5.4 2 11 1.6z'/></svg>");
+  /* A painted gray pebble behind a chosen segment. */
+  --pg-gray-pebble: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 28' preserveAspectRatio='none'><filter id='f'><feTurbulence type='fractalNoise' baseFrequency='0.6' numOctaves='2' seed='9'/><feDisplacementMap in='SourceGraphic' scale='1.8'/></filter><path filter='url(%23f)' fill='%23e2e2da' d='M8 2.2c14-.8 30-.7 44 .1 4.4.6 6.2 3.4 6.2 11.4 0 8.2-1.6 11.4-6.4 11.9-14.4.8-30 .8-44 0C3.6 25 1.8 22.4 1.8 14 1.8 5.6 3.6 2.8 8 2.2z'/></svg>");
+  --pg-fill: color-mix(in oklab, var(--foreground) 5%, transparent);
+  --pg-fill-hover: color-mix(in oklab, var(--foreground) 8%, transparent);
+  --pg-hairline: oklch(0 0 0 / 0.07);
+  --pg-halo: color-mix(in oklab, var(--ring) 16%, transparent);
+}
+
+/* ================= Inputs ================= */
+
+:root[data-hifi] [data-pg^="inputs-"] :is([data-slot="input"], [data-slot="select-trigger"]) { height: 2.5rem; }
+:root[data-hifi] [data-pg^="inputs-"] [data-slot="textarea"] { padding: 0.625rem 0.75rem; }
+
+/* 1 · Filled: a soft gray fill like a secondary button; focus turns it paper with a leaf edge. */
+:root[data-hifi] [data-pg="inputs-1"] :is([data-slot="input"], [data-slot="textarea"], [data-slot="select-trigger"]) {
+  border-color: transparent;
+  box-shadow: none;
+  border-radius: 12px;
+  background: var(--pg-fill);
+}
+:root[data-hifi] [data-pg="inputs-1"] :is([data-slot="input"], [data-slot="textarea"], [data-slot="select-trigger"]):hover { background: var(--pg-fill-hover); }
+:root[data-hifi] [data-pg="inputs-1"] :is([data-slot="input"], [data-slot="textarea"], [data-slot="select-trigger"]):is(:focus-visible, [data-show-focus]) {
+  background: var(--background);
+  border-color: var(--ring);
+  box-shadow: 0 0 0 3px var(--pg-halo);
+}
+
+/* 2 · Paper ring: paper with a faint ring, the hairline the system allows; focus draws it in leaf. */
+:root[data-hifi] [data-pg="inputs-2"] :is([data-slot="input"], [data-slot="textarea"], [data-slot="select-trigger"]) {
+  border-color: transparent;
+  border-radius: 12px;
+  background: var(--background);
+  box-shadow: 0 0 0 1px oklch(0 0 0 / 0.1);
+}
+:root[data-hifi] [data-pg="inputs-2"] :is([data-slot="input"], [data-slot="textarea"], [data-slot="select-trigger"]):hover { box-shadow: 0 0 0 1px oklch(0 0 0 / 0.16); }
+:root[data-hifi] [data-pg="inputs-2"] :is([data-slot="input"], [data-slot="textarea"], [data-slot="select-trigger"]):is(:focus-visible, [data-show-focus]) {
+  border-color: transparent;
+  box-shadow: 0 0 0 1px var(--ring), 0 0 0 4px var(--pg-halo);
+}
+
+/* 3 · Underline: no box, a ruled line like the page's hairlines; focus paints a marker stroke under it. */
+:root[data-hifi] [data-pg="inputs-3"] :is([data-slot="input"], [data-slot="textarea"], [data-slot="select-trigger"]) {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: inset 0 -1px 0 oklch(0 0 0 / 0.16);
+  padding-inline: 0;
+}
+:root[data-hifi] [data-pg="inputs-3"] :is([data-slot="input"], [data-slot="textarea"], [data-slot="select-trigger"]):hover { box-shadow: inset 0 -1px 0 oklch(0 0 0 / 0.3); }
+:root[data-hifi] [data-pg="inputs-3"] :is([data-slot="input"], [data-slot="textarea"], [data-slot="select-trigger"]):is(:focus-visible, [data-show-focus]) {
+  box-shadow: none;
+  background: var(--pg-marker) left bottom / 100% 7px no-repeat;
+}
+:root[data-hifi] [data-pg="inputs-3"] label > svg { left: 0; }
+:root[data-hifi] [data-pg="inputs-3"] label > [data-slot="input"] { padding-left: 1.5rem; }
+
+/* ================= Choices ================= */
+
+:root[data-hifi] [data-pg^="choices-"] :is([data-slot="checkbox"], [data-slot="radio-group-item"]) { width: 18px; height: 18px; box-shadow: none; }
+:root[data-hifi] [data-pg^="choices-"] [data-slot="checkbox"] { border-radius: 6px; }
+:root[data-hifi] [data-pg^="choices-"] [data-slot="switch"] { height: 22px; width: 38px; padding: 2px; border: 0; box-shadow: none; }
+:root[data-hifi] [data-pg^="choices-"] [data-slot="switch"][data-state="unchecked"] { background: color-mix(in oklab, var(--foreground) 13%, transparent); }
+:root[data-hifi] [data-pg^="choices-"] [data-slot="switch-thumb"] { width: 18px; height: 18px; }
+:root[data-hifi] [data-pg^="choices-"] [data-slot="toggle-group-item"] { border: 0; box-shadow: none; }
+
+/* 1 · Soft: gray fills when off, Forest when on. Segments sit in a gray layer with a paper tile for the chosen one. */
+:root[data-hifi] [data-pg="choices-1"] :is([data-slot="checkbox"], [data-slot="radio-group-item"]) { border-color: transparent; background: color-mix(in oklab, var(--foreground) 9%, transparent); }
+:root[data-hifi] [data-pg="choices-1"] :is([data-slot="checkbox"], [data-slot="radio-group-item"])[data-state="checked"] { background: var(--primary); }
+:root[data-hifi] [data-pg="choices-1"] [data-slot="radio-group-item"][data-state="checked"] svg { fill: var(--primary-foreground); stroke: var(--primary-foreground); width: 7px; height: 7px; }
+:root[data-hifi] [data-pg="choices-1"] [data-slot="toggle-group"] { background: var(--pg-fill); padding: 3px; gap: 2px; border-radius: 12px; }
+:root[data-hifi] [data-pg="choices-1"] [data-slot="toggle-group-item"] { border-radius: 9px; background: transparent; color: var(--muted-foreground); }
+:root[data-hifi] [data-pg="choices-1"] [data-slot="toggle-group-item"][data-state="on"] { background: var(--background); color: var(--foreground); }
+
+/* 2 · Painted: a checked box, a chosen radio and a switch that is on are painted in Forest, like the count badges.
+   The chosen segment is a painted gray pebble. */
+:root[data-hifi] [data-pg="choices-2"] :is([data-slot="checkbox"], [data-slot="radio-group-item"]) { border-color: transparent; background: color-mix(in oklab, var(--foreground) 9%, transparent); }
+:root[data-hifi] [data-pg="choices-2"] [data-slot="checkbox"][data-state="checked"] { background: var(--pg-pebble) center / 120% 120% no-repeat; }
+:root[data-hifi] [data-pg="choices-2"] [data-slot="radio-group-item"][data-state="checked"] { background: var(--pg-dot) center / 130% 130% no-repeat; }
+:root[data-hifi] [data-pg="choices-2"] [data-slot="radio-group-item"][data-state="checked"] svg { fill: var(--primary-foreground); stroke: var(--primary-foreground); width: 6px; height: 6px; }
+:root[data-hifi] [data-pg="choices-2"] [data-slot="switch"][data-state="checked"] { background: var(--pg-track) center / 106% 112% no-repeat; }
+:root[data-hifi] [data-pg="choices-2"] [data-slot="toggle-group"] { gap: 2px; }
+:root[data-hifi] [data-pg="choices-2"] [data-slot="toggle-group-item"] { border-radius: 10px; background: transparent; color: var(--muted-foreground); }
+:root[data-hifi] [data-pg="choices-2"] [data-slot="toggle-group-item"]:hover { background: var(--pg-fill); }
+:root[data-hifi] [data-pg="choices-2"] [data-slot="toggle-group-item"][data-state="on"] { background: var(--pg-gray-pebble) center / 100% 100% no-repeat; color: var(--foreground); }
+
+/* 3 · Ring: an ink outline when off; on is a leaf wash with a Forest check. Segments are separate, the chosen one filled. */
+:root[data-hifi] [data-pg="choices-3"] :is([data-slot="checkbox"], [data-slot="radio-group-item"]) { border: 1.5px solid color-mix(in oklab, var(--foreground) 28%, transparent); background: transparent; }
+:root[data-hifi] [data-pg="choices-3"] [data-slot="checkbox"][data-state="checked"] { border-color: var(--primary); background: #eaf5df; color: var(--primary); }
+:root[data-hifi] [data-pg="choices-3"] [data-slot="radio-group-item"][data-state="checked"] { border-color: var(--primary); background: #eaf5df; }
+:root[data-hifi] [data-pg="choices-3"] [data-slot="radio-group-item"][data-state="checked"] svg { width: 8px; height: 8px; }
+:root[data-hifi] [data-pg="choices-3"] [data-slot="switch"][data-state="checked"] { background: var(--brand-leaf); }
+:root[data-hifi] [data-pg="choices-3"] [data-slot="toggle-group"] { gap: 4px; }
+:root[data-hifi] [data-pg="choices-3"] [data-slot="toggle-group-item"] { border-radius: 10px; background: transparent; color: var(--muted-foreground); }
+:root[data-hifi] [data-pg="choices-3"] [data-slot="toggle-group-item"]:hover { color: var(--foreground); }
+:root[data-hifi] [data-pg="choices-3"] [data-slot="toggle-group-item"][data-state="on"] { background: var(--pg-fill-hover); color: var(--foreground); }
+
+/* ================= Tabs ================= */
+
+:root[data-hifi] [data-pg^="tabs-"] [data-slot="tabs-trigger"] { box-shadow: none; }
+:root[data-hifi] [data-pg^="tabs-"] [data-pg-line] [data-slot="tabs-trigger"] { height: 2rem; padding-inline: 0.75rem; flex: none; }
+
+/* 1 · Sheet tab: the rail's sheet tab, turned on its side. The open tab is paper cut from the gray layer, running
+   into the page below it. */
+:root[data-hifi] [data-pg="tabs-1"] [data-slot="tabs-list"][data-variant="default"] { background: var(--hifi-layer); padding: 3px; border-radius: 12px; }
+:root[data-hifi] [data-pg="tabs-1"] [data-slot="tabs-list"][data-variant="default"] [data-slot="tabs-trigger"] { border-radius: 9px; }
+:root[data-hifi] [data-pg="tabs-1"] [data-slot="tabs-list"][data-variant="line"] {
+  width: 100%;
+  justify-content: flex-start;
+  height: auto;
+  gap: 2px;
+  padding: 4px 4px 0;
+  background: var(--hifi-layer);
+  border-radius: 14px 14px 0 0;
+}
+:root[data-hifi] [data-pg="tabs-1"] [data-slot="tabs-list"][data-variant="line"] [data-slot="tabs-trigger"] { border-radius: 10px 10px 0 0; height: 2.25rem; }
+:root[data-hifi] [data-pg="tabs-1"] [data-slot="tabs-list"][data-variant="line"] [data-slot="tabs-trigger"]::after { display: none; }
+:root[data-hifi] [data-pg="tabs-1"] [data-slot="tabs-list"][data-variant="line"] [data-slot="tabs-trigger"][data-state="active"] { background: var(--background); }
+:root[data-hifi] [data-pg="tabs-1"] [data-pg-sheet] { padding-inline: 1rem; box-shadow: inset 0 0 0 1px var(--hifi-layer); border-radius: 0 0 14px 14px; padding-bottom: 1rem; }
+:root[data-hifi] [data-pg="tabs-1"] [role="tablist"][aria-label="Views"] { background: var(--hifi-layer); padding: 3px; border-radius: 12px; width: fit-content; }
+:root[data-hifi] [data-pg="tabs-1"] [role="tablist"][aria-label="Views"] > div { border-radius: 9px; }
+:root[data-hifi] [data-pg="tabs-1"] [role="tablist"][aria-label="Views"] > div:has([aria-selected="true"]) { background: var(--background); }
+:root[data-hifi] [data-pg="tabs-1"] [role="tablist"][aria-label="Views"] [data-button] { border-radius: 9px; }
+
+/* 2 · Marker: no boxes. The open tab gets a Forest marker stroke under it, drawn by hand. */
+:root[data-hifi] [data-pg="tabs-2"] [data-slot="tabs-list"] { background: transparent; padding: 0; gap: 0.25rem; }
+:root[data-hifi] [data-pg="tabs-2"] [data-slot="tabs-trigger"] { background: transparent !important; color: var(--muted-foreground); }
+:root[data-hifi] [data-pg="tabs-2"] [data-slot="tabs-trigger"]:hover { color: var(--foreground); }
+:root[data-hifi] [data-pg="tabs-2"] [data-slot="tabs-trigger"][data-state="active"] { color: var(--foreground); }
+:root[data-hifi] [data-pg="tabs-2"] [data-slot="tabs-trigger"]::after {
+  background: var(--pg-marker) center / 100% 100% no-repeat;
+  height: 7px;
+  bottom: -5px;
+  left: 6px;
+  right: 6px;
+}
+:root[data-hifi] [data-pg="tabs-2"] [data-slot="tabs-trigger"][data-state="active"]::after { opacity: 1; }
+:root[data-hifi] [data-pg="tabs-2"] [data-pg-sheet] { padding-top: 1.25rem; }
+:root[data-hifi] [data-pg="tabs-2"] [role="tablist"][aria-label="Views"] > div { background: transparent; position: relative; }
+:root[data-hifi] [data-pg="tabs-2"] [role="tablist"][aria-label="Views"] > div:has([aria-selected="true"]) [data-button][role="tab"] { color: var(--foreground); background: var(--pg-marker) center calc(100% + 1px) / calc(100% - 16px) 6px no-repeat; }
+
+/* 3 · Quiet fill: the open tab is a soft gray tile, like the project panel's rows. No lines anywhere. */
+:root[data-hifi] [data-pg="tabs-3"] [data-slot="tabs-list"] { background: transparent; padding: 0; gap: 2px; }
+:root[data-hifi] [data-pg="tabs-3"] [data-slot="tabs-trigger"] { border-radius: 10px; color: var(--muted-foreground); padding-inline: 0.625rem; }
+:root[data-hifi] [data-pg="tabs-3"] [data-slot="tabs-trigger"]:hover { color: var(--foreground); }
+:root[data-hifi] [data-pg="tabs-3"] [data-slot="tabs-trigger"][data-state="active"] { background: var(--pg-fill-hover); color: var(--foreground); }
+:root[data-hifi] [data-pg="tabs-3"] [data-slot="tabs-trigger"]::after { display: none; }
+:root[data-hifi] [data-pg="tabs-3"] [data-pg-sheet] { padding-top: 1rem; }
+:root[data-hifi] [data-pg="tabs-3"] [role="tablist"][aria-label="Views"] > div { border-radius: 10px; }
+:root[data-hifi] [data-pg="tabs-3"] [role="tablist"][aria-label="Views"] > div:has([aria-selected="true"]) { background: var(--pg-fill-hover); }
+:root[data-hifi] [data-pg="tabs-3"] [role="tablist"][aria-label="Views"] [data-button] { border-radius: 10px; }
+
+/* ================= Menus and dialogs ================= */
+
+:root[data-hifi] :is([data-slot="dropdown-menu-content"], [data-slot="popover-content"])[data-pg^="menus-"] { border: 0; box-shadow: none; border-radius: 16px; }
+:root[data-hifi] [data-slot="dropdown-menu-content"][data-pg^="menus-"] { padding: 6px; }
+:root[data-hifi] [data-slot="popover-content"][data-pg^="menus-"] { padding: 14px 16px; }
+:root[data-hifi] [data-pg^="menus-"] [data-slot="dropdown-menu-item"] { height: 2.125rem; padding-inline: 0.625rem; gap: 0.625rem; border-radius: 10px; }
+:root[data-hifi] [data-pg^="menus-"] [data-slot="dropdown-menu-separator"] { margin: 4px 10px; }
+:root[data-hifi] [data-slot="tooltip-content"][data-pg^="menus-"] { border-radius: 8px; padding: 6px 10px; }
+:root[data-hifi] [data-slot="dialog-content"][data-pg^="menus-"] { border: 0; border-radius: 24px; padding: 28px; gap: 20px; }
+
+/* 1 · Paper: paper with a faint ring, like a project's hover card in the rail. The dialog dims the page lightly. */
+:root[data-hifi] :is([data-slot="dropdown-menu-content"], [data-slot="popover-content"])[data-pg="menus-1"] { background: var(--background); box-shadow: 0 0 0 1px var(--pg-hairline); }
+:root[data-hifi] [data-pg="menus-1"] [data-slot="dropdown-menu-item"]:is(:focus, :hover) { background: var(--pg-fill); }
+:root[data-hifi] [data-pg="menus-1"] [data-slot="dropdown-menu-separator"] { background: var(--pg-hairline); }
+:root[data-hifi][data-pg-dialog="menus-1"] [data-slot="dialog-overlay"] { background: oklch(0.2 0 0 / 0.18); }
+:root[data-hifi] [data-slot="dialog-content"][data-pg="menus-1"] { box-shadow: none; }
+
+/* 2 · Layer: menus are the gray layer the rail sits on; the item under the cursor is paper. The dialog sits on a
+   paper haze instead of a dark dim. */
+:root[data-hifi] :is([data-slot="dropdown-menu-content"], [data-slot="popover-content"])[data-pg="menus-2"] { background: var(--hifi-layer); }
+:root[data-hifi] [data-pg="menus-2"] [data-slot="dropdown-menu-item"]:is(:focus, :hover) { background: var(--background); }
+:root[data-hifi] [data-pg="menus-2"] [data-slot="dropdown-menu-separator"] { background: oklch(0 0 0 / 0.06); }
+:root[data-hifi] [data-slot="tooltip-content"][data-pg="menus-2"] { background: var(--hifi-layer); color: var(--foreground); }
+:root[data-hifi] [data-slot="tooltip-content"][data-pg="menus-2"] svg { background: var(--hifi-layer); fill: var(--hifi-layer); }
+:root[data-hifi][data-pg-dialog="menus-2"] [data-slot="dialog-overlay"] { background: color-mix(in oklab, var(--hifi-layer) 72%, transparent); backdrop-filter: blur(3px); }
+:root[data-hifi] [data-slot="dialog-content"][data-pg="menus-2"] { box-shadow: 0 0 0 1px var(--pg-hairline); }
+
+/* 3 · Ink: menus and tooltips are ink with paper type, so they read as floating above the paper without a shadow. */
+:root[data-hifi] :is([data-slot="dropdown-menu-content"], [data-slot="popover-content"])[data-pg="menus-3"] { background: var(--foreground); color: var(--background); }
+:root[data-hifi] [data-pg="menus-3"] [data-slot="dropdown-menu-item"] svg { color: color-mix(in oklab, var(--background) 60%, transparent) !important; }
+:root[data-hifi] [data-pg="menus-3"] [data-slot="dropdown-menu-item"]:is(:focus, :hover) { background: color-mix(in oklab, var(--background) 12%, transparent); color: var(--background); }
+:root[data-hifi] [data-pg="menus-3"] [data-slot="dropdown-menu-separator"] { background: color-mix(in oklab, var(--background) 14%, transparent); }
+:root[data-hifi] [data-slot="popover-content"][data-pg="menus-3"] :is(span, a, button) { color: var(--background); }
+:root[data-hifi][data-pg-dialog="menus-3"] [data-slot="dialog-overlay"] { background: oklch(0.2 0 0 / 0.4); }
+:root[data-hifi] [data-slot="dialog-content"][data-pg="menus-3"] { box-shadow: none; }
+
+/* ================= Rows ================= */
+
+:root[data-hifi] [data-pg^="rows-"] [data-pg-rows] > li { gap: 0.875rem; }
+
+/* 1 · Tiles: each row its own soft gray tile, like the thread tiles on a project's home. */
+:root[data-hifi] [data-pg="rows-1"] [data-pg-rows] { gap: 0.5rem; }
+:root[data-hifi] [data-pg="rows-1"] [data-pg-rows] > li { background: color-mix(in oklab, var(--foreground) 3.5%, transparent); border-radius: 16px; padding: 0.875rem 1rem; }
+:root[data-hifi] [data-pg="rows-1"] [data-pg-rows] > li:hover { background: color-mix(in oklab, var(--foreground) 5.5%, transparent); }
+:root[data-hifi] [data-pg="rows-1"] [data-pg-rows] [data-button][data-variant="outline"] { background: var(--background); }
+
+/* 2 · Tray: paper rows held in the gray layer, rounder at the ends, like the rail behind the page. */
+:root[data-hifi] [data-pg="rows-2"] [data-pg-rows] { background: var(--hifi-layer); border-radius: 20px; padding: 4px; gap: 2px; }
+:root[data-hifi] [data-pg="rows-2"] [data-pg-rows] > li { background: var(--background); border-radius: 6px; padding: 0.75rem 0.875rem; }
+:root[data-hifi] [data-pg="rows-2"] [data-pg-rows] > li:first-child { border-top-left-radius: 16px; border-top-right-radius: 16px; }
+:root[data-hifi] [data-pg="rows-2"] [data-pg-rows] > li:last-child { border-bottom-left-radius: 16px; border-bottom-right-radius: 16px; }
+
+/* 3 · Ruled: no boxes, hairlines between rows, like the design system page itself. */
+:root[data-hifi] [data-pg="rows-3"] [data-pg-rows] { border-top: 1px solid color-mix(in oklab, var(--foreground) 80%, transparent); }
+:root[data-hifi] [data-pg="rows-3"] [data-pg-rows] > li { padding: 0.875rem 0; }
+:root[data-hifi] [data-pg="rows-3"] [data-pg-rows] > li + li { border-top: 1px solid var(--pg-hairline); }
+
+/* ================= Table ================= */
+
+:root[data-hifi] [data-pg^="table-"] [data-slot="table-head"] { color: var(--muted-foreground); font-weight: 500; font-size: 0.75rem; }
+:root[data-hifi] [data-pg^="table-"] [data-slot="table-body"] [data-slot="table-cell"] { padding-block: 0.875rem; }
+
+/* 1 · Layer header: the header row in the gray layer, rows split by faint hairlines. */
+:root[data-hifi] [data-pg="table-1"] [data-slot="table-header"] tr { background: var(--hifi-layer) !important; }
+:root[data-hifi] [data-pg="table-1"] [data-slot="table-head"]:first-child { border-radius: 12px 0 0 12px; }
+:root[data-hifi] [data-pg="table-1"] [data-slot="table-head"]:last-child { border-radius: 0 12px 12px 0; }
+:root[data-hifi] [data-pg="table-1"] [data-slot="table-body"] [data-slot="table-row"] { border-color: var(--pg-hairline); }
+
+/* 2 · Tiles: every task a soft gray tile with room between, the header plain. */
+:root[data-hifi] [data-pg="table-2"] [data-slot="table"] { border-collapse: separate; border-spacing: 0 6px; }
+:root[data-hifi] [data-pg="table-2"] [data-slot="table-header"] tr { background: transparent !important; }
+:root[data-hifi] [data-pg="table-2"] [data-slot="table-head"] { height: 1.75rem; }
+:root[data-hifi] [data-pg="table-2"] [data-slot="table-body"] [data-slot="table-row"] { border: 0; background: transparent; }
+:root[data-hifi] [data-pg="table-2"] [data-slot="table-body"] [data-slot="table-cell"] { background: color-mix(in oklab, var(--foreground) 3.5%, transparent); }
+:root[data-hifi] [data-pg="table-2"] [data-slot="table-body"] [data-slot="table-row"]:hover [data-slot="table-cell"] { background: color-mix(in oklab, var(--foreground) 5.5%, transparent); }
+:root[data-hifi] [data-pg="table-2"] [data-slot="table-body"] [data-slot="table-cell"]:first-child { border-radius: 14px 0 0 14px; }
+:root[data-hifi] [data-pg="table-2"] [data-slot="table-body"] [data-slot="table-cell"]:last-child { border-radius: 0 14px 14px 0; }
+:root[data-hifi] [data-pg="table-2"] [data-slot="table-body"] [data-slot="table-cell"][colspan] { background: transparent; }
+
+/* 3 · Ruled: an ink rule under the header and hairlines between rows, like the design system page. */
+:root[data-hifi] [data-pg="table-3"] [data-slot="table-header"] tr { background: transparent !important; }
+:root[data-hifi] [data-pg="table-3"] [data-slot="table-head"] { border-radius: 0 !important; border-bottom: 1px solid color-mix(in oklab, var(--foreground) 80%, transparent); }
+:root[data-hifi] [data-pg="table-3"] [data-slot="table-body"] [data-slot="table-row"] { border-color: var(--pg-hairline); }
+:root[data-hifi] [data-pg="table-3"] [data-slot="table-body"] [data-slot="table-row"]:hover { background: transparent; }
+:root[data-hifi] [data-pg="table-3"] [data-slot="table-body"] [data-slot="table-row"]:hover [data-slot="table-cell"]:nth-child(2) { text-decoration: underline; text-underline-offset: 3px; }
+
+/* Every dialog option: the title in the serif heading, like page titles. */
+:root[data-hifi] [data-slot="dialog-content"][data-pg^="menus-"] [data-slot="dialog-title"] { font-family: var(--font-serif); font-size: var(--text-heading); line-height: var(--text-heading--line-height); font-weight: 400; }
+
+/* ================= Tabs, again (Keller dropped the sheet tab, Nov 11) =================
+   Line tabs only; the segmented control under them stays as it is. Each option first undoes the sheet tab. */
+:root[data-hifi] [data-pg^="tabs-again-"][data-pg] [data-pg-bar].border-b:has(> [data-slot="tabs"] > [data-slot="tabs-list"]) { border-bottom-color: var(--border); padding-bottom: 0.375rem; align-items: center; }
+:root[data-hifi] [data-pg^="tabs-again-"][data-pg] [data-slot="tabs-list"][data-variant="line"] { background: transparent; padding: 0; border-radius: 0; height: auto; gap: 2px; margin-left: -0.5rem; }
+:root[data-hifi] [data-pg^="tabs-again-"][data-pg] [data-slot="tabs-list"][data-variant="line"] [data-slot="tabs-trigger"] { height: 2rem; margin-bottom: 0; border-radius: 10px; background: transparent; color: var(--muted-foreground); }
+:root[data-hifi] [data-pg^="tabs-again-"][data-pg] [data-slot="tabs-list"][data-variant="line"] [data-slot="tabs-trigger"]:hover { color: var(--foreground); }
+:root[data-hifi] [data-pg^="tabs-again-"][data-pg] [data-slot="tabs-list"][data-variant="line"] [data-slot="tabs-trigger"][data-state="active"] { color: var(--foreground); background: transparent; margin-bottom: 0; height: 2rem; }
+:root[data-hifi] [data-pg^="tabs-again-"][data-pg] [data-slot="tabs-list"][data-variant="line"] [data-slot="tabs-trigger"]::after { display: block; }
+
+/* 1 · Marker: a hand-drawn Forest stroke under the open tab, and no rule under the bar. */
+:root[data-hifi] [data-pg="tabs-again-1"][data-pg] [data-pg-bar].border-b:has(> [data-slot="tabs"] > [data-slot="tabs-list"]) { border-bottom-color: transparent; }
+:root[data-hifi] [data-pg="tabs-again-1"][data-pg] [data-slot="tabs-list"][data-variant="line"] [data-slot="tabs-trigger"]::after {
+  background: var(--pg-marker) center / 100% 100% no-repeat;
+  height: 7px;
+  bottom: -6px !important;
+  left: 8px;
+  right: 8px;
+}
+
+/* 2 · Quiet fill: the open tab is a soft gray tile, like the project panel's rows. No rule. */
+:root[data-hifi] [data-pg="tabs-again-2"][data-pg] [data-pg-bar].border-b:has(> [data-slot="tabs"] > [data-slot="tabs-list"]) { border-bottom-color: transparent; }
+:root[data-hifi] [data-pg="tabs-again-2"][data-pg] [data-slot="tabs-list"][data-variant="line"] [data-slot="tabs-trigger"]::after { display: none; }
+:root[data-hifi] [data-pg="tabs-again-2"][data-pg] [data-slot="tabs-list"][data-variant="line"] [data-slot="tabs-trigger"][data-state="active"] { background: color-mix(in oklab, var(--foreground) 7%, transparent); }
+
+/* 3 · Ink underline: a faint rule under the bar, the open tab a 2px ink line sitting on it. */
+:root[data-hifi] [data-pg="tabs-again-3"][data-pg] [data-pg-bar].border-b:has(> [data-slot="tabs"] > [data-slot="tabs-list"]) { border-bottom-color: var(--pg-hairline); }
+:root[data-hifi] [data-pg="tabs-again-3"][data-pg] [data-slot="tabs-list"][data-variant="line"] [data-slot="tabs-trigger"]::after { height: 2px; left: 10px; right: 10px; border-radius: 2px; background: var(--foreground); }
+
+/* 4 · Serif: the tabs set in the heading serif, the open one in ink and the rest faded. No lines. */
+:root[data-hifi] [data-pg="tabs-again-4"][data-pg] [data-pg-bar].border-b:has(> [data-slot="tabs"] > [data-slot="tabs-list"]) { border-bottom-color: transparent; }
+:root[data-hifi] [data-pg="tabs-again-4"][data-pg] [data-slot="tabs-list"][data-variant="line"] { gap: 0.5rem; }
+:root[data-hifi] [data-pg="tabs-again-4"][data-pg] [data-slot="tabs-list"][data-variant="line"] [data-slot="tabs-trigger"] { font-family: var(--font-serif); font-size: var(--text-heading); font-weight: 400; height: 2.25rem; color: color-mix(in oklab, var(--foreground) 38%, transparent); }
+:root[data-hifi] [data-pg="tabs-again-4"][data-pg] [data-slot="tabs-list"][data-variant="line"] [data-slot="tabs-trigger"][data-state="active"] { height: 2.25rem; }
+:root[data-hifi] [data-pg="tabs-again-4"][data-pg] [data-slot="tabs-list"][data-variant="line"] [data-slot="tabs-trigger"]::after { display: none; }
+:root[data-hifi] [data-pg="tabs-again-4"][data-pg] [data-slot="tabs-list"][data-variant="line"] [data-slot="tabs-trigger"] > span { font-family: var(--font-sans); font-size: 0.75rem; }
+
+/* ================= Bars (Keller, Nov 11: two gray bars stacked, at different heights) =================
+   Each option is a rule for the whole system: where the gray layer may go, and one height (36px) for every
+   control in a bar. Every option first undoes the sheet tab and evens out the heights. */
+:root[data-hifi] [data-pg^="bars-"][data-pg] [data-pg-bar].border-b:has(> [data-slot="tabs"] > [data-slot="tabs-list"]) { border-bottom-color: transparent; padding-bottom: 0; align-items: center; }
+:root[data-hifi] [data-pg^="bars-"][data-pg] [data-slot="tabs-list"][data-variant="line"] { background: transparent; padding: 0; border-radius: 0; height: auto; gap: 2px; margin-left: -0.5rem; }
+:root[data-hifi] [data-pg^="bars-"][data-pg] [data-slot="tabs-list"][data-variant="line"] [data-slot="tabs-trigger"] { height: 2.25rem; margin-bottom: 0; border-radius: 10px; background: transparent; color: var(--muted-foreground); }
+:root[data-hifi] [data-pg^="bars-"][data-pg] [data-slot="tabs-list"][data-variant="line"] [data-slot="tabs-trigger"]:hover { color: var(--foreground); }
+:root[data-hifi] [data-pg^="bars-"][data-pg] [data-slot="tabs-list"][data-variant="line"] [data-slot="tabs-trigger"][data-state="active"] { color: var(--foreground); background: transparent; margin-bottom: 0; height: 2.25rem; }
+:root[data-hifi] [data-pg^="bars-"][data-pg] [data-slot="tabs-list"][data-variant="line"] [data-slot="tabs-trigger"]::after { display: none; }
+/* One height: views, the Table and Board switch, search, ⋯, New task and the table header are all 36px. */
+:root[data-hifi] [data-pg^="bars-"][data-pg] div:has(> [role="tablist"][aria-label="Views"]) { border-bottom-color: transparent; align-items: center; }
+:root[data-hifi] [data-pg^="bars-"][data-pg] div:has(> [role="tablist"][aria-label="Views"]) > div:not([role]) { padding-bottom: 0; }
+:root[data-hifi] [data-pg^="bars-"][data-pg] div:has(> [role="tablist"][aria-label="Views"]) > button { margin-bottom: 0; }
+:root[data-hifi] [data-pg^="bars-"][data-pg] [role="tablist"][aria-label="Views"] { margin-bottom: 0; height: 2.25rem; }
+:root[data-hifi] [data-pg^="bars-"][data-pg] [role="tablist"][aria-label="Views"] > div { padding-bottom: 0; border-bottom-width: 0; height: 100%; }
+:root[data-hifi] [data-pg^="bars-"][data-pg] [role="tablist"][aria-label="Views"] [data-button] { height: 100%; }
+:root[data-hifi] [data-pg^="bars-"][data-pg] [data-slot="tabs-list"][data-variant="default"] { height: 2.25rem; }
+:root[data-hifi] [data-pg^="bars-"][data-pg] [data-slot="tabs-list"][data-variant="default"] [data-slot="tabs-trigger"] { height: 100%; }
+:root[data-hifi] [data-pg^="bars-"][data-pg] input[aria-label="Search tasks"] { height: 2.25rem; }
+:root[data-hifi] [data-pg^="bars-"][data-pg] [data-slot="table-head"] { height: 2.25rem; }
+
+/* Text-and-tile: views and switches with no layer behind them; the open one sits on a soft ink tile. */
+:root[data-hifi] :is([data-pg="bars-1"], [data-pg="bars-3"])[data-pg] :is([role="tablist"][aria-label="Views"], [data-slot="tabs-list"][data-variant="default"]) { background: transparent; padding: 0; gap: 2px; }
+:root[data-hifi] :is([data-pg="bars-1"], [data-pg="bars-3"])[data-pg] [role="tablist"][aria-label="Views"] > div { border-radius: 10px; }
+:root[data-hifi] :is([data-pg="bars-1"], [data-pg="bars-3"])[data-pg] [role="tablist"][aria-label="Views"] > div:has([aria-selected="true"]),
+:root[data-hifi] :is([data-pg="bars-1"], [data-pg="bars-3"])[data-pg] [data-slot="tabs-list"][data-variant="default"] [data-slot="tabs-trigger"][data-state="active"] { background: color-mix(in oklab, var(--foreground) 7%, transparent); box-shadow: none; }
+:root[data-hifi] :is([data-pg="bars-1"], [data-pg="bars-3"])[data-pg] [data-slot="tabs-list"][data-variant="default"] [data-slot="tabs-trigger"] { border-radius: 10px; padding-inline: 0.625rem; }
+
+/* 1 · Bar on the table: the table header is the only gray bar. Tabs: quiet fill. */
+:root[data-hifi] [data-pg="bars-1"][data-pg] [data-slot="tabs-list"][data-variant="line"] [data-slot="tabs-trigger"][data-state="active"] { background: color-mix(in oklab, var(--foreground) 7%, transparent); }
+
+/* 2 · Bar on the controls: views and switches keep the gray layer; the table header is plain labels on a hairline.
+   Tabs: ink underline. */
+:root[data-hifi] [data-pg="bars-2"][data-pg] [data-slot="table-header"] tr { background: transparent !important; box-shadow: inset 0 -1px 0 var(--pg-hairline); }
+:root[data-hifi] [data-pg="bars-2"][data-pg] [data-slot="table-head"] { border-radius: 0 !important; }
+:root[data-hifi] [data-pg="bars-2"][data-pg] [data-pg-bar].border-b:has(> [data-slot="tabs"] > [data-slot="tabs-list"]) { border-bottom-color: var(--pg-hairline); padding-bottom: 0.375rem; }
+:root[data-hifi] [data-pg="bars-2"][data-pg] [data-slot="tabs-list"][data-variant="line"] [data-slot="tabs-trigger"]::after { display: block; height: 2px; left: 10px; right: 10px; border-radius: 2px; background: var(--foreground); }
+
+/* 3 · One tray: the table sits in the gray layer like the rows do; its labels sit in the tray, the rows are paper.
+   Views and switches are text and tile. Tabs: marker. */
+:root[data-hifi] [data-pg="bars-3"][data-pg] [data-slot="table-container"] { background: var(--hifi-layer); border-radius: 22px; padding: 0 5px 5px; }
+:root[data-hifi] [data-pg="bars-3"][data-pg] [data-slot="table"] { border-collapse: separate; border-spacing: 0; }
+:root[data-hifi] [data-pg="bars-3"][data-pg] [data-slot="table-header"] tr { background: transparent !important; }
+:root[data-hifi] [data-pg="bars-3"][data-pg] [data-slot="table-head"] { border-radius: 0 !important; }
+:root[data-hifi] [data-pg="bars-3"][data-pg] [data-slot="table-body"] [data-slot="table-row"] { border: 0; }
+:root[data-hifi] [data-pg="bars-3"][data-pg] [data-slot="table-body"] [data-slot="table-cell"] { background: var(--background); border-bottom: 1px solid var(--hifi-hairline); }
+:root[data-hifi] [data-pg="bars-3"][data-pg] [data-slot="table-body"] [data-slot="table-row"]:hover [data-slot="table-cell"] { background: color-mix(in oklab, var(--foreground) 3%, var(--background)); }
+:root[data-hifi] [data-pg="bars-3"][data-pg] [data-slot="table-body"] [data-slot="table-row"]:last-child [data-slot="table-cell"] { border-bottom: 0; }
+:root[data-hifi] [data-pg="bars-3"][data-pg] [data-slot="table-body"] [data-slot="table-row"]:first-child [data-slot="table-cell"]:first-child { border-top-left-radius: 17px; }
+:root[data-hifi] [data-pg="bars-3"][data-pg] [data-slot="table-body"] [data-slot="table-row"]:first-child [data-slot="table-cell"]:last-child { border-top-right-radius: 17px; }
+:root[data-hifi] [data-pg="bars-3"][data-pg] [data-slot="table-body"] [data-slot="table-row"]:last-child [data-slot="table-cell"]:first-child { border-bottom-left-radius: 17px; }
+:root[data-hifi] [data-pg="bars-3"][data-pg] [data-slot="table-body"] [data-slot="table-row"]:last-child [data-slot="table-cell"]:last-child { border-bottom-right-radius: 17px; }
+:root[data-hifi] [data-pg="bars-3"][data-pg] [data-slot="tabs-list"][data-variant="line"] [data-slot="tabs-trigger"]::after { display: block; background: var(--pg-marker) center / 100% 100% no-repeat; height: 7px; bottom: -4px !important; left: 8px; right: 8px; opacity: 0; }
+:root[data-hifi] [data-pg="bars-3"][data-pg] [data-slot="tabs-list"][data-variant="line"] [data-slot="tabs-trigger"][data-state="active"]::after { opacity: 1; }
+
+/* 4 · Same height: both bars stay, but every bar is 36px with the same corners. Tabs: quiet fill. */
+:root[data-hifi] [data-pg="bars-4"][data-pg] [data-slot="table-head"]:first-child { border-radius: 12px 0 0 12px; }
+:root[data-hifi] [data-pg="bars-4"][data-pg] [data-slot="table-head"]:last-child { border-radius: 0 12px 12px 0; }
+:root[data-hifi] [data-pg="bars-4"][data-pg] [data-slot="tabs-list"][data-variant="line"] [data-slot="tabs-trigger"][data-state="active"] { background: color-mix(in oklab, var(--foreground) 7%, transparent); }
+/* Tiles line up with the content's left edge; the marker sits closer under its tab. */
+:root[data-hifi] :is([data-pg="bars-1"], [data-pg="bars-4"])[data-pg] [data-slot="tabs-list"][data-variant="line"] { margin-left: 0; }
+:root[data-hifi] [data-pg="bars-3"][data-pg] [data-slot="tabs-list"][data-variant="line"] [data-slot="tabs-trigger"]::after { translate: 0 -5px; }

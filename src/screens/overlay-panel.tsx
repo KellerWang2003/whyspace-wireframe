@@ -1,18 +1,18 @@
 import { useState, type ReactNode } from "react"
-import { Check, ChevronDown, X } from "lucide-react"
+import { Check, ChevronDown, MessageCircle, PenLine, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { MarkIcon } from "@/components/app/status-badge"
 import { PersonAvatar } from "@/components/app/person"
+import { OverlayAct as Act } from "@/components/app/overlay-kit"
+import { useHifi } from "@/lib/hifi"
 import { cn } from "@/lib/utils"
-import { caughtHere, checkRows, countsHere, firstName, markOfCaught, needsYou, otherOf, type Caught, type CaughtActions, type Layout } from "./overlay-model"
+import { caughtHere, checkRows, firstName, markOfCaught, needsYou, otherOf, type Caught, type CaughtActions, type Layout } from "./overlay-model"
 
 // The expanded pill, one hierarchy: line one says where you are (the overlay passes it as `header`);
-// Needs you shows at most three rows, clashes first, one line and one or two actions each; Caught
-// folds under it. The three layouts differ only in how a row carries its actions, so you can pick.
+// Needs you lists what waits here, clashes first, one line and one or two actions each. The three layouts differ only in how a row carries its actions, so you can pick.
 
 type Where = { project: string; part: string }
-const MAX = 3
 
 export function ExpandedPanel({ layout, all, act, where, header, check, onCheckDone, className }: {
   layout: Layout
@@ -25,10 +25,8 @@ export function ExpandedPanel({ layout, all, act, where, header, check, onCheckD
   onCheckDone?: () => void
   className?: string
 }) {
-  const [more, setMore] = useState(false)
   const [caughtOpen, setCaughtOpen] = useState(false)
   const needs = needsYou(all, where)
-  const shown = more ? needs : needs.slice(0, MAX)
   const caught = caughtHere(all, where)
 
   return (
@@ -41,19 +39,15 @@ export function ExpandedPanel({ layout, all, act, where, header, check, onCheckD
           <>
             <section aria-label="Needs you">
               {needs.length === 0 && <p className="px-2 py-3 text-xs text-muted-foreground">Nothing needs you here.</p>}
-              <ul className="flex flex-col gap-0.5">
-                {shown.map((c) => <NeedsRow key={c.id} layout={layout} c={c} act={act} />)}
+              <ul data-rows={needs.length ? "" : undefined} className="flex flex-col gap-0.5">
+                {needs.map((c) => <NeedsRow key={c.id} layout={layout} c={c} act={act} />)}
               </ul>
-              {needs.length > MAX && (
-                <button type="button" onClick={() => setMore((v) => !v)} className="mt-0.5 w-full rounded-md px-2 py-1.5 text-left text-[11px] text-muted-foreground hover:bg-foreground/5 hover:text-foreground">
-                  {more ? "Fewer" : `${needs.length - MAX} more`}
-                </button>
-              )}
             </section>
 
-            <section aria-label="Caught this session" className="mt-2">
+            {/* Saved sits on the layer itself, no card: it's a record, not something to act on. */}
+            <section aria-label="Saved this session" className="mt-2">
               <button type="button" aria-expanded={caughtOpen} onClick={() => setCaughtOpen((v) => !v)} className="flex w-full items-center gap-2 rounded-md px-2 py-2 text-xs outline-none hover:bg-foreground/5 focus-visible:ring-2 focus-visible:ring-ring">
-                <span className="flex-1 text-left font-medium">Caught</span>
+                <span className="flex-1 text-left font-medium">Saved</span>
                 <span className="tabular-nums text-muted-foreground">{caught.length}</span>
                 <ChevronDown className={cn("size-3.5 text-muted-foreground transition-transform duration-300", caughtOpen && "rotate-180")} />
               </button>
@@ -79,10 +73,10 @@ function NeedsRow({ layout, c, act }: { layout: Layout; c: Caught; act: CaughtAc
   const mark = <MarkIcon mark={markOfCaught(c)} className="size-3.5 shrink-0" />
   const take = () => act.takeTheirs(c.id)
   const chips = c.kind === "clash"
-    ? [<Act key="take" primary onClick={take}>Take {who}’s</Act>, <Act key="keep" onClick={() => setTyping("reason")}>Keep mine</Act>]
-    : [...(layout === "right" ? (c.hints ?? []).slice(0, 1) : c.hints ?? []).map((h) => <Act key={h} onClick={() => act.confirm(c.id, h)}>{h}</Act>), <Act key="why" muted onClick={() => setTyping("why")}>Why{layout === "right" ? "" : "…"}</Act>]
+    ? [<Act key="take" primary icon={Check} onClick={take}>Use {who}’s</Act>, <Act key="keep" icon={MessageCircle} onClick={() => setTyping("reason")}>Keep mine</Act>]
+    : [...(layout === "right" ? (c.hints ?? []).slice(0, 1) : c.hints ?? []).map((h) => <Act key={h} onClick={() => act.confirm(c.id, h)}>{h}</Act>), <Act key="why" muted icon={PenLine} onClick={() => setTyping("why")}>{layout === "right" ? "Why" : "Other reason"}</Act>]
   const detail = other
-    ? <><span className="text-foreground">{who}</span> confirmed “{other.title}”{other.why ? ` · ${other.why}` : ""}</>
+    ? <><span className="text-foreground">{who}</span> confirmed “{other.title}”{open && other.why ? ` · ${other.why}` : ""}</>
     : c.source
   const input = typing && (
     <form className="flex items-center gap-1" onSubmit={(e) => { e.preventDefault(); const f = new FormData(e.currentTarget); const v = String(f.get("v") ?? "").trim(); if (!v) return; if (typing === "why") act.confirm(c.id, v); else act.keepMine(c.id, v); setTyping(null) }}>
@@ -120,7 +114,7 @@ function NeedsRow({ layout, c, act }: { layout: Layout; c: Caught; act: CaughtAc
         <span className="mt-[3px]">{mark}</span>
         <div className="flex min-w-0 flex-1 flex-col gap-1">
           <button type="button" onClick={() => setOpen((v) => !v)} className="text-left text-xs leading-snug font-medium">{c.title}</button>
-          {open && <p className="text-[11px] leading-snug text-muted-foreground">{detail}</p>}
+          {(open || c.kind === "clash") && <p className="text-[11px] leading-snug text-muted-foreground">{detail}</p>}
           {input ?? <div className="flex flex-wrap gap-1">{chips}</div>}
         </div>
       </li>
@@ -140,7 +134,7 @@ function NeedsRow({ layout, c, act }: { layout: Layout; c: Caught; act: CaughtAc
   )
 }
 
-// A decision caught this session: its mark, your words, your why. Tap a why-less one to add a why.
+// A decision saved this session: its mark, your words, your why. Tap a why-less one to add a why.
 function CaughtRow({ c, act }: { c: Caught; act: CaughtActions }) {
   const [typing, setTyping] = useState(false)
   return (
@@ -165,17 +159,16 @@ function CaughtRow({ c, act }: { c: Caught; act: CaughtActions }) {
 // The check when you share: the guesses still in the work, your words as chips. Nothing blocks.
 export function CheckPanel({ ids, all, act, where, onDone }: { ids: string[]; all: Caught[]; act: CaughtActions; where: Where; onDone?: () => void }) {
   const rows = ids.map((id) => all.find((c) => c.id === id)).filter((c): c is Caught => !!c)
-  const { n, m } = countsHere(all, where)
   const fresh = checkRows(all, where).length
+  const hifi = useHifi()
   return (
     <section aria-label="Check" className="flex flex-col gap-3 p-2">
-      <p className="text-xs text-muted-foreground">{rows.length ? `${fresh} ${fresh === 1 ? "guess is" : "guesses are"} still in it. Tap your words to confirm one.` : "Nothing new since your last share."}</p>
-      <ul className="flex flex-col gap-2.5">
+      <p className="text-xs text-muted-foreground">{rows.length ? (fresh ? `${fresh} ${fresh === 1 ? "guess" : "guesses"} in what you shared` : "Everything in it is confirmed") : "Nothing new since you last shared"}</p>
+      <ul data-rows="" className="flex flex-col gap-2.5">
         {rows.map((c) => <CheckRow key={c.id} c={c} act={act} />)}
       </ul>
-      <div className="flex items-center justify-between gap-3 pt-1">
-        <span className="text-xs text-muted-foreground tabular-nums">{n} of {m} confirmed</span>
-        <Button size="sm" className="h-7 text-xs" onClick={() => { act.finishCheck(ids); onDone?.() }}>Done</Button>
+      <div className="flex items-center justify-end gap-3 pt-1">
+        <Button size="sm" className={hifi ? undefined : "h-7 text-xs"} onClick={() => { act.finishCheck(ids); onDone?.() }}>Done</Button>
       </div>
     </section>
   )
@@ -197,26 +190,10 @@ function CheckRow({ c, act }: { c: Caught; act: CaughtActions }) {
         ) : (
           <div className="flex flex-wrap gap-1">
             {(c.hints ?? []).map((h) => <Act key={h} onClick={() => act.confirm(c.id, h)}>{h}</Act>)}
-            <Act muted onClick={() => setTyping(true)}>Why…</Act>
+            <Act muted icon={PenLine} onClick={() => setTyping(true)}>Other reason</Act>
           </div>
         )}
       </div>
     </li>
-  )
-}
-
-// A small action: a chip in your words, a Take/Keep button, or a muted "Why".
-function Act({ primary, muted, onClick, children }: { primary?: boolean; muted?: boolean; onClick: () => void; children: ReactNode }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={cn(
-        "max-w-full truncate rounded-full border px-2 py-0.5 text-[11px] leading-4 transition-colors",
-        primary ? "border-foreground bg-foreground text-background hover:bg-foreground/90" : muted ? "border-dashed text-muted-foreground hover:border-foreground hover:text-foreground" : "hover:border-foreground hover:bg-muted",
-      )}
-    >
-      {children}
-    </button>
   )
 }

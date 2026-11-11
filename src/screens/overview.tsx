@@ -131,7 +131,7 @@ function OverviewHeader({ project }: { project: Project }) {
       <ProjectMark project={project.id} className="size-9 rounded-lg" />
       <h1 className="min-w-0 truncate type-title">{project.name}</h1>
       <div className="ml-auto">
-        <ProjectNewMenu project={project} align="end" trigger={<Button size="lg"><Plus />New</Button>} />
+        <ProjectNewMenu project={project} align="end" trigger={<Button><Plus />New</Button>} />
       </div>
     </header>
   )
@@ -185,7 +185,7 @@ function Threads({ project }: { project: Project }) {
 
 // A fixed-height card: the start of what you missed, faded at the bottom. See more opens the
 // whole catch up on the left with a chat on the right.
-// twoPart (Design B): the summary opens with where the project stands, then what changed since your last visit.
+// twoPart (main design): the summary opens with where the project stands, then what changed since your last visit.
 export function CatchUpCard({ project, twoPart }: { project: Project; twoPart?: boolean }) {
   const [open, setOpen] = useState(false)
   const changed = changedSince(project.id)
@@ -225,7 +225,7 @@ export function CatchUpCard({ project, twoPart }: { project: Project; twoPart?: 
             <div className="min-h-0 overflow-y-auto px-8 py-8 [&_.cu-row]:ring-1 [&_.cu-row]:ring-border [&_section>div>h2]:text-sm [&_section>div>h2]:text-foreground">
               <div className="mx-auto max-w-2xl"><CatchUpBody project={project} large twoPart={twoPart} /></div>
             </div>
-            {/* Design B: the Duet panel in the corner is the chat, so the catch up stands alone. */}
+            {/* Main design: the Duet panel in the corner is the chat, so the catch up stands alone. */}
             {DESIGN !== "b" && <CatchUpChat project={project} onLeave={() => setOpen(false)} />}
           </div>
         </DialogContent>
@@ -252,7 +252,7 @@ function CatchUpBody({ project, large, twoPart }: { project: Project; large?: bo
       </div>
       <NeedsYouBlock project={project} />
       <WhatChanged decisions={changed.decisions} artifacts={changed.artifacts} />
-      {/* Design B shows who's working on Home itself. */}
+      {/* The main design shows who's working on Home itself. */}
       {!twoPart && <WhoIsWorking project={project} />}
       {changed.decisions.length > 0 && (
         <Block title="Sources" count={changed.decisions.length}>

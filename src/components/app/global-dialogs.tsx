@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react"
 import { toast } from "sonner"
-import { Check, FileText, FolderKanban, ListChecks } from "lucide-react"
-import { Badge } from "@/components/ui/badge"
+import { Check, FileText, FolderKanban, Link2, ListChecks } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
   CommandDialog,
@@ -31,15 +30,20 @@ import { navigate } from "@/lib/router"
 import { useStore, type Plan } from "@/lib/store"
 import { cn } from "@/lib/utils"
 import { DESIGN } from "@/lib/design"
-import { SearchPanelB } from "@/design-b/search"
+import { ReplyDialog } from "@/app/reply-dialog"
+import { SearchPanel } from "@/app/search"
 import { SearchC } from "@/design-c/search"
+import { SpotArt } from "@/components/brand/spot-art"
+import { NewProjectIconButton } from "@/components/app/project-icon-picker"
+import { defaultIcon, type ProjectIcon } from "@/components/app/project-icon"
 
 // Everything the nav opens on top of the current screen lives here,
-// so Search, New project, Invite and Upgrade work from any page.
+// so Search, New project, Invite, Upgrade and (main design) replying to a teammate work from any page.
 export function GlobalDialogs() {
   return (
     <>
-      {DESIGN === "c" ? <SearchC /> : DESIGN === "b" ? <SearchPanelB /> : <SearchDialog />}
+      {DESIGN === "c" ? <SearchC /> : DESIGN === "b" ? <SearchPanel /> : <SearchDialog />}
+      {DESIGN === "b" && <ReplyDialog />}
       <NewProjectDialog />
       <InviteDialog />
       <UpgradeDialog />
@@ -110,6 +114,8 @@ function SearchDialog() {
 
 function NewProjectDialog() {
   const { newProjectOpen, setNewProjectOpen } = useStore()
+  const [name, setName] = useState("")
+  const [icon, setIcon] = useState<ProjectIcon>(() => defaultIcon(String(Date.now())))
   return (
     <Dialog open={newProjectOpen} onOpenChange={setNewProjectOpen}>
       <DialogContent className="sm:max-w-lg">
@@ -120,7 +126,10 @@ function NewProjectDialog() {
         <FieldGroup>
           <Field>
             <FieldLabel htmlFor="np-name">Project name</FieldLabel>
-            <Input id="np-name" placeholder="Whiskr" />
+            <div className="flex items-center gap-2">
+              <NewProjectIconButton name={name || "Whiskr"} value={icon} onChange={setIcon} className="size-9" />
+              <Input id="np-name" placeholder="Whiskr" value={name} onChange={(e) => setName(e.target.value)} />
+            </div>
           </Field>
           <Field>
             <FieldLabel htmlFor="np-brief">Brief</FieldLabel>
@@ -161,10 +170,13 @@ function NewProjectDialog() {
 
 function InviteDialog() {
   const { inviteOpen, setInviteOpen, current } = useStore()
+  const [copied, setCopied] = useState(false)
+  useEffect(() => { if (!inviteOpen) setCopied(false) }, [inviteOpen])
   return (
     <Dialog open={inviteOpen} onOpenChange={setInviteOpen}>
       <DialogContent className="sm:max-w-lg" aria-describedby={undefined}>
-        <DialogHeader>
+        <DialogHeader className="gap-3">
+          <SpotArt name="invite" className="-ml-1 h-28 self-start" />
           <DialogTitle>Invite people to {current?.name}</DialogTitle>
         </DialogHeader>
         <FieldGroup>
@@ -184,12 +196,16 @@ function InviteDialog() {
               </SelectContent>
             </Select>
           </Field>
-          <Field orientation="horizontal">
-            <Input readOnly value="whyspace.app/join/design-studio-8f2k" className="font-mono text-xs" />
-            <Button variant="outline" onClick={() => toast("Link copied")}>Copy link</Button>
-          </Field>
         </FieldGroup>
         <DialogFooter>
+          <Button
+            variant="ghost"
+            className="sm:mr-auto sm:-ml-3"
+            onClick={() => { setCopied(true); toast("Link copied") }}
+          >
+            {copied ? <Check /> : <Link2 />}
+            {copied ? "Copied" : "Copy link"}
+          </Button>
           <DialogClose asChild>
             <Button variant="outline">Cancel</Button>
           </DialogClose>
@@ -256,8 +272,4 @@ function UpgradeDialog() {
       </DialogContent>
     </Dialog>
   )
-}
-
-export function ProBadge() {
-  return <Badge variant="outline" className="border-current/30 text-[10px] font-normal text-current">Pro</Badge>
 }

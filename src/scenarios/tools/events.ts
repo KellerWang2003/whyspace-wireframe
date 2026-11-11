@@ -1,5 +1,5 @@
 import type { Decision } from "@/data"
-import type { Item } from "@/design-b/work"
+import type { Item } from "@/app/work"
 
 // What a tool on the scenario desktop writes to Whyspace over MCP, in the app's own types. The
 // desktop hands each event to the bridge, which puts it in the app's store.

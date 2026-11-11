@@ -11,9 +11,11 @@ import { PIGMENT, blobPath, handPath, layoutStrands, type StrandSpec } from "@/c
    4. Overlaps multiply.
    Text and product UI on top stay crisp; only the surfaces underneath are painted. */
 
-export type PaintLevel = "soft" | "painted" | "torn"
+export type PaintLevel = "soft" | "ribbon" | "painted" | "torn"
 const LEVELS: Record<PaintLevel, { rough: number; edgeFreq: number; bloom: number; rim: number; grain: number }> = {
   soft: { rough: 2, edgeFreq: 0.05, bloom: 0.7, rim: 0.16, grain: 0.05 },
+  // ribbon: the illustrations drawn in code (ribbons.tsx). Painted pigment, edges only gently uneven.
+  ribbon: { rough: 2.6, edgeFreq: 0.03, bloom: 1, rim: 0.26, grain: 0.07 },
   painted: { rough: 4.5, edgeFreq: 0.045, bloom: 1, rim: 0.25, grain: 0.07 },
   torn: { rough: 10, edgeFreq: 0.06, bloom: 1, rim: 0.28, grain: 0.08 },
 }

@@ -2,10 +2,12 @@ import { Circle, CircleCheck, CircleDashed, Square, Triangle } from "lucide-reac
 import { Badge } from "@/components/ui/badge"
 import { STATUS_LABEL, type Status } from "@/data"
 import { DESIGN } from "@/lib/design"
-import { B_LABEL, MARK_OF, type Mark } from "@/lib/marks"
+import { MARK_OF, stateLabel, type Mark } from "@/lib/marks"
+import { useMarkLook, type MarkLook } from "@/lib/mark-look"
 import { cn } from "@/lib/utils"
+import { HifiMark } from "./mark-shapes"
 
-// Design B draws the four marks from lib/marks.ts (● ◉ ○ ▲). Design A keeps its five icons.
+// The main design draws the four marks from lib/marks.ts (● ◉ ○ ▲). Archived Design A keeps its five icons.
 const ICON = {
   conf: CircleCheck,
   prec: CircleDashed,
@@ -16,7 +18,12 @@ const ICON = {
 }
 
 // One mark, drawn inside a box the size the caller gives (size-4 by default), in the current text color.
-export function MarkIcon({ mark, className }: { mark: Mark; className?: string }) {
+// While High-fi is on it is drawn in Forest and rose (mark-shapes.tsx); `look` pins one drawing, for a place
+// not redrawn yet (the pill's big mark with the count inside).
+export function MarkIcon({ mark, look, className }: { mark: Mark; look?: MarkLook; className?: string }) {
+  const tried = useMarkLook()
+  const drawn = look ?? tried
+  if (drawn === "hifi") return <HifiMark mark={mark} className={className} />
   if (mark === "triangle") {
     return (
       <svg aria-hidden viewBox="0 0 16 16" className={cn("size-4 shrink-0 fill-current", className)}>
@@ -44,7 +51,7 @@ export function StatusBadge({ status }: { status: Status }) {
     return (
       <Badge variant={MARK_OF[status] === "filled" ? "secondary" : "outline"} className="gap-1.5 font-normal">
         <MarkIcon mark={MARK_OF[status]} className="size-3" />
-        {B_LABEL[status]}
+        {stateLabel(status)}
       </Badge>
     )
   }
@@ -58,7 +65,7 @@ export function StatusBadge({ status }: { status: Status }) {
 }
 
 // What each mark means, for the bottom of screens that show them.
-const MEANING_B: [Mark, string][] = [
+const MEANING: [Mark, string][] = [
   ["filled", "Confirmed by a person"],
   ["ringed", "Follows an earlier confirmed decision"],
   ["empty", "A guess, nobody confirmed it yet"],
@@ -75,7 +82,7 @@ export function StatusLegend({ className }: { className?: string }) {
   return (
     <div className={className ?? "flex flex-wrap items-center gap-x-5 gap-y-1 text-xs text-muted-foreground"} aria-label="Decision states">
       {DESIGN === "b"
-        ? MEANING_B.map(([m, text]) => <span key={m} className="flex items-center gap-1.5"><MarkIcon mark={m} className="size-3.5 shrink-0" />{text}</span>)
+        ? MEANING.map(([m, text]) => <span key={m} className="flex items-center gap-1.5"><MarkIcon mark={m} className="size-3.5 shrink-0" />{text}</span>)
         : MEANING_A.map(([s, text]) => <span key={s} className="flex items-center gap-1.5"><StatusIcon status={s} className="size-3.5 shrink-0" />{text}</span>)}
     </div>
   )

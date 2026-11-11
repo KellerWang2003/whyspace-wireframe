@@ -11,7 +11,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { ProjectMark } from "@/components/app/project-mark"
-import { MarkIcon } from "@/components/app/status-badge"
+import { OverlayCount, OverlayLogo, OverlayWhere } from "@/components/app/overlay-kit"
 import { PROJECTS } from "@/data"
 import { cn } from "@/lib/utils"
 import { MockDesktop } from "@/screens/mock-desktop"
@@ -203,23 +203,19 @@ export function OverlayPill({ all, act, where, onWhere, expanded, onExpanded, ch
     setDock(snap(r))
   }
 
-  const whereLabel = (
-    <>
-      <ProjectMark project={where.project} className="size-4" />
-      <span className="truncate font-medium">{projectName}</span>
-      <span className="text-muted-foreground">/</span><span className="truncate text-muted-foreground">{where.part}</span>
-    </>
-  )
+  const whereLabel = <OverlayWhere project={where.project} name={projectName} part={where.part} />
 
   return (
     <section
       ref={boxRef}
       aria-label="Whyspace desktop overlay"
+      data-overlay={expanded ? "open" : "pill"}
+      data-edge={horizontal ? "h" : "v"}
       onKeyDown={(e) => { if (e.key === "Escape") { close(); pillRef.current?.focus() } }}
       className={cn(
         "group/box fixed z-30 flex max-h-[calc(100svh-1.5rem)] max-w-[calc(100vw-1.5rem)] flex-col overflow-hidden border border-white/60 bg-background/85 shadow-xl ring-1 ring-black/5 backdrop-blur-xl",
         "transition-[border-radius,box-shadow,background-color] duration-300",
-        expanded ? "h-[560px] w-[320px] rounded-2xl" : cn(horizontal ? "h-12" : "w-12", "rounded-[24px] hover:bg-background hover:shadow-2xl hover:ring-black/15"),
+        expanded ? "max-h-[560px] w-[320px] rounded-2xl" : cn(horizontal ? "h-12" : "w-12", "rounded-[24px] hover:bg-background hover:shadow-2xl hover:ring-black/15"),
         dragAt && "cursor-grabbing shadow-2xl",
       )}
       style={dragAt ? { left: dragAt.x, top: dragAt.y } : dockStyle(dock)}
@@ -239,14 +235,7 @@ export function OverlayPill({ all, act, where, onWhere, expanded, onExpanded, ch
       >
         <ProjectMark project={where.project} className="size-7 rounded-md" />
         {/* Only the most urgent mark shows, with everything waiting inside. Nothing waiting: the confirmed count. */}
-        {top ? (
-          <span role="status" className="relative grid size-8 place-items-center">
-            <MarkIcon mark={top} className={cn("absolute inset-0 size-8", top === "empty" && "[&>span]:size-full [&>span]:border-[1.25px]", top === "triangle" && "text-foreground/15")} />
-            {top === "triangle" && <svg aria-hidden viewBox="0 0 16 16" className="absolute inset-0 size-8 fill-none stroke-foreground" strokeWidth={0.9}><path d="M8 3 L13.2 12.8 H2.8 Z" strokeLinejoin="round" /></svg>}
-            <span className={cn("relative text-[11px] font-semibold leading-none tabular-nums", top === "triangle" && "translate-y-[3px]")}>{needs.length}</span>
-            <span className="sr-only"> waiting, most urgent: {top === "triangle" ? "a clash" : "a guess"}</span>
-          </span>
-        ) : confirmed.length > 0 && (
+        {top ? <OverlayCount top={top} n={needs.length} /> : confirmed.length > 0 && (
           <span role="status" className="text-xs font-medium tabular-nums text-muted-foreground">
             {confirmed.length}<span className="sr-only"> confirmed</span>
           </span>
@@ -268,12 +257,8 @@ export function OverlayPill({ all, act, where, onWhere, expanded, onExpanded, ch
           check={check}
           onCheckDone={() => { onCheck(null); onExpanded(false) }}
           header={
-            <header className="flex h-12 shrink-0 items-center gap-2 border-b pr-2 pl-4">
-              {onOpenApp ? (
-                <button type="button" onClick={onOpenApp} title="Open Whyspace" aria-label="Open Whyspace" className="shrink-0 rounded-sm px-0.5 text-sm font-semibold tracking-tight outline-none hover:bg-foreground/5 focus-visible:ring-2 focus-visible:ring-ring">Y</button>
-              ) : (
-                <span className="shrink-0 text-sm font-semibold tracking-tight" aria-label="Whyspace">Y</span>
-              )}
+            <header data-overlay-head className="flex h-12 shrink-0 items-center gap-2 border-b pr-2 pl-4">
+              <OverlayLogo onClick={onOpenApp} />
               {onWhere ? (
                 <DropdownMenu modal={false} open={menuOpen} onOpenChange={setMenuOpen}>
                   <DropdownMenuTrigger className="flex min-w-0 flex-1 items-center gap-1.5 rounded-sm py-1 text-left text-xs outline-none focus-visible:ring-2 focus-visible:ring-ring" aria-label={`Save to ${projectName}, ${where.part}`}>

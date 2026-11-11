@@ -1,0 +1,11 @@
+--- src/app/rail-sidebar.tsx
++++ src/app/rail-sidebar.tsx
+@@ -8,7 +8,7 @@
+ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+ import { Sidebar, SidebarContent } from "@/components/ui/sidebar"
+ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
+-import { ME, MY_PROJECTS, SETTINGS_TABS } from "@/data"
++import { ME, MY_PROJECTS } from "@/data"
+ import { PersonAvatar } from "@/components/app/person"
+ import { navigate, useRoute } from "@/lib/router"
+ import { useStore } from "@/lib/store"

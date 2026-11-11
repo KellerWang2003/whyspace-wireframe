@@ -1,0 +1,99 @@
+/* Painted playground (screens/paint-playground.tsx): Keller's picks with the brand's visual elements on top.
+   Option 1 is the pick as the app draws it (index.css). The painted surfaces are CSS variables set on the page from
+   system-art.ts. Each rule carries [data-px] twice so it outranks the app's own high-fi rules. */
+
+/* Option 1 shows a focused field without focus. */
+:root[data-hifi] [data-px="inputs-1"][data-px] [data-show-focus] { box-shadow: 0 0 0 1px var(--ring), 0 0 0 4px var(--hifi-halo); }
+
+/* ================= Inputs ================= */
+
+/* 2 · Hand-drawn edge: a pencil line instead of a ruled ring; focus redraws it in leaf. */
+:root[data-hifi] [data-px="inputs-2"][data-px] :is([data-slot="input"], [data-slot="select-trigger"]) {
+  box-shadow: none;
+  border-radius: 0;
+  background: var(--x-outline) center / 100% 100% no-repeat;
+}
+:root[data-hifi] [data-px="inputs-2"][data-px] [data-slot="textarea"] { box-shadow: none; border-radius: 0; background: var(--x-outline-area) center / 100% 100% no-repeat; }
+:root[data-hifi] [data-px="inputs-2"][data-px] :is([data-slot="input"], [data-slot="select-trigger"]):is(:focus-visible, [data-show-focus]) { box-shadow: none; background-image: var(--x-outline-focus); }
+:root[data-hifi] [data-px="inputs-2"][data-px] [data-slot="textarea"]:is(:focus-visible, [data-show-focus]) { box-shadow: none; background-image: var(--x-outline-area-focus); }
+:root[data-hifi] [data-px="inputs-2"][data-px] :is(label [data-slot="input"], [data-slot="select-trigger"]) { background-image: var(--x-outline-sm); }
+
+/* 3 · Wash on focus: at rest the pick; the field you are typing in fills with a leaf watercolor wash. */
+:root[data-hifi] [data-px="inputs-3"][data-px] :is([data-slot="input"], [data-slot="select-trigger"]):is(:focus-visible, [data-show-focus]) {
+  box-shadow: 0 0 0 1px color-mix(in oklab, var(--ring) 55%, transparent);
+  background: var(--x-wash) center / 100% 100% no-repeat;
+}
+:root[data-hifi] [data-px="inputs-3"][data-px] [data-slot="textarea"]:is(:focus-visible, [data-show-focus]) {
+  box-shadow: 0 0 0 1px color-mix(in oklab, var(--ring) 55%, transparent);
+  background: var(--x-wash-area) center / 100% 100% no-repeat;
+}
+
+/* ================= Choices ================= */
+
+/* 2 · Hand-drawn: pencil boxes, a marker tick that runs past its box, a painted dot and a painted track. */
+:root[data-hifi] [data-px="choices-2"][data-px] [data-slot="checkbox"] { background: var(--x-box) center / 100% 100% no-repeat; border-radius: 0; overflow: visible; }
+:root[data-hifi] [data-px="choices-2"][data-px] [data-slot="checkbox"][data-state="checked"] { background: var(--x-tick) 3px -4px / 22px 22px no-repeat, var(--x-box) center / 100% 100% no-repeat; }
+:root[data-hifi] [data-px="choices-2"][data-px] [data-slot="checkbox"] svg { display: none; }
+:root[data-hifi] [data-px="choices-2"][data-px] [data-slot="radio-group-item"] { background: var(--x-ring) center / 100% 100% no-repeat; border-radius: 50%; }
+:root[data-hifi] [data-px="choices-2"][data-px] [data-slot="radio-group-item"][data-state="checked"] { background: var(--x-dot) center / 120% 120% no-repeat; }
+:root[data-hifi] [data-px="choices-2"][data-px] [data-slot="switch"][data-state="checked"] { background: var(--x-track) center / 100% 100% no-repeat; }
+
+/* 3 · Sticky notes: a checked box and the chosen segment are painted notes, set down a little crooked. */
+:root[data-hifi] [data-px="choices-3"][data-px] [data-slot="checkbox"][data-state="checked"] { background: var(--x-note-forest) center / 110% 110% no-repeat; transform: rotate(-5deg); }
+:root[data-hifi] [data-px="choices-3"][data-px] [data-slot="radio-group-item"][data-state="checked"] { background: var(--x-dot) center / 120% 120% no-repeat; }
+:root[data-hifi] [data-px="choices-3"][data-px] [data-slot="switch"][data-state="checked"] { background: var(--x-track) center / 100% 100% no-repeat; }
+:root[data-hifi] [data-px="choices-3"][data-px] [data-slot="toggle-group-item"][data-state="on"] { background: var(--x-note) center / 100% 100% no-repeat; transform: rotate(-2deg); }
+
+/* ================= Tabs ================= */
+
+/* 2 · Painted strip: the gray layer behind the tabs is painted, not flat; the open tab is still paper. */
+:root[data-hifi] [data-px="tabs-2"][data-px] [data-slot="tabs-list"][data-variant="line"] { background: var(--x-strip) center top / 100% 130% no-repeat; }
+:root[data-hifi] [data-px="tabs-2"][data-px] :is([data-slot="tabs-list"][data-variant="default"], [role="tablist"][aria-label="Views"]) { background: var(--x-segment-strip) center / 100% 100% no-repeat; }
+
+/* 3 · Thread pigment: the open tab carries its thread's pigment as a marker stroke along its top. */
+:root[data-hifi] [data-px="tabs-3"][data-px] [data-slot="tabs-list"][data-variant="line"] [data-slot="tabs-trigger"][data-state="active"] { background: var(--x-pigment-marker) center 2px / calc(100% - 20px) 6px no-repeat, var(--background); }
+:root[data-hifi] [data-px="tabs-3"][data-px] [data-slot="tabs-list"][data-variant="default"] [data-slot="tabs-trigger"][data-state="active"] { background: var(--x-pigment-marker) center calc(100% - 1px) / calc(100% - 20px) 5px no-repeat, var(--background); }
+
+/* ================= Menus and dialogs ================= */
+
+/* 2 · Hand-cut paper: menus and the dialog are scraps of paper with a pencil edge. */
+:root[data-hifi] [data-slot="dropdown-menu-content"][data-pg="x-menus-2"][data-pg] { box-shadow: none; border-radius: 0; background: var(--x-paper) center / 100% 100% no-repeat; }
+:root[data-hifi] [data-slot="popover-content"][data-pg="x-menus-2"][data-pg] { box-shadow: none; border-radius: 0; background: var(--x-paper-wide) center / 100% 100% no-repeat; }
+:root[data-hifi] [data-slot="dialog-content"][data-pg="x-menus-2"][data-pg] { border-radius: 0; background: var(--x-paper-dialog) center / 100% 100% no-repeat; }
+
+/* 3 · Painted hover: the item under the cursor sits on a painted gray pebble, and a bit of paint is tucked in the
+   corner of the popover and the dialog. */
+:root[data-hifi] [data-pg="x-menus-3"] [data-slot="dropdown-menu-item"]:is(:focus, :hover, [data-highlighted]) { background: var(--x-hover) center / 100% 100% no-repeat; }
+:root[data-hifi] [data-pg="x-menus-3"] [data-slot="dropdown-menu-item"]:first-of-type { background: var(--x-hover) center / 100% 100% no-repeat; }
+:root[data-hifi] :is([data-slot="popover-content"], [data-slot="dialog-content"])[data-pg="x-menus-3"] { overflow: hidden; }
+:root[data-hifi] [data-slot="popover-content"][data-pg="x-menus-3"] { position: relative; }
+:root[data-hifi] [data-pg="x-menus-3"] > :not([data-x-corner]) { position: relative; }
+
+/* ================= Rows ================= */
+
+/* 2 · Pigment edge: each row gets a short painted stroke at its edge, in the pigment of what it is
+   (rose for a clash, sky for a question, leaf for a decision), like the edge of a sticky note. */
+:root[data-hifi] [data-px="rows-2"][data-px] [data-pg-rows] > li { position: relative; }
+:root[data-hifi] [data-px="rows-2"][data-px] [data-pg-rows] > li::before { content: ""; position: absolute; left: 5px; top: 12px; bottom: 12px; width: 5px; background: var(--x-edge-rose) center / 100% 100% no-repeat; }
+:root[data-hifi] [data-px="rows-2"][data-px] [data-pg-rows] > li:nth-child(2)::before { background-image: var(--x-edge-sky); }
+:root[data-hifi] [data-px="rows-2"][data-px] [data-pg-rows] > li:nth-child(3)::before { background-image: var(--x-edge-leaf); }
+
+/* 3 · Thread through: a Forest thread runs down through the faces, stringing the rows together. */
+:root[data-hifi] [data-px="rows-3"][data-px] [data-pg-rows] { position: relative; }
+:root[data-hifi] [data-px="rows-3"][data-px] [data-pg-rows]::before { content: ""; position: absolute; left: 30px; top: 28px; bottom: 28px; width: 10px; opacity: 0.8; background: var(--x-thread) center / 100% 100% no-repeat; z-index: 1; pointer-events: none; }
+:root[data-hifi] [data-px="rows-3"][data-px] [data-pg-rows] > li > :first-child { position: relative; z-index: 2; border-radius: 9999px; box-shadow: 0 0 0 3px var(--background); background: var(--background); }
+
+/* The Rows demo here is the tray: the playground's list opts in to the app's rows. */
+:root[data-hifi] [data-px^="rows-"] [data-pg-rows] { background: var(--hifi-layer); border-radius: 22px; padding: 5px; gap: 3px; }
+:root[data-hifi] [data-px^="rows-"] [data-pg-rows] > li { background: var(--background); border-radius: 7px; padding: 1rem 1.125rem 1rem 1.25rem; gap: 1rem; }
+:root[data-hifi] [data-px^="rows-"] [data-pg-rows] > li:first-child { border-top-left-radius: 18px; border-top-right-radius: 18px; }
+:root[data-hifi] [data-px^="rows-"] [data-pg-rows] > li:last-child { border-bottom-left-radius: 18px; border-bottom-right-radius: 18px; }
+
+/* ================= Table ================= */
+
+/* 2 · Painted header: the header row is a painted gray band with hand-cut ends. */
+:root[data-hifi] [data-px="table-2"][data-px] [data-slot="table-header"] tr { background: var(--x-head) center / 100% 100% no-repeat !important; }
+
+/* 3 · Painted rows: the row under the cursor sits on a painted wash; the first row shows it. */
+:root[data-hifi] [data-px="table-3"][data-px] [data-slot="table-body"] [data-slot="table-row"] { border-color: transparent; }
+:root[data-hifi] [data-px="table-3"][data-px] [data-slot="table-body"] [data-slot="table-row"]:is(:hover, :first-child) { background: var(--x-row) center / 100% 100% no-repeat; }
