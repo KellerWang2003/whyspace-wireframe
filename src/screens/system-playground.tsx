@@ -37,6 +37,7 @@ import { useSavedViews, type SavedView } from "@/lib/saved-views"
 import { useStore } from "@/lib/store"
 import { useConfirmed, useStatusOf, useTasks, useWithdrawn } from "@/lib/work"
 import { cn } from "@/lib/utils"
+import { AuthOption, type AuthStep } from "@/screens/auth-options"
 import "./system-playground.css"
 
 // Playground (#/playground/system/<part>): high-fi options for every part of the design system that is still
@@ -48,7 +49,7 @@ const WHISKR = PROJECTS.find((p) => p.id === "whiskr")!
 const first = (id: string) => PEOPLE[id]?.name.split(" ")[0] ?? id
 
 type Demo = (p: { pg: string; n: number }) => ReactNode
-type Part = { id: string; label: string; options: string[]; wide?: boolean; Demo: Demo }
+type Part = { id: string; label: string; options: string[]; wide?: boolean; full?: boolean; Demo: Demo }
 
 const PARTS: Part[] = [
   { id: "inputs", label: "Inputs", options: ["Filled", "Paper ring", "Underline"], Demo: InputsDemo },
@@ -60,6 +61,7 @@ const PARTS: Part[] = [
   { id: "rows", label: "Rows", options: ["Tiles", "Tray", "Ruled"], wide: true, Demo: RowsDemo },
   { id: "card", label: "Decision card", options: ["Tile", "Pigment", "Ledger"], wide: true, Demo: CardDemo },
   { id: "table", label: "Table", options: ["Layer header", "Tiles", "Ruled"], wide: true, Demo: TableDemo },
+  { id: "login", label: "Sign in", options: ["Bunting on a wash", "Circle on the tray", "Form on the tray"], full: true, Demo: LoginDemo },
 ]
 
 export function SystemPlayground({ part = "inputs" }: { part?: string }) {
@@ -78,7 +80,7 @@ export function SystemPlayground({ part = "inputs" }: { part?: string }) {
         </nav>
         <button type="button" onClick={() => navigate("/design-system")} className="ml-auto text-sm text-muted-foreground hover:text-foreground">Design system</button>
       </header>
-      <main className={cn("grid gap-x-12 gap-y-16 px-10 py-10", p.wide ? "max-w-5xl grid-cols-1" : p.options.length === 4 ? "max-w-6xl lg:grid-cols-2" : "lg:grid-cols-3")}>
+      <main className={cn("grid gap-x-12 gap-y-16 px-10 py-10", p.full ? "max-w-[1240px] grid-cols-1" : p.wide ? "max-w-5xl grid-cols-1" : p.options.length === 4 ? "max-w-6xl lg:grid-cols-2" : "lg:grid-cols-3")}>
         {p.options.map((name, i) => (
           <section key={`${p.id}-${i}`} data-pg={`${p.id}-${i + 1}`} aria-labelledby={`pg-${p.id}-${i + 1}`} className="flex min-w-0 flex-col gap-6">
             <h2 id={`pg-${p.id}-${i + 1}`} className="type-heading flex items-baseline gap-2.5">
@@ -88,6 +90,27 @@ export function SystemPlayground({ part = "inputs" }: { part?: string }) {
           </section>
         ))}
       </main>
+    </div>
+  )
+}
+
+/* ---------- Sign in (src/screens/auth-options.tsx) ---------- */
+
+const AUTH_STEPS: [AuthStep, string][] = [["signin", "Sign in"], ["signup", "Create account"], ["workspace", "Workspace"]]
+
+function LoginDemo({ n }: { n: number }) {
+  const [step, setStep] = useState<AuthStep>("signin")
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="flex items-center gap-4">
+        <ToggleGroup type="single" size="sm" value={step} onValueChange={(v) => v && setStep(v as AuthStep)} aria-label="Step">
+          {AUTH_STEPS.map(([id, label]) => <ToggleGroupItem key={id} value={id} className="px-3">{label}</ToggleGroupItem>)}
+        </ToggleGroup>
+        <button type="button" onClick={() => navigate(`/playground/login/${n}`)} className="ml-auto text-sm text-muted-foreground hover:text-foreground">Full page</button>
+      </div>
+      <div className="h-[680px] overflow-hidden rounded-[20px] shadow-[0_0_0_1px_var(--hifi-hairline,oklch(0_0_0/0.08)),0_12px_40px_-16px_oklch(0_0_0/0.18)]">
+        <AuthOption n={n} step={step} onStep={setStep} />
+      </div>
     </div>
   )
 }

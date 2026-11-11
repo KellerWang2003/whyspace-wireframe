@@ -10,63 +10,52 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Field, FieldDescription, FieldGroup, FieldLabel, FieldSeparator } from "@/components/ui/field"
+import { Field, FieldGroup, FieldLabel, FieldSeparator } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { Item, ItemActions, ItemContent, ItemDescription, ItemMedia, ItemTitle } from "@/components/ui/item"
-import { AuthLayout } from "@/screens/auth"
+import { AuthSplit, WorkspaceArt } from "@/screens/auth"
 import { navigate } from "@/lib/router"
 import { useStore } from "@/lib/store"
 import { Illo } from "@/components/brand/illo/pieces"
 
-// Onboarding step after sign up: create your workspace (starts on Free) before
-// you see the app, or accept a pending invite instead.
+// Onboarding step after sign up: name your workspace (starts on Free) before you see the app, or accept a
+// pending invite instead. Same layout as signing in, with the tied cards in the panel.
 export function CreateWorkspaceStep() {
   const { createWorkspace, joinWorkspace } = useStore()
   const [name, setName] = useState("")
-  const slug = name.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "your-team"
-
   return (
-    <AuthLayout>
-      <Card>
-        <CardHeader className="text-center">
-          <Illo name="create-workspace" className="mx-auto mb-3 h-28" />
-          <CardTitle className="type-display">Create your workspace</CardTitle>
-          <CardDescription>Starts on the free plan.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form
-            onSubmit={(e) => {
-              e.preventDefault()
-              createWorkspace(name.trim() || "My workspace")
-              navigate("/projects")
-            }}
-          >
-            <FieldGroup>
-              <Field>
-                <FieldLabel htmlFor="ob-name">Workspace name</FieldLabel>
-                <Input id="ob-name" autoFocus value={name} onChange={(e) => setName(e.target.value)} placeholder="Your team or company" />
-                <FieldDescription>whyspace.app/{slug}</FieldDescription>
-              </Field>
-              <Field>
-                <Button type="submit">Create workspace</Button>
-              </Field>
-              <FieldSeparator className="*:data-[slot=field-separator-content]:bg-card">Or join your team</FieldSeparator>
-              <Item variant="outline" size="sm">
-                <ItemMedia variant="icon"><JoinIcon /></ItemMedia>
-                <ItemContent>
-                  <ItemTitle>Keller’s workspace</ItemTitle>
-                  <ItemDescription>Invited by Christine</ItemDescription>
-                </ItemContent>
-                <ItemActions>
-                  <Button type="button" size="sm" variant="outline" onClick={() => { joinWorkspace(); navigate("/inbox") }}>Join</Button>
-                </ItemActions>
-              </Item>
-            </FieldGroup>
-          </form>
-        </CardContent>
-      </Card>
-    </AuthLayout>
+    <div className="h-svh">
+      <AuthSplit art={<WorkspaceArt />}>
+        <form
+          className="flex w-full max-w-[340px] flex-col gap-8"
+          onSubmit={(e) => {
+            e.preventDefault()
+            createWorkspace(name.trim() || "My workspace")
+            navigate("/projects")
+          }}
+        >
+          <h1 className="type-display">Your workspace</h1>
+          <FieldGroup className="gap-5">
+            <Field>
+              <FieldLabel htmlFor="ob-name">Workspace name</FieldLabel>
+              <Input id="ob-name" autoFocus autoComplete="organization" className="h-10" value={name} onChange={(e) => setName(e.target.value)} />
+            </Field>
+            <Button type="submit" className="h-10">Create workspace</Button>
+            <FieldSeparator className="my-0 *:data-[slot=field-separator-content]:bg-transparent">or join your team</FieldSeparator>
+            <Item variant="outline" size="sm">
+              <ItemMedia variant="icon"><JoinIcon /></ItemMedia>
+              <ItemContent>
+                <ItemTitle>Keller’s workspace</ItemTitle>
+                <ItemDescription>Invited by Christine</ItemDescription>
+              </ItemContent>
+              <ItemActions>
+                <Button type="button" size="sm" variant="outline" onClick={() => { joinWorkspace(); navigate("/inbox") }}>Join</Button>
+              </ItemActions>
+            </Item>
+          </FieldGroup>
+        </form>
+      </AuthSplit>
+    </div>
   )
 }
 

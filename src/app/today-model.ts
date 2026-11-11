@@ -81,8 +81,18 @@ export function useTodayRows(): Row[] {
   const shown = rows.filter((r) => (r.kind === "decide" ? onToday(r.decision.id, "decision") : r.kind === "do" ? onToday(r.task.id, "task") : onToday(r.kind === "asked" ? r.line.id : r.item.id, "other")))
   // Clashes, then whoever is waiting on you, then work due today, decisions, invitations, and the rest of the work.
   const order = (r: Row) => (r.kind === "decide" && markOf(statusOf(r.decision)) === "triangle" ? 0 : r.kind === "asked" || (r.kind === "decide" && r.waiting?.length) ? 1 : r.kind === "do" && dueDay(r.task) <= TODAY ? 2 : r.kind === "decide" ? 3 : r.kind === "invite" ? 4 : 5)
-  return shown.sort((a, b) => order(a) - order(b) || (a.kind === "do" && b.kind === "do" ? dueDay(a.task) - dueDay(b.task) : 0))
+  const sorted = shown.sort((a, b) => order(a) - order(b) || (a.kind === "do" && b.kind === "do" ? dueDay(a.task) - dueDay(b.task) : 0))
+  // The stack holds a few, not the whole backlog: the first ones when Today first opens, plus anything
+  // that arrives later (work made from a changed decision). Answering one doesn't pull the next from the backlog.
+  let held = HELD.get(current.id)
+  if (!held) HELD.set(current.id, (held = { all: new Set(sorted.map((r) => r.id)), top: new Set(sorted.slice(0, NEEDS_CAP).map((r) => r.id)) }))
+  const h = held
+  return sorted.filter((r) => h.top.has(r.id) || !h.all.has(r.id))
 }
+
+// How many cards the Needs you stack holds.
+export const NEEDS_CAP = 4
+const HELD = new Map<string, { all: Set<string>; top: Set<string> }>()
 
 export type Recap = { project: Project; summary: string; items: InboxItem[]; unread: number }
 
