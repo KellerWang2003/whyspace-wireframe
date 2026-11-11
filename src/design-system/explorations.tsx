@@ -146,7 +146,8 @@ const EXPLORATIONS: Exploration[] = [
     when: "Nov 11",
     tried: "How much of the cards waiting behind should show, and how the next card arrives. The painted pieces stay; they only peek out on the right and below.",
     options: ["Peek below", "One piece", "Small tilt"],
-    outcome: "Still open: the picker is at the top of the Needs you section.",
+    picked: "Peek below",
+    outcome: "Two pieces peek out below and on the right, and the next card rises from behind.",
     shots: [
       { src: img("stack-peek"), caption: "Peek below" },
       { src: img("stack-one"), caption: "One piece" },

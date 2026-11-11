@@ -12,7 +12,6 @@ import { cn } from "@/lib/utils"
 import type { Answer, AnswerIcon, NeedsItem, NeedsQueue, Source } from "./needs-model"
 import { ThreadChip } from "./hifi-kit"
 import { pigmentOf, threadOfRow } from "./hifi-model"
-import { useStackLook } from "./needs-stack"
 import { Illo } from "@/components/brand/illo/pieces"
 
 // Needs you, one at a time: the faces of what's left with the current one ringed, the item's sentence,
@@ -98,7 +97,8 @@ export function NeedsFocus({ queue, onOpen, compact }: { queue: NeedsQueue; onOp
   const [typing, setTyping] = useState<{ id: string; answer: number } | null>(null)
   const [text, setText] = useState("")
   const hifiLook = useHifi()
-  const look = useStackLook()
+  // Picked Nov 11: two painted pieces peek out below and on the right, and the next card rises from behind.
+  const look = { behind: "two", motion: "rise" } as const
   const [leaving, setLeaving] = useState<string | null>(null)
   const [cardH, setCardH] = useState(0)
   const pieceH = useSettled(cardH, 340) || cardH
@@ -120,7 +120,7 @@ export function NeedsFocus({ queue, onOpen, compact }: { queue: NeedsQueue; onOp
   // High-fi: the queue is a stack of cards, the next ones painted pieces tucked behind, each in its thread's pigment.
   const hifi = hifiLook && !compact
   const thread = threadOfRow(it.row)
-  const behind = list.slice(1, look.behind === "one" ? 2 : 3)
+  const behind = list.slice(1, 3)
   // Finishing or skipping a card: it lifts away first, then the next one comes up from behind.
   const finish = (done: () => void) => {
     const ms = hifi ? LEAVE_MS[look.motion] : 0
@@ -139,7 +139,7 @@ export function NeedsFocus({ queue, onOpen, compact }: { queue: NeedsQueue; onOp
             style={{ height: pieceH - shorter }} className={cn("absolute! will-change-transform", i === 0 ? "z-[-1]" : "z-[-2]", place)} />
         )
       })}
-      <article ref={hifi ? measure : undefined} key={hifi ? it.id : undefined} aria-label={it.title} className={cn("bg-card", hifi ? cn("rounded-[24px] px-8 pt-6 pb-8 shadow-[0_0_0_1px_oklch(0_0_0/0.05)]", look.motion !== "none" && (leaving === it.id ? `hifi-${look.motion}-out` : `hifi-${look.motion}`)) : "rounded-xl border", !hifi && (compact ? "p-4" : "px-6 pt-5 pb-6"))}>
+      <article ref={hifi ? measure : undefined} key={hifi ? it.id : undefined} aria-label={it.title} className={cn("bg-card", hifi ? cn("rounded-[24px] px-8 pt-6 pb-8 shadow-[0_0_0_1px_oklch(0_0_0/0.05)]", (leaving === it.id ? `hifi-${look.motion}-out` : `hifi-${look.motion}`)) : "rounded-xl border", !hifi && (compact ? "p-4" : "px-6 pt-5 pb-6"))}>
         {/* The project and thread on the left, who raised it on the right; Skip sits at the bottom right, beside the suggestions. */}
         <div className={cn("flex items-center gap-x-3 gap-y-1", compact ? "mb-2" : "flex-wrap", hifi ? "mb-3 min-h-8 text-sm" : "mb-2 min-h-7 text-xs", "text-muted-foreground")}>
           {!compact && <Where project={it.row.project} part={thread?.part} />}

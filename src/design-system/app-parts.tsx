@@ -9,8 +9,6 @@ import { useNeedsItems, useNeedsQueue } from "@/app/needs-model"
 import { RailSidebar } from "@/app/rail-sidebar"
 import { Bubble, DuetNote } from "@/app/reply-dialog"
 import { useTodayRows } from "@/app/today-model"
-import { setStackLook, useStackLook, type StackBehind, type StackMotion } from "@/app/needs-stack"
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { Group, Specimen } from "./kit"
 
 // The app's own pieces that aren't shadcn components: Needs you, the rail, and messages.
@@ -22,9 +20,6 @@ export function NeedsSection() {
   const queue = useNeedsQueue(useNeedsItems(useTodayRows()))
   return (
     <>
-      <Group title="Stack options" note="Temporary: pick how much shows behind and how the next card arrives. Today follows this too.">
-        <StackPicker />
-      </Group>
       <Group title="On Today" note="One at a time, with its source and the answers as Suggested chips; the next ones wait behind">
         <div className="max-w-3xl"><NeedsFocus queue={queue} onOpen={() => {}} /></div>
       </Group>
@@ -32,29 +27,6 @@ export function NeedsSection() {
         <div className="max-w-sm"><NeedsFocus queue={queue} onOpen={() => {}} compact /></div>
       </Group>
     </>
-  )
-}
-
-const BEHIND: { v: StackBehind; label: string }[] = [{ v: "two", label: "Peek below" }, { v: "one", label: "One piece" }, { v: "tilt", label: "Small tilt" }]
-const MOTION: { v: StackMotion; label: string }[] = [{ v: "rise", label: "Rise" }, { v: "fade", label: "Fade" }, { v: "none", label: "None" }]
-
-function StackPicker() {
-  const look = useStackLook()
-  return (
-    <div className="flex flex-wrap items-center gap-x-8 gap-y-3 text-sm">
-      <div className="flex items-center gap-3">
-        <span className="text-muted-foreground">Behind</span>
-        <ToggleGroup type="single" variant="outline" size="sm" value={look.behind} onValueChange={(v) => v && setStackLook({ behind: v as StackBehind })} aria-label="Cards behind">
-          {BEHIND.map((o) => <ToggleGroupItem key={o.v} value={o.v} className="px-3">{o.label}</ToggleGroupItem>)}
-        </ToggleGroup>
-      </div>
-      <div className="flex items-center gap-3">
-        <span className="text-muted-foreground">Motion</span>
-        <ToggleGroup type="single" variant="outline" size="sm" value={look.motion} onValueChange={(v) => v && setStackLook({ motion: v as StackMotion })} aria-label="Motion">
-          {MOTION.map((o) => <ToggleGroupItem key={o.v} value={o.v} className="px-3">{o.label}</ToggleGroupItem>)}
-        </ToggleGroup>
-      </div>
-    </div>
   )
 }
 
