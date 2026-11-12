@@ -13,6 +13,7 @@ import { useStatusOf, useWithdrawn } from "@/lib/work"
 import { KIND_ICON } from "@/playground/artifact"
 import { ThreadIcon, ThreadTag } from "./thread-ui"
 import { threadsNow } from "./threads"
+import { Illo } from "@/components/brand/illo/pieces"
 import { useAllTasks, useArtifactsOf } from "./work"
 
 // ⌘K search: one big panel over every project. Tags under the field narrow it to one kind
@@ -179,7 +180,7 @@ export function SearchPanel() {
               )}
             </div>
             <CommandList key={`${tag}-${states.join()}`} className="h-[min(60vh,560px)] max-h-none p-2">
-              <CommandEmpty className="type-body py-16 text-center text-muted-foreground">Nothing matches</CommandEmpty>
+              <CommandEmpty className="type-body flex flex-col items-center gap-3 py-16 text-center text-muted-foreground"><Illo name="no-projects" className="h-14" />Nothing matches</CommandEmpty>
               {ORDER.map((k) => {
                 const rows = shown.filter((h) => h.kind === k)
                 if (!rows.length) return null

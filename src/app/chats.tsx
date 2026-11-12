@@ -154,6 +154,7 @@ const column = EXP.width === "center" ? "mx-auto w-full max-w-3xl px-3 sm:px-5" 
 function ChatView({ chat, item }: { chat: Chat; item?: string }) {
   const s = useChatsState()
   const duet = useDuetState()
+  const hifi = useHifi()
   const confirmedMsgs = useConfirmed(chat, msgsOf(chat, s))
   const msgs = [...msgsOf(chat, s), ...confirmedMsgs]
   const { shown, replyOf } = foldReplies(msgs)
@@ -181,7 +182,9 @@ function ChatView({ chat, item }: { chat: Chat; item?: string }) {
         <ChatHeader chat={chat} open={!!side} onToggle={() => open(side ? undefined : "decisions")} />
         <div ref={scrollRef} className="min-h-0 flex-1 overflow-y-auto">
           <div className={cn("flex flex-col py-6", column)} aria-live="polite">
-            {msgs.length === 0 && <p className="px-2 text-sm text-muted-foreground">No messages yet.</p>}
+            {msgs.length === 0 && (hifi ? (
+              <div className="flex flex-col items-center gap-3 py-16 text-center"><Illo name="no-chats" className="h-28" /><p className="type-body text-muted-foreground">No messages yet</p></div>
+            ) : <p className="px-2 text-sm text-muted-foreground">No messages yet.</p>)}
             {shown.map((m, i) => {
               const prev = shown[i - 1]
               const newDay = !prev || prev.day !== m.day

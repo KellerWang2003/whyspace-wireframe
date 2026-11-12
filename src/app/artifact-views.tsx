@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils"
 import { dayOf } from "@/playground/model"
 import { AddArtifactDialog, ArtifactSheet, Tile, sourceOf, stateOf } from "@/screens/project-artifacts"
 import { EmptyStart, StartThread } from "./empty-start"
+import { Illo } from "@/components/brand/illo/pieces"
 import { ThreadIcon } from "./thread-ui"
 import { threadOf, useArchived, useThreads, type Thread } from "./threads"
 import { addArtifact, moveArtifact, removeArtifact, restoreArtifact, useArtifacts, type Item } from "./work"
@@ -76,7 +77,7 @@ export function HomeArtifacts({ projectId, selectedId, search = "" }: { projectI
   return (
     <div className="flex min-w-0 flex-col gap-6">
       {empty ? (
-        <EmptyStart icon={Shapes} title="Add your first artifact" action={<Button size="sm" onClick={() => setAdding({})}><Plus />Add artifact</Button>} />
+        <EmptyStart icon={Shapes} title="Add your first artifact" art={<Illo name="new-project" className="mb-3 h-28" />} action={<Button size="sm" onClick={() => setAdding({})}><Plus />Add artifact</Button>} />
       ) : (
         <div className="flex flex-wrap items-center justify-end gap-2">
           <Button size="sm" variant="outline" onClick={() => setAdding({})}><Plus />Add</Button>

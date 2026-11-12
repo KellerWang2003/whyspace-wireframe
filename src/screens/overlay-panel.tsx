@@ -7,6 +7,7 @@ import { PersonAvatar } from "@/components/app/person"
 import { OverlayAct as Act } from "@/components/app/overlay-kit"
 import { useHifi } from "@/lib/hifi"
 import { cn } from "@/lib/utils"
+import { Illo } from "@/components/brand/illo/pieces"
 import { caughtHere, checkRows, firstName, markOfCaught, needsYou, otherOf, type Caught, type CaughtActions, type Layout } from "./overlay-model"
 
 // The expanded pill, one hierarchy: line one says where you are (the overlay passes it as `header`);
@@ -38,7 +39,12 @@ export function ExpandedPanel({ layout, all, act, where, header, check, onCheckD
         ) : (
           <>
             <section aria-label="Needs you">
-              {needs.length === 0 && <p className="px-2 py-3 text-xs text-muted-foreground">Nothing needs you here.</p>}
+              {needs.length === 0 && (
+                <div className="flex flex-col items-center gap-2 px-2 py-3 text-center">
+                  <Illo name="caught-up" className="h-12" />
+                  <p className="text-xs text-muted-foreground">Nothing needs you here.</p>
+                </div>
+              )}
               <ul data-rows={needs.length ? "" : undefined} className="flex flex-col gap-0.5">
                 {needs.map((c) => <NeedsRow key={c.id} layout={layout} c={c} act={act} />)}
               </ul>

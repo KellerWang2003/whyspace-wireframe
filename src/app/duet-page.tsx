@@ -49,8 +49,7 @@ function DuetChat({ convo }: { convo: Conversation }) {
   // Opening another chat lands on its newest message at once.
   useEffect(() => { scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight }) }, [chat])
   const open = chats.find((c) => c.id === chat)
-  // Your very first chat: meet your Duet, wearing its face color.
-  const firstChat = chats.every((c) => c.msgs.length === 0)
+  // Every new chat opens on your Duet, wearing its face color.
   const face = useDuetFace(ME.id)
   const hifi = useHifi()
   return (
@@ -67,8 +66,8 @@ function DuetChat({ convo }: { convo: Conversation }) {
             <div className="space-y-5" aria-live="polite"><Messages msgs={convo.msgs} /></div>
           ) : (
             <>
-              {firstChat && <Illo name="meet-duet" duet={PIGMENT_HEX[face.pigment]} className="mx-auto mt-auto h-40" />}
-              <Greeting className={firstChat && hifi ? "mb-auto pt-4 pb-16" : "my-auto py-16"} />
+              <Illo name="meet-duet" duet={PIGMENT_HEX[face.pigment]} className="mx-auto mt-auto h-40" />
+              <Greeting className={hifi ? "mb-auto pt-4 pb-16" : "my-auto py-16"} />
               <Jumpstarts jumpstarts={convo.jumpstarts} onSend={convo.send} className="-mx-2.5" />
             </>
           )}
