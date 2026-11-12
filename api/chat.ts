@@ -10,8 +10,13 @@ const ORIGIN = /^(https:\/\/(([a-z0-9-]+\.)?whyspace\.app|whyspace-wireframe[a-z
 const MAX_CHARS = 60_000
 const MAX_MESSAGES = 40
 
+// Forgives the usual paste slips in the Vercel settings: spaces, quotes, or the whole `NAME=value` line.
+const cleanKey = (raw?: string) => raw?.trim().replace(/^ANTHROPIC_API_KEY\s*=\s*/, '').replace(/^["']|["']$/g, '').trim() || undefined
+// What a bad key looks like, without showing it.
+const shape = (key: string) => `starts with "${key.slice(0, 7)}", ${key.length} characters`
+
 export async function POST(request: Request) {
-  const apiKey = process.env.ANTHROPIC_API_KEY
+  const apiKey = cleanKey(process.env.ANTHROPIC_API_KEY)
   if (!apiKey) return new Response('ANTHROPIC_API_KEY is not set', { status: 503 })
   if (!ORIGIN.test(request.headers.get('origin') ?? '')) return new Response('Forbidden', { status: 403 })
 
@@ -32,7 +37,9 @@ export async function POST(request: Request) {
   return new Response(new ReadableStream({
     async start(controller) {
       stream.on('text', (t) => controller.enqueue(encoder.encode(t)))
-      try { await stream.finalMessage() } catch (err) { console.error('[chat]', err) }
+      try { await stream.finalMessage() } catch (err) {
+        console.error('[chat]', err instanceof Anthropic.AuthenticationError ? `Anthropic rejected the key (${shape(apiKey)})` : err)
+      }
       controller.close()
     },
     cancel() { stream.abort() },
