@@ -1,6 +1,7 @@
 import { useSyncExternalStore } from "react"
 import { DECISIONS, ME, MY_PROJECTS, PEOPLE, recordDecision, type Decision } from "@/data"
 import { DESIGN } from "@/lib/design"
+import { navigate } from "@/lib/router"
 import { SCENARIO } from "@/lib/scenario"
 import { STAGE } from "@/lib/stage"
 import { DUET_LOG, sureOf, type DuetLine, type Sure } from "./duet"
@@ -325,6 +326,8 @@ export function makeChat(people: string[], name: string, links: Link[]): string 
   set({ made: [...state.made, { id, kind: "group", name: name.trim() || others.map(first).join(", "), members: [ME.id, ...others], links, msgs: [] }] })
   return id
 }
+// Where Reply and Talk with go: the chat the conversation lives in, else your DM with them.
+export const chatFor = (chatId: string | undefined, person: string) => navigate(`/chats/${chatId && chatById(chatId) ? chatId : makeChat([person], "", [])}`)
 export const setLinks = (chatId: string, links: Link[]) => set({ links: { ...state.links, [chatId]: links } })
 
 // The threads a chat can link to: every thread of your projects.

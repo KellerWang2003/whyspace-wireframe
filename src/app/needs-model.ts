@@ -3,10 +3,9 @@ import { toast } from "sonner"
 import { INBOX, ME, SESSIONS, decisionById, patchDecision, projectName, recordDecision, type Decision, type InboxItem } from "@/data"
 import { navigate } from "@/lib/router"
 import { useStore } from "@/lib/store"
-import { makeChat } from "./chats-model"
-import { openReply } from "./duet-state"
+import { chatFor, chatOfLine, chatOfTopic, makeChat } from "./chats-model"
 import { first, type Row } from "./today-model"
-import { askTopicId, clashTopicId, conversationOf, topicOf } from "./together"
+import { askTopicId, clashTopicId, topicOf } from "./together"
 
 // Needs you, one at a time. Each row becomes one item: a plain sentence of what needs you, its two
 // sides (yours and the other person's, or what you said and who is waiting), and the answers.
@@ -97,7 +96,7 @@ export function useNeedsItems(rows: Row[]): NeedsItem[] {
           answers: [
             { label: copy.take ?? `Use ${name}’s`, primary: true, icon: "done", run: () => { settleClash(d.id, "theirs"); toast(`Took ${name}’s decision`) } },
             // Your Duet brings you both into one conversation, each decision and why on top. Keep mine stays on the decision sheet.
-            { label: `Talk with ${name}`, icon: "talk", run: () => openReply(clashTopicId(d.id)) },
+            { label: `Talk with ${name}`, icon: "talk", run: () => chatFor(chatOfTopic(clashTopicId(d.id)), other.owner) },
           ],
         }]
       }
@@ -201,7 +200,7 @@ export function useNeedsItems(rows: Row[]): NeedsItem[] {
           { label: "Your decisions", text: "None covers this yet.", note: "You can save your answer as one." },
           ...(topic && theirs ? [{ label: `${first(topic.other)}’s decision`, text: theirs.title, note: theirs.why }] : []),
         ],
-        answers: [{ label: topic ? `Talk with ${who} and ${first(topic.other)}` : `Reply to ${who}`, primary: true, icon: "talk", run: () => openReply(conversationOf(l)) }],
+        answers: [{ label: topic ? `Talk with ${who} and ${first(topic.other)}` : `Reply to ${who}`, primary: true, icon: "talk", run: () => chatFor(chatOfLine(l), l.who) }],
       }]
     }
 

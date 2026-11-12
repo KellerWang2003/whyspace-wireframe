@@ -14,7 +14,7 @@ import { TODAY, dayOf } from "@/playground/model"
 import { PersonAvatar } from "@/components/app/person"
 import { useStore } from "@/lib/store"
 import { HomeArtifacts, artifactMatches } from "./artifact-views"
-import { WorkingNowList } from "./people-cards"
+import { WorkingNow } from "./people-cards"
 import { DecisionList, DecisionsFooter, decisionMatches } from "./decision-list"
 import { ProjectSearch } from "./project-search"
 import { NewMenu } from "./new-menu"
@@ -83,7 +83,7 @@ export function ProjectHome({ project, tab, sub }: { project: Project; tab: Home
                 {!noWork && <>
                   <section aria-labelledby="working-now" className="flex flex-col gap-3">
                     <h2 id="working-now" className="type-section">Working now</h2>
-                    <WorkingNowList project={project} artifacts={artifacts} />
+                    <WorkingNow projects={[project.id]} />
                   </section>
                   <CaughtForYou project={project} />
                 </>}

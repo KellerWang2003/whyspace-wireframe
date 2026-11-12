@@ -1,6 +1,6 @@
 import { useState } from "react"
 import { toast } from "sonner"
-import { ChevronRight, Kanban, LayoutList, ListTodo, Plus } from "lucide-react"
+import { ArrowUpDown, ChevronRight, Kanban, LayoutList, ListFilter, ListTodo, Plus } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
@@ -33,6 +33,7 @@ const SEED: SavedView<Filters>[] = [
   { id: "week", name: "Due this week", filters: { ...BLANK, status: "open", due: "week" }, sort: null },
 ]
 type SortKey = "thread" | "title" | "status" | "owner" | "due"
+const SORTS: [SortKey | "default", string][] = [["default", "Default"], ["title", "Task"], ["status", "Status"], ["owner", "Assignee"], ["due", "Due date"], ["thread", "Thread"]]
 
 export function TaskList({ projectId, tasks, thread, search = "" }: { projectId: string; tasks: Task[]; thread?: Thread; search?: string }) {
   // Home keeps saved views; a thread keeps its filters for this visit only.
@@ -60,7 +61,7 @@ export function TaskList({ projectId, tasks, thread, search = "" }: { projectId:
     taskMatches(t, query))
   // Default order: by thread (in sidebar order), open work first, then by due date.
   const base = [...shown].sort((a, b) => (thread ? 0 : order(a.part) - order(b.part)) || STATUS_ORDER.indexOf(a.status) - STATUS_ORDER.indexOf(b.status) || dueDay(a) - dueDay(b))
-  const { sorted, sort, toggle } = useSort<Task, SortKey>(base, {
+  const { sorted, sort, toggle, setSort } = useSort<Task, SortKey>(base, {
     thread: (t) => order(t.part),
     title: (t) => t.title,
     status: (t) => STATUS_ORDER.indexOf(t.status),
@@ -112,38 +113,58 @@ export function TaskList({ projectId, tasks, thread, search = "" }: { projectId:
               <DropdownMenuRadioItem value="board"><Kanban />Board</DropdownMenuRadioItem>
             </DropdownMenuRadioGroup>
             <DropdownMenuSeparator />
-            {!thread && (
-              <DropdownMenuSub>
-                <DropdownMenuSubTrigger>Thread</DropdownMenuSubTrigger>
-                <DropdownMenuSubContent>
-                  <DropdownMenuRadioGroup value={filters.thread} onValueChange={(x) => setFilters({ thread: x })}>
-                    <DropdownMenuRadioItem value="all">All threads</DropdownMenuRadioItem>
-                    {threads.map((x) => <DropdownMenuRadioItem key={x.id} value={x.part}><ThreadTag projectId={projectId} part={x.part} /></DropdownMenuRadioItem>)}
+            <DropdownMenuSub>
+              <DropdownMenuSubTrigger><ListFilter />Filter{filtering && <span className="ml-auto size-1.5 rounded-full bg-foreground" />}</DropdownMenuSubTrigger>
+              <DropdownMenuSubContent className="w-48">
+                {!thread && (
+                  <DropdownMenuSub>
+                    <DropdownMenuSubTrigger>Thread</DropdownMenuSubTrigger>
+                    <DropdownMenuSubContent>
+                      <DropdownMenuRadioGroup value={filters.thread} onValueChange={(x) => setFilters({ thread: x })}>
+                        <DropdownMenuRadioItem value="all">All threads</DropdownMenuRadioItem>
+                        {threads.map((x) => <DropdownMenuRadioItem key={x.id} value={x.part}><ThreadTag projectId={projectId} part={x.part} /></DropdownMenuRadioItem>)}
+                      </DropdownMenuRadioGroup>
+                    </DropdownMenuSubContent>
+                  </DropdownMenuSub>
+                )}
+                <DropdownMenuSub>
+                  <DropdownMenuSubTrigger>Status</DropdownMenuSubTrigger>
+                  <DropdownMenuSubContent>
+                    <DropdownMenuRadioGroup value={filters.status} onValueChange={(x) => setFilters({ status: x as Filters["status"] })}>
+                      <DropdownMenuRadioItem value="all">Any status</DropdownMenuRadioItem>
+                      <DropdownMenuRadioItem value="open">Not done</DropdownMenuRadioItem>
+                      {STATUS_ORDER.map((x) => <DropdownMenuRadioItem key={x} value={x}>{TASK_STATUS_LABEL[x]}</DropdownMenuRadioItem>)}
+                    </DropdownMenuRadioGroup>
+                  </DropdownMenuSubContent>
+                </DropdownMenuSub>
+                <DropdownMenuSub>
+                  <DropdownMenuSubTrigger>Assignee</DropdownMenuSubTrigger>
+                  <DropdownMenuSubContent>
+                    <DropdownMenuRadioGroup value={filters.owner} onValueChange={(x) => setFilters({ owner: x })}>
+                      <DropdownMenuRadioItem value="all">Anyone</DropdownMenuRadioItem>
+                      {owners.map((o) => <DropdownMenuRadioItem key={o} value={o}>{o === ME.id ? "Me" : PEOPLE[o]?.name}</DropdownMenuRadioItem>)}
+                    </DropdownMenuRadioGroup>
+                  </DropdownMenuSubContent>
+                </DropdownMenuSub>
+                <DropdownMenuCheckboxItem checked={filters.due === "week"} onCheckedChange={(c) => setFilters({ due: c ? "week" : "any" })} onSelect={(e) => e.preventDefault()}>Due this week</DropdownMenuCheckboxItem>
+                {changed && <><DropdownMenuSeparator /><DropdownMenuItem onSelect={() => (thread ? setLocal({ ...BLANK, layout: filters.layout }) : views.resetFilters())}>Clear filters</DropdownMenuItem></>}
+              </DropdownMenuSubContent>
+            </DropdownMenuSub>
+            <DropdownMenuSub>
+              <DropdownMenuSubTrigger><ArrowUpDown />Sort<span className="ml-auto text-xs text-muted-foreground">{SORTS.find(([k]) => k === (sort?.key ?? "default"))?.[1]}</span></DropdownMenuSubTrigger>
+              <DropdownMenuSubContent className="w-44">
+                <DropdownMenuRadioGroup value={sort?.key ?? "default"} onValueChange={(k) => setSort(k === "default" ? null : { key: k as SortKey, dir: sort?.dir ?? "asc" })}>
+                  {SORTS.filter(([k]) => !thread || k !== "thread").map(([k, label]) => <DropdownMenuRadioItem key={k} value={k}>{label}</DropdownMenuRadioItem>)}
+                </DropdownMenuRadioGroup>
+                {sort && <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuRadioGroup value={sort.dir} onValueChange={(d) => setSort({ ...sort, dir: d as "asc" | "desc" })}>
+                    <DropdownMenuRadioItem value="asc">Ascending</DropdownMenuRadioItem>
+                    <DropdownMenuRadioItem value="desc">Descending</DropdownMenuRadioItem>
                   </DropdownMenuRadioGroup>
-                </DropdownMenuSubContent>
-              </DropdownMenuSub>
-            )}
-            <DropdownMenuSub>
-              <DropdownMenuSubTrigger>Status</DropdownMenuSubTrigger>
-              <DropdownMenuSubContent>
-                <DropdownMenuRadioGroup value={filters.status} onValueChange={(x) => setFilters({ status: x as Filters["status"] })}>
-                  <DropdownMenuRadioItem value="all">Any status</DropdownMenuRadioItem>
-                  <DropdownMenuRadioItem value="open">Not done</DropdownMenuRadioItem>
-                  {STATUS_ORDER.map((x) => <DropdownMenuRadioItem key={x} value={x}>{TASK_STATUS_LABEL[x]}</DropdownMenuRadioItem>)}
-                </DropdownMenuRadioGroup>
+                </>}
               </DropdownMenuSubContent>
             </DropdownMenuSub>
-            <DropdownMenuSub>
-              <DropdownMenuSubTrigger>Assignee</DropdownMenuSubTrigger>
-              <DropdownMenuSubContent>
-                <DropdownMenuRadioGroup value={filters.owner} onValueChange={(x) => setFilters({ owner: x })}>
-                  <DropdownMenuRadioItem value="all">Anyone</DropdownMenuRadioItem>
-                  {owners.map((o) => <DropdownMenuRadioItem key={o} value={o}>{o === ME.id ? "Me" : PEOPLE[o]?.name}</DropdownMenuRadioItem>)}
-                </DropdownMenuRadioGroup>
-              </DropdownMenuSubContent>
-            </DropdownMenuSub>
-            <DropdownMenuCheckboxItem checked={filters.due === "week"} onCheckedChange={(c) => setFilters({ due: c ? "week" : "any" })} onSelect={(e) => e.preventDefault()}>Due this week</DropdownMenuCheckboxItem>
-            {changed && <><DropdownMenuSeparator /><DropdownMenuItem onSelect={() => (thread ? setLocal({ ...BLANK, layout: filters.layout }) : views.resetFilters())}>Clear filters</DropdownMenuItem></>}
             {!thread && <><DropdownMenuSeparator /><ViewActions v={views} onRename={setRenaming} /></>}
           </FilterMenu>
           <Button size="sm" variant={thread ? "default" : "outline"} onClick={() => setCreating(true)}><Plus />New task</Button>

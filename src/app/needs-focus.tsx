@@ -109,10 +109,16 @@ export function NeedsFocus({ queue, onOpen, compact }: { queue: NeedsQueue; onOp
     return () => ro.disconnect()
   }
   const pieceColors = useSettled(list.slice(1, 3).map((x) => { const t = threadOfRow(x.row); return t ? pigmentOf(t) : "#d9d9d6" }).join(" "), 340).split(" ")
-  // All caught up: the person leaning back, centered where the card was, the card itself gone (High-fi only, Illo draws nothing in the wireframe).
-  if (!it) return queue.cleared
-    ? <div className={cn("flex w-full flex-col items-center gap-3 text-center", hifiLook && !compact ? "px-8 pt-6 pb-8" : "py-4")}><Illo name="caught-up" className={compact ? "h-20" : "h-28"} /><p className="text-sm text-muted-foreground">Nothing else needs you.</p></div>
-    : <p className="py-4 text-sm text-muted-foreground">Nothing waits on you.</p>
+  // All caught up: the person leaning back (High-fi only, Illo draws nothing in the wireframe), in a dashed card
+  // as tall as a real one, so the section keeps its place on the page.
+  if (!it) return (
+    <div className={cn("flex w-full flex-col items-center justify-center gap-3 border border-dashed text-center",
+      hifiLook ? "rounded-[24px] border-foreground/15" : "rounded-xl",
+      compact ? "min-h-36 p-4" : hifiLook ? "min-h-72 px-8 py-8" : "min-h-56 p-6")}>
+      <Illo name="caught-up" className={compact ? "h-16" : "h-28"} />
+      <p className={cn("text-foreground", compact ? "text-sm" : "type-heading")}>You’re all caught up.</p>
+    </div>
+  )
 
   const writing = typing?.id === it.id ? it.answers[typing.answer]?.input : undefined
   const stop = () => { setTyping(null); setText("") }
