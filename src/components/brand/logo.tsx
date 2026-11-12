@@ -1,12 +1,13 @@
 import { useEffect, useId, useRef, useState, type CSSProperties } from "react"
 import { cn } from "@/lib/utils"
 import { PIGMENT } from "./hand"
-import { ICON_NUDGE, ICON_RADIUS, ICON_VIEWBOX, LOCKUPS, MARK_D, MARK_VIEWBOX } from "./logo-paths"
+import { ICON_MARK, ICON_RADIUS, ICON_VIEWBOX, LOCKUPS, MARK_D, MARK_VIEWBOX } from "./logo-paths"
 
 // The Whyspace logo, one place for every use (replacement plan P0, Nov 12 2026):
 // - WhyspaceMark: the bare forest mark, inside our own UI (rail, overlay pill). `appear` writes it by hand.
 // - WhyspaceIcon: the app icon tile, wherever we sit next to other apps (dock, browser tab, Slack, connectors).
-// - WhyspaceLockup: mark + name. Stacked is the main one (sign-in, landing, brand pages); beside the name is secondary.
+// - WhyspaceLockup: the app icon + the name. Stacked (icon over the name) is the main one (sign-in, brand pages);
+//   beside the name is secondary (landing header and footer).
 // - WhyspaceThread: the mark running on into a thread ("Rounder last loop"). Logo animation only (landing hero).
 // Size everything with a width class; the height follows the artwork.
 
@@ -23,19 +24,21 @@ const easeIn = (x: number) => (x <= 0 ? 0 : x >= 1 ? 1 : x * x * x)
 let frames: Promise<string[]> | null = null
 const loadFrames = () => (frames ??= import("./logo-appear.json").then((m) => m.default.head as string[]))
 
-/** Writes the mark into `path`: once and holds, or (loop) write, hold, unwrite, again. Remount to replay. */
-function useAppear(on: boolean, loop: boolean) {
+/** Writes the mark into `path`: once and holds, or (loop) write, hold, unwrite, again. Remount to replay.
+ *  `still` (0 to 1) shows the stroke frozen that far along instead, for stills of the motion. */
+function useAppear(on: boolean, loop: boolean, still?: number) {
   const path = useRef<SVGPathElement>(null)
   useEffect(() => {
     const el = path.current
-    if (!on || !el) return
-    if (reduced()) { el.setAttribute("d", MARK_D); return }
+    if ((!on && still == null) || !el) return
+    if (still == null && reduced()) { el.setAttribute("d", MARK_D); return }
     el.setAttribute("d", "")
     let raf = 0, dead = false
     loadFrames().then((head) => {
       if (dead) return
       const n = head.length
       const at = (k: number) => (k >= 1 ? MARK_D : k <= 0 ? "" : head[Math.min(n - 1, Math.floor(k * n))])
+      if (still != null) { el.setAttribute("d", at(still)); return }
       const t0 = performance.now()
       const tick = (now: number) => {
         const t = (now - t0) / 1000
@@ -48,18 +51,18 @@ function useAppear(on: boolean, loop: boolean) {
       raf = requestAnimationFrame(tick)
     })
     return () => { dead = true; cancelAnimationFrame(raf) }
-  }, [on, loop])
+  }, [on, loop, still])
   return { path }
 }
 
 /** The bare mark. Forest by default; paper on a dark ground. */
-export function WhyspaceMark({ tone = "forest", appear = false, loop = false, title = "Whyspace", className, style }: {
-  tone?: Tone; appear?: boolean; loop?: boolean; title?: string | null; className?: string; style?: CSSProperties
+export function WhyspaceMark({ tone = "forest", appear = false, loop = false, still, title = "Whyspace", className, style }: {
+  tone?: Tone; appear?: boolean; loop?: boolean; still?: number; title?: string | null; className?: string; style?: CSSProperties
 }) {
-  const { path } = useAppear(appear, loop)
+  const { path } = useAppear(appear, loop, still)
   return (
     <svg viewBox={MARK_VIEWBOX} role={title ? "img" : undefined} aria-label={title ?? undefined} aria-hidden={title ? undefined : true} className={cn("block h-auto w-[22px] shrink-0", className)} style={style}>
-      <path ref={path} d={appear ? "" : MARK_D} fill={FILL[tone]} fillRule="evenodd" />
+      <path ref={path} d={appear || still != null ? "" : MARK_D} fill={FILL[tone]} fillRule="evenodd" />
     </svg>
   )
 }
@@ -72,23 +75,25 @@ export function WhyspaceIcon({ appear = false, loop = false, title = "Whyspace",
   return (
     <svg viewBox={ICON_VIEWBOX} role={title ? "img" : undefined} aria-label={title ?? undefined} aria-hidden={title ? undefined : true} className={cn("block size-10 shrink-0", className)}>
       <rect x={-40} y={-40} width={680} height={680} rx={ICON_RADIUS} fill={PIGMENT.forest} />
-      <path ref={path} transform={ICON_NUDGE} d={appear ? "" : MARK_D} fill={PIGMENT.paper} fillRule="evenodd" />
+      <path ref={path} transform={ICON_MARK} d={appear ? "" : MARK_D} fill={PIGMENT.paper} fillRule="evenodd" />
     </svg>
   )
 }
 
-/** Mark + name. `stacked` (main) or `beside` (secondary). */
+/** The app icon + the name. `stacked` (main) or `beside` (secondary). On a dark ground use tone "paper". */
 export function WhyspaceLockup({ variant = "stacked", tone = "forest", appear = false, className }: {
   variant?: keyof typeof LOCKUPS; tone?: Tone; appear?: boolean; className?: string
 }) {
   const l = LOCKUPS[variant]
   const { path } = useAppear(appear, false)
+  const ink = FILL[tone], inside = tone === "paper" ? PIGMENT.forest : PIGMENT.paper
   return (
     <svg viewBox={l.vb} role="img" aria-label="Whyspace" className={cn("block h-auto shrink-0", variant === "stacked" ? "w-32" : "w-36", className)}>
-      <g fill={FILL[tone]} fillRule="evenodd">
-        <path ref={path} transform={l.mark} d={appear ? "" : MARK_D} />
-        <path d={l.word} />
+      <g transform={l.icon}>
+        <rect x={-40} y={-40} width={680} height={680} rx={ICON_RADIUS} fill={ink} />
+        <path ref={path} transform={ICON_MARK} d={appear ? "" : MARK_D} fill={inside} fillRule="evenodd" />
       </g>
+      <path transform={l.wordT} d={l.word} fill={ink} />
     </svg>
   )
 }
@@ -98,9 +103,9 @@ type ThreadArt = { d: string; clips: string[]; vb: number[] }
 let thread: Promise<ThreadArt> | null = null
 const loadThread = () => (thread ??= import("./logo-thread.json").then((m) => m.default as ThreadArt))
 
-/** The mark running on into a thread, written by hand once (3.3s), then held. */
-export function WhyspaceThread({ tone = "forest", duration = 3.3, delay = 0.3, className }: {
-  tone?: Tone; duration?: number; delay?: number; className?: string
+/** The mark running on into a thread, written by hand (3.3s), then held. `loop`: write, hold, let go, again. */
+export function WhyspaceThread({ tone = "forest", duration = 3.3, delay = 0.3, loop = false, className }: {
+  tone?: Tone; duration?: number; delay?: number; loop?: boolean; className?: string
 }) {
   const [art, setArt] = useState<ThreadArt | null>(null)
   const clip = useRef<SVGPathElement>(null)
@@ -112,17 +117,24 @@ export function WhyspaceThread({ tone = "forest", duration = 3.3, delay = 0.3, c
     if (!art || !c || !g) return
     if (reduced()) { g.removeAttribute("clip-path"); return }
     const n = art.clips.length
+    // Same rhythm as the motion page: write, hold 2.2s, unwrite 1.1s, rest 0.6s.
+    const cycle = duration + 2.2 + 1.1 + 0.6
     let raf = 0
     const t0 = performance.now() + delay * 1000
     const tick = (now: number) => {
-      const k = (now - t0) / 1000 / duration
-      if (k >= 1) { g.removeAttribute("clip-path"); return }
-      c.setAttribute("d", k <= 0 ? "" : art.clips[Math.min(n - 1, Math.floor(k * n))])
-      raf = requestAnimationFrame(tick)
+      const t = Math.max(0, (now - t0) / 1000)
+      const c0 = loop ? t % cycle : t
+      const k = c0 < duration ? c0 / duration : !loop || c0 < duration + 2.2 ? 1 : 1 - Math.min(1, ((c0 - duration - 2.2) / 1.1) ** 2)
+      if (k >= 1) g.removeAttribute("clip-path")
+      else {
+        g.setAttribute("clip-path", `url(#${id})`)
+        c.setAttribute("d", k <= 0 ? "" : art.clips[Math.min(n - 1, Math.floor(k * n))])
+      }
+      if (loop || k < 1) raf = requestAnimationFrame(tick)
     }
     raf = requestAnimationFrame(tick)
     return () => cancelAnimationFrame(raf)
-  }, [art, duration, delay])
+  }, [art, duration, delay, loop, id])
   if (!art) return <svg viewBox="-81 -185 1402 339" aria-hidden className={cn("block h-auto w-full", className)} />
   return (
     <svg viewBox={art.vb.join(" ")} role="img" aria-label="Whyspace" className={cn("block h-auto w-full", className)}>
