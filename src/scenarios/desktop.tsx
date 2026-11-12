@@ -42,7 +42,7 @@ export function ScenarioDesktop() {
     })
   }, [])
 
-  // A link to a page (the debug panel's "Jump to screen") opens it in the Whyspace window.
+  // A link to a page (like the debug panel's Design system) opens it in the Whyspace window.
   useEffect(() => {
     const onHash = () => {
       const path = window.location.hash.replace(/^#/, "") || "/today"

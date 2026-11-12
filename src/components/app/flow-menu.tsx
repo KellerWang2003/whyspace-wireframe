@@ -1,19 +1,11 @@
 import { useEffect, useRef, useState } from "react"
-import { ArrowRight, Bug, Check, ChevronDown, X } from "lucide-react"
+import { ArrowRight, Bug, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { Kbd } from "@/components/ui/kbd"
 import { Popover, PopoverAnchor, PopoverContent } from "@/components/ui/popover"
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectSeparator, SelectTrigger, SelectValue } from "@/components/ui/select"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
 import { navigate, useRoute } from "@/lib/router"
 import { useStore } from "@/lib/store"
 import { STAGE, STAGES, setStage } from "@/lib/stage"
@@ -23,7 +15,6 @@ import { setHifi, useHifi } from "@/lib/hifi"
 import { PEOPLE } from "@/data"
 import { PersonAvatar } from "@/components/app/person"
 import { cn } from "@/lib/utils"
-import { setOffline } from "@/lib/connection"
 import { SCENARIOS as DEMO_SCENARIOS } from "@/demo/scenarios"
 import { PINS, SCENARIO, exitScenario, openScenario } from "@/lib/scenario"
 import { PEOPLE_C, SCENES, VIEWERS_C } from "@/design-c/data"
@@ -32,40 +23,6 @@ import { Face } from "@/design-c/ui"
 
 // Prototype helper only, not part of the app: a debug tab that rests on any screen edge
 // and opens a small overlay for reviewing the flow.
-type Group = [string, [string, string][]]
-const GETTING_IN: Group = ["Getting in", [["Home page", "/site"], ["Home page · shapes", "/site/shapes"], ["Sign up", "/signup"], ["Log in", "/login"], ["Create workspace", "/new"]]]
-const PLAYGROUND: Group = ["Playground", [["Design system", "/design-system"], ["High-fi styles", "/hifi"], ["Left nav", "/playground/nav/drill"], ["Rail on hover", "/playground/rail"], ["How sure your Duet is", "/playground/sure"], ["Duet replies in chats", "/playground/fold/1"], ["Overlay pill", "/playground/pill/grid"], ["Expanded pill", "/playground/pill/expanded"], ["Decisions layouts", "/playground/layouts/sections"], ["Decision display states", "/playground/decisions/states"], ["Section map & outline", "/playground/whiskr/canvas"], ["Earlier decision views", "/playground/whiskr/board"]]]
-const SETTINGS: Group = ["Settings", [["Workspace settings", "/settings/general"], ["Plan and billing", "/settings/billing"], ["Profile", "/account/profile"], ["My AI tools", "/account/ai-tools"], ["Connect Claude", "/connect/claude"], ["Connect ChatGPT", "/connect/chatgpt"], ["Notifications", "/account/notifications"]]]
-// The main design's one Settings page: your account and the workspace.
-const SETTINGS_B: Group = ["Settings", [["Profile", "/settings/profile"], ["Connectors", "/settings/connectors"], ["Connect Claude", "/connect/claude"], ["Connect ChatGPT", "/connect/chatgpt"], ["Duet", "/settings/duet"], ["Notifications", "/settings/notifications"], ["Workspace", "/settings/workspace"], ["Members", "/settings/members"], ["Plan and billing", "/settings/billing"]]]
-const SCREENS: Group[] = [
-  GETTING_IN,
-  ["Workspace", [["Today", "/today"], ["Duet", "/duet"], ["Chats", "/chats"], ["All projects", "/projects"], ["The Desk", "/desk"]]],
-  ["Project", [
-    ["Home", "/p/whiskr/home"], ["Home · Tasks", "/p/whiskr/tasks"], ["Home · Decisions", "/p/whiskr/decisions"], ["Home · Artifacts", "/p/whiskr/artifacts"],
-    ["Thread · Marketing", "/p/whiskr/t/marketing"], ["Thread · Brand decisions", "/p/whiskr/t/brand/decisions"], ["Thread · App artifacts", "/p/whiskr/t/app/artifacts"],
-    ["Decision detail", "/p/whiskr/decisions/nored"], ["Project settings", "/p/whiskr/settings/general"],
-  ]],
-  ["Rare moments", [["Opening Whyspace", "/loading"], ["No projects yet", "/projects/empty"], ["Invite people", "/invite"], ["No access", "/no-access/brand-refresh"], ["Something went wrong", "/went-wrong"], ["My AI tools · none connected", "/account/ai-tools/none"], ["Lost connection", "/offline"]]],
-  PLAYGROUND,
-  SETTINGS_B,
-]
-// Archived Design A (project-wide pages) keeps Inbox, My tasks and its own project screens.
-const SCREENS_A: Group[] = [
-  GETTING_IN,
-  ["Workspace", [["All projects", "/projects"], ["Inbox", "/inbox"], ["My tasks", "/my-tasks"]]],
-  ["Project", [["Home", "/p/whiskr/home"], ["Tasks", "/p/whiskr/tasks"], ["Decisions", "/p/whiskr/decisions"], ["Decision detail", "/p/whiskr/decisions/nored"], ["Project settings", "/p/whiskr/settings/general"], ["Project people", "/p/whiskr/settings/people"]]],
-  PLAYGROUND,
-  SETTINGS,
-]
-// Archived Design C (handoffs) has far fewer screens: Today, projects, threads, talks, the Duet.
-const SCREENS_C: Group[] = [
-  ["Getting in", [["Home page", "/site"], ["Sign up", "/signup"], ["Log in", "/login"], ["Create workspace", "/new"]]],
-  ["Workspace", [["Today", "/today"], ["Projects", "/projects"], ["The Desk", "/desk"]]],
-  ["Launch", [["Project", "/p/launch"], ["Thread · Onboarding", "/p/launch/t/onboarding"], ["Thread · Pricing", "/p/launch/t/pricing"], ["Thread · Launch comms", "/p/launch/t/comms"], ["Thread · API", "/p/launch/t/api"], ["Handoff · PRD v2", "/p/launch/t/onboarding/h/prd"], ["Talk · Onboarding steps", "/p/launch/talks/steps"], ["Talk · Kickoff", "/p/launch/talks/kickoff"], ["Project settings", "/p/launch/settings/general"]]],
-  ["Settings", [["Workspace settings", "/settings/general"], ["Profile", "/account/profile"], ["Duet", "/account/duet"], ["My AI tools", "/account/ai-tools"], ["Notifications", "/account/notifications"]]],
-]
-const SCREEN_LIST = DESIGN === "c" ? SCREENS_C : DESIGN === "a" ? SCREENS_A : SCREENS
 
 type Edge = "left" | "right" | "top" | "bottom"
 // Where the tab rests: an edge, and how far along it (0–1).
@@ -127,7 +84,7 @@ function useViewport() {
 }
 
 export function FlowMenu({ desktop, onDesktop }: { desktop: boolean; onDesktop: (on: boolean) => void }) {
-  const { joinWorkspace, startFresh, setUpgradeOpen, setInviteOpen } = useStore()
+  const { joinWorkspace, setUpgradeOpen } = useStore()
   const [open, setOpen] = useState(false)
   const [spot, setSpot] = useState(readSpot)
   const [drag, setDrag] = useState<{ x: number; y: number } | null>(null)
@@ -141,7 +98,6 @@ export function FlowMenu({ desktop, onDesktop }: { desktop: boolean; onDesktop: 
   const here = "/" + useRoute().join("/")
   // The scenario running: on the real app, or still on its demo page (#/demo/N).
   const demoOn = SCENARIO || (here.startsWith("/demo/") ? Number(here.split("/")[2]) || 0 : 0)
-  const currentScreen = desktop ? undefined : SCREEN_LIST.flatMap(([, items]) => items).find(([, path]) => path === here)?.[0]
 
   // ` toggles the overlay from anywhere, except while typing.
   useEffect(() => {
@@ -181,23 +137,11 @@ export function FlowMenu({ desktop, onDesktop }: { desktop: boolean; onDesktop: 
     setDrag(null)
   }
 
-  function go(path: string) {
+  function openDesignSystem() {
     setOpen(false)
-    // Rare moments that aren't pages: the invite dialog, and a faked lost connection.
-    if (path === "/invite" || path === "/offline") {
-      joinWorkspace()
-      if (path === "/invite") setInviteOpen(true)
-      else { setOffline(true); navigate("/today") }
-      return
-    }
-    if (path === "/new") {
-      startFresh()
-      navigate("/onboarding")
-      return
-    }
-    onDesktop(path === "/desk")
-    if (!["/signup", "/login"].includes(path)) joinWorkspace()
-    navigate(path)
+    onDesktop(false)
+    joinWorkspace()
+    navigate("/design-system")
   }
 
   const vertical = spot.edge === "left" || spot.edge === "right"
@@ -251,169 +195,142 @@ export function FlowMenu({ desktop, onDesktop }: { desktop: boolean; onDesktop: 
         <header className="flex items-center gap-2 border-b px-3 py-2">
           <Bug className="size-3.5 shrink-0" />
           <div className="text-xs font-medium">Debug</div>
-          <div className="ml-auto text-[11px] text-muted-foreground">Prototype tool · not part of the app</div>
         </header>
 
-        <div className="space-y-3 p-3">
-          <div className="space-y-1.5">
-            <div className="text-[11px] font-medium text-muted-foreground">Design</div>
-            <Select value={DESIGN} onValueChange={(v) => setDesign(v as Design)} disabled={!!PINS}>
-              <SelectTrigger size="sm" className="w-full text-xs">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent className="z-[70]">
-                <SelectItem value="b" className="text-xs">Main</SelectItem>
-                <SelectSeparator />
-                <SelectGroup>
-                  <SelectLabel className="text-[11px]">Archived</SelectLabel>
-                  <SelectItem value="a" className="text-xs text-muted-foreground">A · Original</SelectItem>
-                  <SelectItem value="c" className="text-xs text-muted-foreground">C · Handoffs</SelectItem>
-                </SelectGroup>
-              </SelectContent>
-            </Select>
-            <Label className="flex items-center justify-between gap-2 pt-1 text-xs font-normal">
+        <div className="divide-y">
+          {!SCENARIO && (
+            <div className="p-3">
+              <Label className="flex items-center justify-between gap-2 text-xs font-normal">
+                {DESIGN === "a" ? "Desktop overlay" : "The Desk"}
+                <Switch checked={desktop} onCheckedChange={onDesktop} />
+              </Label>
+            </div>
+          )}
+
+          <div className="space-y-3 p-3">
+            {DESIGN === "c" ? (
+              <>
+                <Field label="View as">
+                  <Select value={c.viewer} onValueChange={setViewerC}>
+                    <SelectTrigger size="sm" className="w-full text-xs">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="z-[70]">
+                      {VIEWERS_C.map((id) => (
+                        <SelectItem key={id} value={id} className="text-xs">
+                          <Face id={id} className="size-5" />
+                          {PEOPLE_C[id].name}
+                          <span className="text-muted-foreground">· {PEOPLE_C[id].role} · {PEOPLE_C[id].ai}</span>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </Field>
+                <Field label="Scene">
+                  <Select value={String(c.scene)} onValueChange={(v) => setScene(Number(v))}>
+                    <SelectTrigger size="sm" className="w-full text-xs">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="z-[70]">
+                      {SCENES.map((sc) => (
+                        <SelectItem key={sc.id} value={String(sc.id)} className="text-xs">
+                          {sc.id}. {sc.day} {sc.time} · {sc.title}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </Field>
+              </>
+            ) : (
+              <>
+                <Field label="View as">
+                  <Select value={VIEWER} onValueChange={setViewer} disabled={!!PINS}>
+                    <SelectTrigger size="sm" className="w-full text-xs">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="z-[70]">
+                      {VIEWERS.map((id) => (
+                        <SelectItem key={id} value={id} className="text-xs">
+                          <PersonAvatar id={id} className="size-5" />
+                          {PEOPLE[id].name}
+                          <span className="text-muted-foreground">· {PEOPLE[id].role}</span>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </Field>
+                <Field label="Stage">
+                  <Select value={String(STAGE)} onValueChange={(v) => setStage(Number(v))} disabled={!!PINS}>
+                    <SelectTrigger size="sm" className="w-full text-xs">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="z-[70]">
+                      {STAGES.map((stage, i) => (
+                        <SelectItem key={stage.name} value={String(i + 1)} className="text-xs">
+                          {i + 1}. {stage.name} · {stage.date}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </Field>
+              </>
+            )}
+
+            <Field label="Scenario">
+              <Select value={demoOn ? String(demoOn) : ""} onValueChange={(v) => openScenario(Number(v))}>
+                <SelectTrigger size="sm" className="w-full text-xs">
+                  <SelectValue placeholder="None" />
+                </SelectTrigger>
+                <SelectContent className="z-[70]">
+                  {DEMO_SCENARIOS.map((sc) => (
+                    <SelectItem key={sc.n} value={String(sc.n)} className="text-xs">
+                      {sc.n}. {sc.title}
+                      <span className="text-muted-foreground">· {sc.who}</span>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {demoOn > 0 && <Button variant="outline" size="sm" className="w-full text-xs" onClick={exitScenario}><X />Exit scenario</Button>}
+            </Field>
+          </div>
+
+          <div className="space-y-3 p-3">
+            <Field label="Design">
+              <Select value={DESIGN} onValueChange={(v) => setDesign(v as Design)} disabled={!!PINS}>
+                <SelectTrigger size="sm" className="w-full text-xs">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="z-[70]">
+                  <SelectItem value="b" className="text-xs">Main</SelectItem>
+                  <SelectSeparator />
+                  <SelectGroup>
+                    <SelectLabel className="text-[11px]">Archived</SelectLabel>
+                    <SelectItem value="a" className="text-xs text-muted-foreground">A · Original</SelectItem>
+                    <SelectItem value="c" className="text-xs text-muted-foreground">C · Handoffs</SelectItem>
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+            </Field>
+            <Label className="flex items-center justify-between gap-2 text-xs font-normal">
               High-fi
               <Switch checked={hifi} onCheckedChange={setHifi} />
             </Label>
-            <Button variant="outline" size="sm" className="w-full justify-between text-xs font-normal" onClick={() => go("/design-system")}>
+            <Button variant="outline" size="sm" className="w-full justify-between text-xs font-normal" onClick={openDesignSystem}>
               Design system
               <ArrowRight className="opacity-50" />
             </Button>
           </div>
 
-          {DESIGN === "c" ? (
-            <>
-              <div className="space-y-1.5">
-                <div className="text-[11px] font-medium text-muted-foreground">View as</div>
-                <Select value={c.viewer} onValueChange={setViewerC}>
-                  <SelectTrigger size="sm" className="w-full text-xs">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="z-[70]">
-                    {VIEWERS_C.map((id) => (
-                      <SelectItem key={id} value={id} className="text-xs">
-                        <Face id={id} className="size-5" />
-                        {PEOPLE_C[id].name}
-                        <span className="text-muted-foreground">· {PEOPLE_C[id].role} · {PEOPLE_C[id].ai}</span>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-1.5">
-                <div className="text-[11px] font-medium text-muted-foreground">Scene · ← → in the Desk</div>
-                <Select value={String(c.scene)} onValueChange={(v) => setScene(Number(v))}>
-                  <SelectTrigger size="sm" className="w-full text-xs">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="z-[70]">
-                    {SCENES.map((sc) => (
-                      <SelectItem key={sc.id} value={String(sc.id)} className="text-xs">
-                        {sc.id}. {sc.day} {sc.time} · {sc.title}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </>
-          ) : (
-            <>
-          <div className="space-y-1.5">
-                <div className="text-[11px] font-medium text-muted-foreground">View as</div>
-                <Select value={VIEWER} onValueChange={setViewer} disabled={!!PINS}>
-                  <SelectTrigger size="sm" className="w-full text-xs">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="z-[70]">
-                    {VIEWERS.map((id) => (
-                      <SelectItem key={id} value={id} className="text-xs">
-                        <PersonAvatar id={id} className="size-5" />
-                        {PEOPLE[id].name}
-                        <span className="text-muted-foreground">· {PEOPLE[id].role}</span>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-    
-              <div className="space-y-1.5">
-                <div className="text-[11px] font-medium text-muted-foreground">Whiskr stage</div>
-                <Select value={String(STAGE)} onValueChange={(v) => setStage(Number(v))} disabled={!!PINS}>
-                  <SelectTrigger size="sm" className="w-full text-xs">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="z-[70]">
-                    {STAGES.map((stage, i) => (
-                      <SelectItem key={stage.name} value={String(i + 1)} className="text-xs">
-                        {i + 1}. {stage.name} · {stage.date}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <p className="text-[11px] leading-snug text-muted-foreground">{STAGES[STAGE - 1].what}</p>
-              </div>
-            </>
-          )}
-
-          <div className="space-y-1.5">
-            <div className="text-[11px] font-medium text-muted-foreground">Test scenarios</div>
-            <Select value={demoOn ? String(demoOn) : ""} onValueChange={(v) => openScenario(Number(v))}>
-              <SelectTrigger size="sm" className="w-full text-xs">
-                <SelectValue placeholder="Pick a scenario" />
-              </SelectTrigger>
-              <SelectContent className="z-[70]">
-                {DEMO_SCENARIOS.map((sc) => (
-                  <SelectItem key={sc.n} value={String(sc.n)} className="text-xs">
-                    {sc.n}. {sc.title}
-                    <span className="text-muted-foreground">· {sc.who}</span>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {PINS && <p className="text-[11px] leading-snug text-muted-foreground">Runs on the real app: the main design, {PEOPLE[PINS.viewer]?.name}, Whiskr at stage {PINS.stage}. The three above are pinned.</p>}
-            {demoOn > 0 && <Button variant="outline" size="sm" className="w-full text-xs" onClick={exitScenario}><X />Exit scenario</Button>}
-          </div>
-
-          <div className="space-y-1.5">
-            <div className="text-[11px] font-medium text-muted-foreground">Jump to screen</div>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm" className="w-full justify-between text-xs font-normal">
-                  <span className={cn(!currentScreen && "text-muted-foreground")}>{currentScreen ?? "Pick a screen"}</span>
-                  <ChevronDown className="opacity-50" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="z-[70] max-h-[60vh] w-(--radix-dropdown-menu-trigger-width) overflow-y-auto">
-                {SCREEN_LIST.map(([group, items], gi) => (
-                  <div key={group}>
-                    {gi > 0 && <DropdownMenuSeparator />}
-                    <DropdownMenuLabel className="text-[11px] font-normal text-muted-foreground">{group}</DropdownMenuLabel>
-                    {items.map(([label, path]) => (
-                      <DropdownMenuItem key={path} className="text-xs" onSelect={() => go(path)}>
-                        {label}
-                        {label === currentScreen && <Check className="ml-auto" />}
-                      </DropdownMenuItem>
-                    ))}
-                  </div>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-
-          {!SCENARIO && <Label className="flex items-center justify-between gap-2 text-xs font-normal">
-            {DESIGN === "c" ? "The Desk (Docs, Figma, Slack, GitHub, Claude, Meet)" : DESIGN === "b" ? "The Desk (Claude, Docs, Slack, Figma)" : "Outside the app (desktop overlay)"}
-            <Switch checked={desktop} onCheckedChange={onDesktop} />
-          </Label>}
-          {DESIGN === "c" && (
-            <Button variant="outline" size="sm" className="w-full text-xs" onClick={resetVisit}>
-              Forget what I did this visit
+          <div className="space-y-1.5 p-3">
+            <Button variant="outline" size="sm" className="w-full text-xs" onClick={() => { setOpen(false); setUpgradeOpen(true) }}>
+              Upgrade dialog
             </Button>
-          )}
-
-          <Button variant="outline" size="sm" className="w-full text-xs" onClick={() => { setOpen(false); setUpgradeOpen(true) }}>
-            Open upgrade dialog
-          </Button>
+            {DESIGN === "c" && (
+              <Button variant="outline" size="sm" className="w-full text-xs" onClick={resetVisit}>
+                Forget this visit
+              </Button>
+            )}
+          </div>
         </div>
 
         <footer className="flex items-center gap-1.5 border-t px-3 py-1.5 text-[11px] text-muted-foreground">
@@ -421,5 +338,14 @@ export function FlowMenu({ desktop, onDesktop }: { desktop: boolean; onDesktop: 
         </footer>
       </PopoverContent>
     </Popover>
+  )
+}
+
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="space-y-1.5">
+      <div className="text-[11px] font-medium text-muted-foreground">{label}</div>
+      {children}
+    </div>
   )
 }
