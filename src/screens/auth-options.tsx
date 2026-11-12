@@ -41,7 +41,7 @@ function Circle({ step, onStep }: StepProps) {
         {step === "workspace"
           ? <Illo key={step} name="create-workspace" force className="h-[46%]" />
           : <img src={`${import.meta.env.BASE_URL}illustrations/set/welcome.webp`} alt="Five people holding ribbons that cross in the middle" className="w-[62%] max-w-[420px] mix-blend-multiply brightness-[1.05] contrast-[1.02]" />}
-        <Wordmark className="absolute top-6 left-7" />
+        <Wordmark variant="beside" className="absolute top-6 left-7" />
       </aside>
       <main className="flex min-w-0 items-center justify-center px-8">
         <StepForm step={step} onStep={onStep} />
@@ -56,7 +56,7 @@ function TrayForm({ step, onStep }: StepProps) {
   return (
     <div className="grid h-full bg-background md:grid-cols-2">
       <aside className="relative hidden min-w-0 flex-col justify-center gap-8 px-14 md:flex">
-        <Wordmark className="absolute top-8 left-14" />
+        <Wordmark variant="beside" className="absolute top-8 left-14" />
         {step === "workspace"
           ? <Illo key={step} name="create-workspace" force className="h-40 self-start" />
           : <Illo key="welcome" name="welcome" force className="h-auto w-full max-w-[380px]" />}

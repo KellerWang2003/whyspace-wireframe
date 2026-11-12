@@ -8,10 +8,11 @@ import { ME } from "@/data"
 import { navigate } from "@/lib/router"
 import { cn } from "@/lib/utils"
 import { MCP_URL, PROVIDERS, disconnect, useConnections, type ProviderId } from "./connections"
+import { WhyspaceIcon } from "@/components/brand/logo"
 
-// Whyspace's mark until the logo is decided: the placeholder tile the rail uses.
+// Whyspace's app icon, beside the tools' own logos.
 export function WhyspaceTile({ className }: { className?: string }) {
-  return <span aria-label="Whyspace" className={cn("flex size-10 shrink-0 items-center justify-center rounded-xl bg-foreground font-serif text-xl text-background", className)}>Y</span>
+  return <WhyspaceIcon className={cn("size-10", className)} />
 }
 
 export function ProviderTile({ id, className }: { id: ProviderId; className?: string }) {

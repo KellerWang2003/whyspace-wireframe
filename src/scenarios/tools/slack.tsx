@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils"
 import { TODAY, dayOf } from "@/playground/model"
 import { appApi, useApp, type AppSnapshot } from "../frame"
 import { focusWin } from "../windows"
+import { WhyspaceIcon } from "@/components/brand/logo"
 
 // Slack on the scenario desktop, with Whyspace's Slack app in it (the chat plan's row 1). A stand-in,
 // not Whyspace UI, except for what the app posts: on Pro your Duet answers asks for you while you're
@@ -331,9 +332,9 @@ function Tag({ children }: { children: ReactNode }) {
   return <span className="rounded bg-neutral-200 px-1 text-[10px] font-semibold text-neutral-600 uppercase">{children}</span>
 }
 
-// Whyspace's mark, as its Slack app's icon.
+// Whyspace's app icon, as its Slack app's avatar.
 function Y({ className }: { className?: string }) {
-  return <span className={cn("flex shrink-0 items-center justify-center rounded bg-neutral-900 font-serif text-white", className)}>Y</span>
+  return <WhyspaceIcon title={null} className={className} />
 }
 
 // A pane that opens scrolled to its newest message and follows new ones, like a chat.

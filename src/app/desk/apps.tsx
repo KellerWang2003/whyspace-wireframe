@@ -9,6 +9,7 @@ import { firstName, markOfCaught, otherOf, type Caught } from "@/screens/overlay
 import { intentOf, threadOf } from "../threads"
 import { CHANNEL, DM, READ_THREAD, type Scene, type SlackMsg } from "./data"
 import { Toast, Win } from "./win"
+import { WhyspaceIcon } from "@/components/brand/logo"
 
 // The apps on the Desk: Claude, Google Docs, Slack and Figma, as stand-ins. The one Whyspace piece
 // inside them is the card where the work lands: the same card in a Docs margin, a Slack reply, a
@@ -25,7 +26,7 @@ export function CaughtCard({ items, title, time, dark, className }: { items: Cau
   return (
     <div className={cn("rounded-lg border p-3 text-[12px]", dark ? "border-white/10 bg-white/5 text-neutral-100" : "border-black/10 bg-white text-neutral-900", className)}>
       <div className={cn("flex items-center gap-2", dark ? "text-neutral-400" : "text-neutral-500")}>
-        <span className={cn("flex size-5 items-center justify-center rounded-full font-serif text-[11px]", dark ? "bg-white text-black" : "bg-neutral-900 text-white")}>Y</span>
+        <WhyspaceIcon title={null} className="size-5" />
         <span className="truncate"><span className={dark ? "text-neutral-100" : "text-neutral-900"}>{title}</span> · {n} of {items.length} confirmed</span>
         {time && <span className="ml-auto shrink-0 tabular-nums">{time}</span>}
       </div>
@@ -188,7 +189,7 @@ function Msg({ m, items, work }: { m: SlackMsg; items: Caught[]; work: string })
       </div>
       {m.card && (
         <div className="ml-11 border-l-2 border-neutral-200 pl-3">
-          <div className="mb-1 flex items-center gap-2 text-[12px]"><span className="flex size-4 items-center justify-center rounded-full bg-neutral-900 font-serif text-[9px] text-white">Y</span><span className="font-semibold">Whyspace</span><span className="text-neutral-400">APP · {m.time}</span></div>
+          <div className="mb-1 flex items-center gap-2 text-[12px]"><WhyspaceIcon title={null} className="size-4" /><span className="font-semibold">Whyspace</span><span className="text-neutral-400">APP · {m.time}</span></div>
           <CaughtCard items={items} title={work} className="max-w-[460px]" />
         </div>
       )}

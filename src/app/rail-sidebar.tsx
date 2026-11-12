@@ -5,6 +5,7 @@ import { AccountMenuContent, WorkspaceMark } from "@/components/app/app-sidebar"
 import { dateOfDay } from "@/components/app/calendar/events"
 import { ProjectMark } from "@/components/app/project-mark"
 import { RailCount } from "@/components/app/count-badge"
+import { WhyspaceMark } from "@/components/brand/logo"
 import { ProjectNewMenu } from "@/components/app/project-new-menu"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Sidebar, SidebarContent } from "@/components/ui/sidebar"
@@ -68,10 +69,10 @@ export function RailSidebar({ at }: { at?: string[] } = {}) {
         <div className="relative z-10 w-(--rail-w) shrink-0">
           <nav ref={railRef} aria-label="Rail" className={RAIL}>
             {hifi && <RailSheetTab at={route.join("/")} />}
-            {/* Logo placeholder (the mark is still TBD): a plain box. */}
-            {/* High-fi: the panel is a sheet set 8px down, so the logo drops the same 8px to sit on the panel title's line. */}
+            {/* The Whyspace mark alone, 22px wide (about 15px clear each side of the rail), centered on the panel title's line. */}
+            {/* High-fi: the panel is a sheet set 8px down, so the mark drops the same 8px. */}
             <div className={cn("mb-1 flex h-9 w-full shrink-0 items-center justify-center", hifi && "mt-2")}>
-              <span aria-hidden className={cn("rounded-md border-[1.5px] border-sidebar-foreground", hifi ? "size-7 rounded-lg" : "size-6")} />
+              <WhyspaceMark className="w-[22px]" />
             </div>
             <div data-rail-zone className="flex min-h-0 flex-col gap-(--rail-gap)">
             <RailButton label="Search" hint="⌘K" onClick={() => setSearchOpen(true)}><Search className="size-4" /></RailButton>

@@ -10,6 +10,7 @@ import { useHifi } from "@/lib/hifi"
 import { navigate } from "@/lib/router"
 import { useStore } from "@/lib/store"
 import { cn } from "@/lib/utils"
+import { WhyspaceLockup } from "@/components/brand/logo"
 
 // Signing in, creating an account and naming the workspace (Keller's pick, Nov 11: "Bunting on a wash" from
 // #/playground/system/login). Art on the left in a leaf wash panel, the form on the right under the wordmark:
@@ -97,8 +98,9 @@ function OtherWays({ onPick }: { onPick: (name: string) => void }) {
   )
 }
 
-export function Wordmark({ className }: { className?: string }) {
-  return <span className={cn("font-serif text-[22px] leading-none tracking-tight text-foreground", className)}>Whyspace</span>
+/** The Whyspace lockup: stacked over the form (the main one), or beside the name in a corner. */
+export function Wordmark({ variant = "stacked", className }: { variant?: "stacked" | "beside"; className?: string }) {
+  return <WhyspaceLockup variant={variant} className={cn(variant === "stacked" ? "w-24" : "w-32", className)} />
 }
 
 // Sign up is only the account form. Naming the workspace is the next step (screens/welcome.tsx).
