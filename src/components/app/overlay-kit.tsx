@@ -1,6 +1,7 @@
 import type { ComponentType, ReactNode } from "react"
 import { ChevronRight } from "lucide-react"
 import { ProjectMark } from "@/components/app/project-mark"
+import { WhyspaceMark } from "@/components/brand/logo"
 import { CountBadge } from "@/components/app/count-badge"
 import { MarkIcon } from "@/components/app/status-badge"
 import { ThreadChip } from "@/app/hifi-kit"
@@ -10,15 +11,13 @@ import { cn } from "@/lib/utils"
 
 // The pieces both desktop overlays share (the Desk's pill and the scenario pill), so they follow the design system.
 // High-fi: the overlay is the rail's gray layer with paper rows on it (index.css "High-fi overlay"), the logo
-// placeholder from the rail, project mark › thread chip, Suggested chips, and the painted count badge.
+// mark from the rail, project mark › thread chip, Suggested chips, and the painted count badge.
 // The wireframe keeps its plain look.
 
-// The logo placeholder, same as the rail's (the mark is still to be decided). Wireframe: the "Y".
+// The Whyspace mark, same as the rail's: the bare forest mark.
 export function OverlayLogo({ onClick }: { onClick?: () => void }) {
   const hifi = useHifi()
-  const mark = hifi
-    ? <span aria-hidden className="block size-6 rounded-lg border-[1.5px] border-foreground" />
-    : <span aria-hidden className="text-sm font-semibold tracking-tight">Y</span>
+  const mark = <WhyspaceMark title={null} className={hifi ? "w-[22px]" : "w-5"} />
   if (!onClick) return <span className="shrink-0" aria-label="Whyspace">{mark}</span>
   return (
     <button type="button" onClick={onClick} title="Open Whyspace" aria-label="Open Whyspace" className="shrink-0 rounded-sm px-0.5 outline-none hover:bg-foreground/5 focus-visible:ring-2 focus-visible:ring-ring">

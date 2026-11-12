@@ -7,6 +7,7 @@ import { appApi, attachApp, installDesk } from "./frame"
 import { ScenarioBar } from "./bar"
 import { Pill } from "./pill"
 import { MENU_H, clampWins, dragWin, focusWin, frontOf, layOut, minimizeWin, toggleMax, useDrag, useWins, type Mode } from "./windows"
+import { WhyspaceIcon } from "@/components/brand/logo"
 
 // The scenario desktop: a menu bar, the dock on the left, and windows you can move, resize, minimize
 // and bring forward. Whyspace is one of them: the real app in an iframe (see frame.ts), on the
@@ -191,7 +192,7 @@ function Dock({ front, min }: { front?: string; min: Record<string, boolean> }) 
 
 export function AppIcon({ icon, className }: { icon: DockIcon; className?: string }) {
   const base = "grid place-items-center rounded-[11px] shadow-sm ring-1 ring-black/10"
-  if (icon === "whyspace") return <span className={cn(base, "bg-neutral-900 font-serif text-2xl text-white", className)}>Y</span>
+  if (icon === "whyspace") return <span className={cn(base, "overflow-hidden", className)}><WhyspaceIcon title={null} className="size-full" /></span>
   if (icon === "claude") return <span className={cn(base, "bg-[#f5f0e8] text-2xl text-[#c96442]", className)}>✳</span>
   if (icon === "runway") return <span className={cn(base, "bg-black text-lg font-semibold text-white", className)}>R</span>
   if (icon === "slack") return <span className={cn(base, "bg-[#4a154b] text-2xl font-semibold text-white", className)}>#</span>

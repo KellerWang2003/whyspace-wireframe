@@ -4,6 +4,7 @@ import { navigate } from "@/lib/router"
 import { ToolLogo } from "@/components/app/tool-logo"
 import { cn } from "@/lib/utils"
 import { PaintSurface, Strands } from "@/components/brand/paint"
+import { WhyspaceLockup, WhyspaceMark, WhyspaceThread } from "@/components/brand/logo"
 import thread from "@/assets/landing/thread.webp"
 import face1 from "@/assets/landing/face-1.webp"
 import face2 from "@/assets/landing/face-2.webp"
@@ -71,19 +72,6 @@ export function Landing() {
 }
 
 /* ---------- shared ---------- */
-
-const Y_PATHS = [
-  "M476.7 15.6Q495.0 0.0 495.0 24.0L495.0 173.4Q495.0 197.4 475.9 211.8L185.2 431.9Q166.1 446.4 166.1 422.4L166.1 304.7Q166.1 280.7 184.3 265.1Z",
-  "M21.8 31.4Q1.2 19.0 1.0 43.0L0.2 174.5Q0.0 198.5 21.8 208.6L132.4 260.1Q154.1 270.2 172.3 254.6L245.7 191.6Q263.9 176.0 243.3 163.7Z",
-  "M337.9 334.9Q356.9 320.2 356.9 344.2L356.9 483.3Q356.9 507.3 337.7 521.7L185.4 635.6Q166.2 650.0 166.2 626.0L166.2 491.3Q166.2 467.3 185.2 452.7Z",
-]
-function YMark({ className, color }: { className?: string; color: string }) {
-  return (
-    <svg viewBox="0 0 495 650" className={className} aria-hidden>
-      {Y_PATHS.map((d) => <path key={d} d={d} fill={color} />)}
-    </svg>
-  )
-}
 
 function useInView<T extends Element>() {
   const ref = useRef<T>(null)
@@ -178,8 +166,7 @@ function Nav({ go }: { go: (id: string) => void }) {
     <header className="sticky top-0 z-30 border-b backdrop-blur-md" style={{ background: `${C.paper}e6`, borderColor: C.line }}>
       <div className="mx-auto flex h-16 max-w-[1040px] items-center gap-8 px-6">
         <button onClick={() => go("top")} className="flex items-center gap-2">
-          <YMark className="h-6 w-auto" color={C.forest} />
-          <span className="font-serif text-[22px] leading-none">Whyspace</span>
+          <WhyspaceLockup variant="beside" className="w-[124px]" />
         </button>
         <nav className="hidden items-center gap-6 text-[14px] md:flex" style={{ color: C.muted }}>
           <button onClick={() => go("how")} className="hover:opacity-70">How it works</button>
@@ -198,6 +185,8 @@ function Hero({ go }: { go: (id: string) => void }) {
   return (
     <Section id="top" className="pt-20 pb-24 md:pt-28">
       <div className="text-center">
+        {/* The mark writes itself and runs on into a thread: the logo's own animation, only here. */}
+        <WhyspaceThread className="mx-auto mb-8 w-[min(360px,72%)]" />
         <h1 className="lp-rise font-serif text-[clamp(3rem,7vw,5.5rem)] leading-[0.98] tracking-[-0.025em]">Where the why lives.</h1>
         <p className="lp-rise mx-auto mt-6 max-w-xl text-[18px] leading-relaxed md:text-[20px]" style={{ color: C.muted, animationDelay: "100ms" }}>
           Keep the why with the work, from teammate to teammate and tool to tool.
@@ -235,7 +224,7 @@ function ProductWindow() {
       </div>
       <div className="grid md:grid-cols-[200px_1fr]">
         <aside className="hidden border-r p-3 text-[13px] md:block" style={{ borderColor: C.line, background: C.subtle }}>
-          <div className="flex items-center gap-2 px-2 py-1.5 font-medium"><YMark className="h-3.5 w-auto" color={C.forest} />Whiskr</div>
+          <div className="flex items-center gap-2 px-2 py-1.5 font-medium"><WhyspaceMark title={null} className="w-4" />Whiskr</div>
           <div className="mt-2 space-y-0.5">
             <div className="rounded-md bg-white px-2 py-1.5 font-medium" style={{ boxShadow: `0 0 0 1px ${C.line}` }}>Home</div>
             <div className="px-2 py-1.5" style={{ color: C.muted }}>Tasks</div>
@@ -529,8 +518,7 @@ function Closing() {
       </div>
       <div className="mx-auto mt-24 flex max-w-[1040px] flex-wrap items-center gap-x-8 gap-y-3 border-t px-6 py-7 text-[13px]" style={{ borderColor: "#ffffff22" }}>
         <div className="flex items-center gap-2">
-          <YMark className="h-4 w-auto" color={C.paper} />
-          <span className="font-serif text-[18px] leading-none">Whyspace</span>
+          <WhyspaceLockup variant="beside" tone="paper" className="w-[104px]" />
         </div>
         <span className="font-mono text-[11px]" style={{ opacity: 0.6 }}>whyspace.app</span>
         <span className="ml-auto font-mono text-[11px]" style={{ opacity: 0.6 }}>© 2026 Whyspace</span>

@@ -1,6 +1,6 @@
-import { useState, type ReactNode } from "react"
+import { Fragment, useState, type ReactNode } from "react"
 import { toast } from "sonner"
-import { ArrowUpRight, RotateCcw } from "lucide-react"
+import { ArrowUpDown, ArrowUpRight, ListFilter, RotateCcw, Rows3 } from "lucide-react"
 import {
   AppWindow,
   Check,
@@ -63,14 +63,19 @@ import { ResizeHandle } from "@/components/app/resize-handle"
 import { usePanelWidth } from "@/lib/use-panel-width"
 import { DESIGN } from "@/lib/design"
 import { TaskWhere } from "@/app/where"
+import { ThreadTag } from "@/app/thread-ui"
 
 // Tasks, grouped by the thread they belong to. Each task suggests a tool and a ready prompt
 // that pulls its context from Whyspace over MCP; what it relates to stays folded away.
 
 const STATUS_ORDER: TaskStatus[] = ["prog", "review", "todo", "done"]
 // Views work like Notion: each keeps its filters, sort and layout, and edits save into it.
-type TaskFilters = { thread: string; status: "all" | "open" | TaskStatus; owner: string; due: "any" | "week"; layout: "list" | "board" }
-const BLANK: TaskFilters = { thread: "all", status: "all", owner: "all", due: "any", layout: "list" }
+// group: across projects (My tasks), the table's rows fall under their project, their thread, or neither.
+type Group = "project" | "thread" | "none"
+type TaskFilters = { thread: string; status: "all" | "open" | TaskStatus; owner: string; due: "any" | "week"; layout: "list" | "board"; group: Group }
+const BLANK: TaskFilters = { thread: "all", status: "all", owner: "all", due: "any", layout: "list", group: "project" }
+const GROUPS: [Group, string][] = [["project", "Project"], ["thread", "Thread"], ["none", "None"]]
+const SORTS: [string, string][] = [["default", "Default"], ["title", "Task"], ["status", "Status"], ["owner", "Assignee"], ["due", "Due date"], ["thread", "Thread"]]
 const SEED: SavedView<TaskFilters>[] = [
   { id: "all", name: "All", filters: BLANK, sort: null, locked: true },
   { id: "mine", name: "My open tasks", filters: { ...BLANK, owner: ME.id, status: "open" }, sort: null },
@@ -109,6 +114,8 @@ export function TasksView({ title, tasks: initial, showProject = false, defaultP
 
   const v = useSavedViews<TaskFilters>(showProject ? "tasks:mine" : `tasks:${defaultProject}`, SEED, BLANK)
   const { thread, status, owner, due, layout } = v.active.filters
+  // Grouping only applies across projects; a project's own table stays one list.
+  const group: Group = showProject ? v.active.filters.group : "none"
   const [search, setSearch] = useState("")
   const update = (id: string, patch: Partial<Task>) => patchTask(id, patch)
   const owners = [...new Set(tasks.flatMap(assigneesOf))]
@@ -130,8 +137,11 @@ export function TasksView({ title, tasks: initial, showProject = false, defaultP
     owner: (t) => assigneesOf(t).map((id) => PEOPLE[id]?.name).join(", "),
     due: (t) => dueDay(t),
   }, null, { sort: v.active.sort as Sort<"thread" | "title" | "status" | "owner" | "due">, setSort: v.setSort })
+  // The groups in the order the rows came in, so a header sort reorders inside each group.
+  const keyOf = (t: Task) => (group === "project" ? t.project : group === "thread" ? threadOf(t) : "")
+  const groups = group === "none" ? [] : [...new Set(rows.map(keyOf))].sort((a, b) => a.localeCompare(b)).map((key) => ({ key, rows: rows.filter((t) => keyOf(t) === key) }))
   const seed = SEED.find((x) => x.id === v.active.id)?.filters ?? BLANK
-  const changed = JSON.stringify({ ...v.active.filters, layout: seed.layout }) !== JSON.stringify(seed)
+  const changed = JSON.stringify({ ...v.active.filters, layout: seed.layout, group: seed.group }) !== JSON.stringify(seed)
   const filtering = thread !== "all" || status !== "all" || owner !== "all" || due !== "any"
 
   // The ⋯ menu holds the layout, the filters and the open view's actions.
@@ -142,36 +152,66 @@ export function TasksView({ title, tasks: initial, showProject = false, defaultP
         <DropdownMenuRadioItem value="board"><Kanban />Board</DropdownMenuRadioItem>
       </DropdownMenuRadioGroup>
       <DropdownMenuSeparator />
+      {showProject && layout === "list" && (
+        <DropdownMenuSub>
+          <DropdownMenuSubTrigger><Rows3 />Group by<span className="ml-auto text-xs text-muted-foreground">{GROUPS.find(([g]) => g === group)?.[1]}</span></DropdownMenuSubTrigger>
+          <DropdownMenuSubContent>
+            <DropdownMenuRadioGroup value={group} onValueChange={(x) => v.setFilters({ group: x as Group })}>
+              {GROUPS.map(([g, label]) => <DropdownMenuRadioItem key={g} value={g}>{label}</DropdownMenuRadioItem>)}
+            </DropdownMenuRadioGroup>
+          </DropdownMenuSubContent>
+        </DropdownMenuSub>
+      )}
       <DropdownMenuSub>
-        <DropdownMenuSubTrigger>Thread</DropdownMenuSubTrigger>
-        <DropdownMenuSubContent>
-          <DropdownMenuRadioGroup value={thread} onValueChange={(x) => v.setFilters({ thread: x })}>
-            <DropdownMenuRadioItem value="all">All threads</DropdownMenuRadioItem>
-            {threads.map((x) => <DropdownMenuRadioItem key={x} value={x}>{x}</DropdownMenuRadioItem>)}
-          </DropdownMenuRadioGroup>
+        <DropdownMenuSubTrigger><ListFilter />Filter{filtering && <span className="ml-auto size-1.5 rounded-full bg-foreground" />}</DropdownMenuSubTrigger>
+        <DropdownMenuSubContent className="w-48">
+          <DropdownMenuSub>
+            <DropdownMenuSubTrigger>Thread</DropdownMenuSubTrigger>
+            <DropdownMenuSubContent>
+              <DropdownMenuRadioGroup value={thread} onValueChange={(x) => v.setFilters({ thread: x })}>
+                <DropdownMenuRadioItem value="all">All threads</DropdownMenuRadioItem>
+                {threads.map((x) => <DropdownMenuRadioItem key={x} value={x}>{x}</DropdownMenuRadioItem>)}
+              </DropdownMenuRadioGroup>
+            </DropdownMenuSubContent>
+          </DropdownMenuSub>
+          <DropdownMenuSub>
+            <DropdownMenuSubTrigger>Status</DropdownMenuSubTrigger>
+            <DropdownMenuSubContent>
+              <DropdownMenuRadioGroup value={status} onValueChange={(x) => v.setFilters({ status: x as TaskFilters["status"] })}>
+                <DropdownMenuRadioItem value="all">Any status</DropdownMenuRadioItem>
+                <DropdownMenuRadioItem value="open">Not done</DropdownMenuRadioItem>
+                {STATUS_ORDER.map((x) => <DropdownMenuRadioItem key={x} value={x}>{TASK_STATUS_LABEL[x]}</DropdownMenuRadioItem>)}
+              </DropdownMenuRadioGroup>
+            </DropdownMenuSubContent>
+          </DropdownMenuSub>
+          <DropdownMenuSub>
+            <DropdownMenuSubTrigger>Assignee</DropdownMenuSubTrigger>
+            <DropdownMenuSubContent>
+              <DropdownMenuRadioGroup value={owner} onValueChange={(x) => v.setFilters({ owner: x })}>
+                <DropdownMenuRadioItem value="all">Anyone</DropdownMenuRadioItem>
+                {owners.map((o) => <DropdownMenuRadioItem key={o} value={o}>{o === ME.id ? "Me" : PEOPLE[o]?.name}</DropdownMenuRadioItem>)}
+              </DropdownMenuRadioGroup>
+            </DropdownMenuSubContent>
+          </DropdownMenuSub>
+          <DropdownMenuCheckboxItem checked={due === "week"} onCheckedChange={(c) => v.setFilters({ due: c ? "week" : "any" })} onSelect={(e) => e.preventDefault()}>Due this week</DropdownMenuCheckboxItem>
+          {changed && <><DropdownMenuSeparator /><DropdownMenuItem onSelect={v.resetFilters}>Clear filters</DropdownMenuItem></>}
         </DropdownMenuSubContent>
       </DropdownMenuSub>
       <DropdownMenuSub>
-        <DropdownMenuSubTrigger>Status</DropdownMenuSubTrigger>
-        <DropdownMenuSubContent>
-          <DropdownMenuRadioGroup value={status} onValueChange={(x) => v.setFilters({ status: x as TaskFilters["status"] })}>
-            <DropdownMenuRadioItem value="all">Any status</DropdownMenuRadioItem>
-            <DropdownMenuRadioItem value="open">Not done</DropdownMenuRadioItem>
-            {STATUS_ORDER.map((x) => <DropdownMenuRadioItem key={x} value={x}>{TASK_STATUS_LABEL[x]}</DropdownMenuRadioItem>)}
+        <DropdownMenuSubTrigger><ArrowUpDown />Sort<span className="ml-auto text-xs text-muted-foreground">{SORTS.find(([k]) => k === (sort?.key ?? "default"))?.[1]}</span></DropdownMenuSubTrigger>
+        <DropdownMenuSubContent className="w-44">
+          <DropdownMenuRadioGroup value={sort?.key ?? "default"} onValueChange={(k) => v.setSort(k === "default" ? null : { key: k, dir: sort?.dir ?? "asc" })}>
+            {SORTS.map(([k, label]) => <DropdownMenuRadioItem key={k} value={k}>{label}</DropdownMenuRadioItem>)}
           </DropdownMenuRadioGroup>
+          {sort && <>
+            <DropdownMenuSeparator />
+            <DropdownMenuRadioGroup value={sort.dir} onValueChange={(d) => v.setSort({ ...sort, dir: d as "asc" | "desc" })}>
+              <DropdownMenuRadioItem value="asc">Ascending</DropdownMenuRadioItem>
+              <DropdownMenuRadioItem value="desc">Descending</DropdownMenuRadioItem>
+            </DropdownMenuRadioGroup>
+          </>}
         </DropdownMenuSubContent>
       </DropdownMenuSub>
-      <DropdownMenuSub>
-        <DropdownMenuSubTrigger>Assignee</DropdownMenuSubTrigger>
-        <DropdownMenuSubContent>
-          <DropdownMenuRadioGroup value={owner} onValueChange={(x) => v.setFilters({ owner: x })}>
-            <DropdownMenuRadioItem value="all">Anyone</DropdownMenuRadioItem>
-            {owners.map((o) => <DropdownMenuRadioItem key={o} value={o}>{o === ME.id ? "Me" : PEOPLE[o]?.name}</DropdownMenuRadioItem>)}
-          </DropdownMenuRadioGroup>
-        </DropdownMenuSubContent>
-      </DropdownMenuSub>
-      <DropdownMenuCheckboxItem checked={due === "week"} onCheckedChange={(c) => v.setFilters({ due: c ? "week" : "any" })} onSelect={(e) => e.preventDefault()}>Due this week</DropdownMenuCheckboxItem>
-      {changed && <><DropdownMenuSeparator /><DropdownMenuItem onSelect={v.resetFilters}>Clear filters</DropdownMenuItem></>}
       <DropdownMenuSeparator />
       <ViewActions v={v} onRename={setRenaming} />
     </FilterMenu>
@@ -194,7 +234,7 @@ export function TasksView({ title, tasks: initial, showProject = false, defaultP
           <TableHeader>
             <TableRow>
               <TableHead className="w-10 pl-4" />
-              <SortableHead id="thread" sort={sort} onSort={toggle} className="w-44">Thread</SortableHead>
+              {group !== "thread" && <SortableHead id="thread" sort={sort} onSort={toggle} className={group === "project" ? "w-36" : "w-44"}>Thread</SortableHead>}
               <SortableHead id="title" sort={sort} onSort={toggle}>Task</SortableHead>
               <SortableHead id="status" sort={sort} onSort={toggle} className="w-32">Status</SortableHead>
               <SortableHead id="owner" sort={sort} onSort={toggle} className="w-44">Assignees</SortableHead>
@@ -202,9 +242,18 @@ export function TasksView({ title, tasks: initial, showProject = false, defaultP
             </TableRow>
           </TableHeader>
           <TableBody>
-            {rows.map((t) => (
-              <TaskRow key={t.id} task={t} thread={threadOf(t)} onOpen={() => setOpenId(t.id)} onToggle={(done) => update(t.id, { status: done ? "done" : "todo" })} />
-            ))}
+            {group === "none"
+              ? rows.map((t) => <TaskRow key={t.id} task={t} thread={threadOf(t)} onOpen={() => setOpenId(t.id)} onToggle={(done) => update(t.id, { status: done ? "done" : "todo" })} />)
+              : groups.map((g) => (
+                <Fragment key={g.key}>
+                  <TableRow className="hover:bg-transparent">
+                    <TableCell colSpan={group === "thread" ? 5 : 6} className="px-4 pt-5 pb-2 text-xs font-medium">
+                      {group === "project" ? <ProjectLabel project={projectId(g.key)} /> : <TaskWhere task={g.rows[0]} />}
+                    </TableCell>
+                  </TableRow>
+                  {g.rows.map((t) => <TaskRow key={t.id} task={t} thread={group === "project" ? t.part : undefined} onOpen={() => setOpenId(t.id)} onToggle={(done) => update(t.id, { status: done ? "done" : "todo" })} />)}
+                </Fragment>
+              ))}
             {!rows.length && <TableRow><TableCell colSpan={6} className="py-12 text-center text-sm text-muted-foreground">No matches.</TableCell></TableRow>}
           </TableBody>
         </Table>
@@ -250,12 +299,13 @@ export function TasksView({ title, tasks: initial, showProject = false, defaultP
   )
 }
 
-function TaskRow({ task: t, thread, onOpen, onToggle }: { task: Task; thread: string; onOpen: () => void; onToggle: (done: boolean) => void }) {
+// thread: what the Thread column says; left out when the rows are grouped by thread.
+function TaskRow({ task: t, thread, onOpen, onToggle }: { task: Task; thread?: string; onOpen: () => void; onToggle: (done: boolean) => void }) {
   const done = t.status === "done"
   return (
     <TableRow className="cursor-pointer" onClick={onOpen}>
       <TableCell className="pl-4" onClick={(e) => e.stopPropagation()}><Checkbox checked={done} onCheckedChange={(v) => onToggle(!!v)} /></TableCell>
-      <TableCell className="truncate text-xs text-muted-foreground">{DESIGN === "b" && thread !== t.part ? <TaskWhere task={t} /> : thread}</TableCell>
+      {thread !== undefined && <TableCell className="truncate text-xs text-muted-foreground">{DESIGN === "b" && thread !== t.part ? <TaskWhere task={t} /> : thread === t.part && DESIGN === "b" ? <ThreadTag projectId={projectId(t.project)} part={t.part} /> : thread}</TableCell>}
       <TableCell className={cn("max-w-0 truncate py-3", done ? "text-muted-foreground line-through" : "font-medium")}>{t.title}</TableCell>
       <TableCell><span className="flex items-center gap-1.5 text-xs"><TaskStatusIcon status={t.status} />{TASK_STATUS_LABEL[t.status]}</span></TableCell>
       <TableCell><span className="flex items-center gap-2 text-xs"><MiniStack ids={assigneesOf(t)} /><span className="truncate">{namesOf(assigneesOf(t))}</span></span></TableCell>

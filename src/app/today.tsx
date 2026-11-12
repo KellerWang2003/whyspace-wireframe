@@ -1,6 +1,6 @@
 import { useState, type ReactNode } from "react"
 import { toast } from "sonner"
-import { ArrowUpRight, Bell, BellOff, CalendarDays, Check, ChevronRight, Copy, Mail, MailOpen, RotateCcw, Sun, X } from "lucide-react"
+import { Bell, BellOff, CalendarDays, Check, ChevronRight, Copy, Mail, MailOpen, RotateCcw, Sun, X } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
@@ -8,31 +8,29 @@ import { Empty, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empt
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from "@/components/ui/sheet"
 import { AppShell } from "@/components/app/app-shell"
 import { PersonAvatar } from "@/components/app/person"
-import { ProjectMark } from "@/components/app/project-mark"
 import { StatusBadge, StatusIcon } from "@/components/app/status-badge"
 import { TaskSheet, TasksView } from "@/components/app/tasks"
-import { ARTIFACTS, DECISIONS, ME, PEOPLE, SESSIONS, type InboxItem, type InboxKind, type Task } from "@/data"
+import { ARTIFACTS, DECISIONS, ME, MY_PROJECTS, PEOPLE, SESSIONS, type InboxItem, type InboxKind, type Task } from "@/data"
 import { navigate } from "@/lib/router"
 import { useStore } from "@/lib/store"
 import { useHifi } from "@/lib/hifi"
-import { CountBadge } from "@/components/app/count-badge"
 import { cn } from "@/lib/utils"
 import { useStatusOf } from "@/lib/work"
 import { KIND_ICON } from "@/playground/artifact"
 import { dateOfDay, fmtDay } from "@/components/app/calendar/events"
 import { ComingUp } from "@/screens/inbox"
-import { openReply } from "./duet-state"
+import { chatFor, chatOfLine } from "./chats-model"
 import { NeedsFocus } from "./needs-focus"
+import { WorkingNow } from "./people-cards"
 import { SureMark } from "./sure-mark"
 import { useNeedsItems, useNeedsQueue, type NeedsItem } from "./needs-model"
-import { conversationOf } from "./together"
 import { InboxWhere } from "./where"
 import { useAllTasks } from "./work"
-import { onToday, todayDay, useHandledLines, useRecap, useTodayRows, type Line } from "./today-model"
+import { onToday, todayDay, useHandledLines, useTodayRows, type Line } from "./today-model"
 import { Illo } from "@/components/brand/illo/pieces"
 
 // Today: the one page that replaced Inbox and My tasks. It reads like a recap: what needs you,
-// one line per project, your tasks, then what was handled (by you and by your Duet).
+// your tasks, who's working on what across your projects, then what was handled (by you and by your Duet).
 // Needs you shows one thing at a time, answered in place; its sentence opens the detail as a side peek.
 
 const KIND_LABEL: Record<InboxKind, string> = { review: "Decision review", change: "Project update", alert: "Possible misalignment", invite: "Meeting invitation", mention: "Mention" }
@@ -40,9 +38,8 @@ const labelOf = (item: InboxItem) => (item.need === "do" ? "Do" : item.need === 
 const isMine = (t: Task) => t.owner === ME.id || !!t.assignees?.includes(ME.id)
 
 export function Today() {
-  const { current, inboxState, openDecision, patchTask, setInboxRead } = useStore()
+  const { current, openDecision, patchTask, setInboxRead } = useStore()
   const rows = useTodayRows()
-  const recap = useRecap()
   const lines = useHandledLines()
   const tasks = useAllTasks()
   const queue = useNeedsQueue(useNeedsItems(rows))
@@ -51,14 +48,14 @@ export function Today() {
   const [taskId, setTaskId] = useState<string | null>(null)
   const openTask = tasks.find((t) => t.id === taskId)
   const peek = (item: InboxItem) => { setInboxRead(item.id, true); setPeekId(item.id) }
-  const peeked = [...rows.flatMap((r) => ("item" in r && r.item ? [r.item] : [])), ...recap.flatMap((r) => r.items), ...lines.flatMap((l) => (l.item ? [l.item] : []))].find((i) => i.id === peekId)
+  const peeked = [...rows.flatMap((r) => ("item" in r && r.item ? [r.item] : [])), ...lines.flatMap((l) => (l.item ? [l.item] : []))].find((i) => i.id === peekId)
   const day = todayDay()
   // High-fi: more room between everything.
   const hifi = useHifi()
 
   // What an item's sentence opens: the update behind it, the decision, the conversation or the task.
   const openItem = ({ row: r }: NeedsItem) => {
-    if (r.kind === "asked") return openReply(conversationOf(r.line))
+    if (r.kind === "asked") return chatFor(chatOfLine(r.line), r.line.who)
     if (r.kind === "decide") return r.item ? peek(r.item) : openDecision(r.decision.id)
     if (r.kind === "invite") return peek(r.item)
     return r.item ? peek(r.item) : setTaskId(r.task.id)
@@ -98,14 +95,6 @@ export function Today() {
               <NeedsFocus queue={queue} onOpen={openItem} />
             </Lane>
 
-            {recap.length > 0 && (
-              <Lane title="Across your projects">
-                <ul className={cn("flex flex-col", hifi ? "gap-2" : "gap-1")}>
-                  {recap.map((r) => <RecapLine key={r.project.id} recap={r} unreadOf={(i) => !(inboxState[i.id]?.read ?? !i.unread)} onItem={peek} />)}
-                </ul>
-              </Lane>
-            )}
-
             {mine.length > 0 && (
               <Collapsible defaultOpen className="flex flex-col gap-4">
                 <CollapsibleTrigger className="group flex items-center gap-2 text-left">
@@ -115,6 +104,12 @@ export function Today() {
                 </CollapsibleTrigger>
                 <CollapsibleContent><TasksView title="My tasks" tasks={mine} showProject headless /></CollapsibleContent>
               </Collapsible>
+            )}
+
+            {current?.example && (
+              <Lane title="Working now">
+                <WorkingNow projects={MY_PROJECTS.map((p) => p.id)} />
+              </Lane>
             )}
 
             <Lane title="Handled">
@@ -153,43 +148,6 @@ function Lane({ title, count, children }: { title: string; count?: string; child
       </div>
       {children}
     </section>
-  )
-}
-
-function RecapLine({ recap: r, unreadOf, onItem }: { recap: { project: { id: string; name: string }; summary: string; items: InboxItem[]; unread: number }; unreadOf: (i: InboxItem) => boolean; onItem: (i: InboxItem) => void }) {
-  const [open, setOpen] = useState(false)
-  const hifi = useHifi()
-  return (
-    <li>
-      <button type="button" onClick={() => (r.items.length ? setOpen((o) => !o) : navigate(`/p/${r.project.id}/home`))} aria-expanded={r.items.length ? open : undefined} className={cn("flex w-full items-center text-left transition-colors hover:bg-muted/50", hifi ? "gap-4 rounded-2xl px-3 py-3.5" : "gap-3 rounded-lg px-3 py-2.5")}>
-        <ProjectMark project={r.project.id} className={hifi ? "size-9 rounded-xl" : "size-7 rounded-md"} />
-        <span className="min-w-0 flex-1">
-          <span className="block truncate text-sm font-medium">{r.project.name}</span>
-          <span className="block truncate text-xs text-muted-foreground">{r.summary}</span>
-        </span>
-        {r.unread > 0 && <CountBadge n={r.unread} suffix="new" size="md" />}
-        {r.items.length > 0 ? <ChevronRight className={cn("size-4 shrink-0 text-muted-foreground transition-transform", open && "rotate-90")} /> : <ArrowUpRight className="size-4 shrink-0 text-muted-foreground" />}
-      </button>
-      {open && (
-        <ul className="mb-2 ml-10 flex flex-col border-l pl-3">
-          {r.items.map((item) => {
-            const unread = unreadOf(item)
-            return (
-              <li key={item.id}>
-                <button type="button" onClick={() => onItem(item)} className="flex w-full items-start gap-3 rounded-md px-2 py-2 text-left hover:bg-muted/50">
-                  <span aria-label={unread ? "Unread" : "Read"} className={cn("mt-2 block size-1.5 shrink-0 rounded-full", unread ? "bg-foreground" : "bg-transparent")} />
-                  <span className="min-w-0 flex-1">
-                    <span className={cn("block text-sm leading-5", unread ? "font-semibold" : "font-medium")}>{item.summary}</span>
-                    <InboxWhere item={item} className="mt-1 text-[11px] text-muted-foreground" />
-                  </span>
-                  <span className="shrink-0 text-xs text-muted-foreground">{item.time}</span>
-                </button>
-              </li>
-            )
-          })}
-        </ul>
-      )}
-    </li>
   )
 }
 

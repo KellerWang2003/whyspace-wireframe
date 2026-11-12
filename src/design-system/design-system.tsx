@@ -5,6 +5,7 @@ import { ButtonsSection, BadgesSection, CardSection, ChoicesSection, EmptySectio
 import { ColorSection, ElevationSection, IconsSection, MarksSection, RadiusSection, SpacingSection, TypeSection } from "./foundations"
 import { MessagesSection, NeedsSection, RailSection } from "./app-parts"
 import { IllustrationsSection } from "./illustrations"
+import { LogoSection } from "./logo"
 import { ExplorationsSection } from "./explorations"
 import { Section, StateMark } from "./kit"
 import { SECTIONS, STATE, type SectionId, type State } from "./model"
@@ -16,6 +17,7 @@ import { useHifi } from "@/lib/hifi"
 
 // Color reads the live tokens as it renders, so it remounts when the High-fi switch flips.
 const RENDER: Record<SectionId, (hifi: boolean) => ReactNode> = {
+  logo: () => <LogoSection />,
   type: () => <TypeSection />,
   color: (hifi) => <ColorSection key={hifi ? "hifi" : "wire"} />,
   marks: () => <MarksSection />,

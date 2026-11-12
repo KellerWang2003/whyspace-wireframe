@@ -12,10 +12,11 @@ export const STATE: Record<State, { mark: Mark; label: string }> = {
 }
 
 export type SectionId =
-  | "type" | "color" | "marks" | "icons" | "illustrations" | "spacing" | "radius" | "elevation"
+  | "logo" | "type" | "color" | "marks" | "icons" | "illustrations" | "spacing" | "radius" | "elevation"
   | "buttons" | "badges" | "inputs" | "choices" | "tabs" | "overlays" | "people" | "places" | "rail" | "rows" | "card" | "needs" | "messages" | "table" | "empty"
 
 export const SECTIONS: { id: SectionId; label: string; group: "Foundations" | "Components"; state: State }[] = [
+  { id: "logo", label: "Logo", group: "Foundations", state: "hifi" },
   { id: "type", label: "Type", group: "Foundations", state: "hifi" },
   { id: "color", label: "Color", group: "Foundations", state: "hifi" },
   { id: "marks", label: "Marks", group: "Foundations", state: "hifi" },

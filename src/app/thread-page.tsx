@@ -5,14 +5,14 @@ import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Empty, EmptyContent, EmptyHeader, EmptyTitle } from "@/components/ui/empty"
-import { DECISIONS, reachOf, type Decision, type Project, type Task } from "@/data"
+import { DECISIONS, reachOf, type Decision, type Project } from "@/data"
 import { navigate } from "@/lib/router"
 import { useStore } from "@/lib/store"
 import { cn } from "@/lib/utils"
 import { useTasks } from "@/lib/work"
 import { ThreadArtifacts, artifactMatches } from "./artifact-views"
 import { DecisionList, DecisionsFooter, decisionMatches } from "./decision-list"
-import { PeopleCards } from "./people-cards"
+import { WorkingNow } from "./people-cards"
 import { ConfirmedCount } from "./confirmed"
 import { ProjectSearch } from "./project-search"
 import { Count } from "./home"
@@ -20,7 +20,7 @@ import { TaskList, taskMatches } from "./task-list"
 import { ThreadIcon, ThreadIconButton, ThreadMenu } from "./thread-ui"
 import { ThreadToolbarSlot } from "./thread-toolbar"
 import { intentOf, threadOf, updateThread, useAnyThread, type Thread } from "./threads"
-import { useAllTasks, useArtifacts, type Item } from "./work"
+import { useAllTasks, useArtifacts } from "./work"
 import { NeedsFocus } from "./needs-focus"
 import { useNeedsItems, useNeedsQueue } from "./needs-model"
 import { useTodayRows } from "./today-model"
@@ -100,7 +100,7 @@ export function ThreadPage({ project, threadId, tab, sub }: { project: Project; 
               )}
               </ThreadToolbarSlot.Provider>
             </div>
-            {tab === "tasks" && <ThreadContext project={project} thread={thread} tasks={tasks} artifacts={artifacts} />}
+            {tab === "tasks" && <ThreadContext project={project} thread={thread} />}
           </div>
         </div>
       </div>
@@ -118,13 +118,12 @@ function Block({ title, icon, count, children }: { title: string; icon?: ReactNo
   )
 }
 
-function ThreadContext({ project, thread, tasks, artifacts }: { project: Project; thread: Thread; tasks: Task[]; artifacts: Item[] }) {
+function ThreadContext({ project, thread }: { project: Project; thread: Thread }) {
   const { openDecision } = useStore()
   const reachTasks = useTasks()
   // Today's Needs you, kept to the decisions in this thread: the same items and answers, one at a time.
   const rows = useTodayRows().filter((r) => r.kind === "decide" && r.project === project.id && r.decision.part === thread.part)
   const queue = useNeedsQueue(useNeedsItems(rows))
-  const decisions = DECISIONS.filter((d) => d.project === project.id && d.part === thread.part)
 
   // Decisions made in other threads that changed this thread's work and still need an update here.
   const upstream: { d: Decision; what: string }[] = []
@@ -145,7 +144,7 @@ function ThreadContext({ project, thread, tasks, artifacts }: { project: Project
       )}
 
       <Block title="Working now">
-        <PeopleCards project={project} thread={thread} tasks={tasks} decisions={decisions} artifacts={artifacts} />
+        <WorkingNow projects={[project.id]} part={thread.part} />
       </Block>
 
       {upstream.length > 0 && (
