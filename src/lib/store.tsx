@@ -51,12 +51,12 @@ type Store = {
 }
 
 // A test scenario can start on another plan (scenario 3 is on Pro, so the Duet answers in Slack).
-const DESIGN_WORKSPACE: Workspace = { id: "design-studio", name: "Keller’s workspace", plan: PRESET.plan ?? "Free", example: true }
+const DESIGN_WORKSPACE: Workspace = { id: "design-studio", name: "Litterbox Labs", plan: PRESET.plan ?? "Free", example: true }
 
 const StoreContext = createContext<Store | null>(null)
 
 export function StoreProvider({ children }: { children: ReactNode }) {
-  // Start inside Keller’s workspace so deep links work; sign up resets to no workspace.
+  // Start inside the Litterbox Labs workspace so deep links work; sign up resets to no workspace.
   const [workspaces, setWorkspaces] = useState<Workspace[]>([DESIGN_WORKSPACE])
   const [currentId, setCurrentId] = useState<string | null>("design-studio")
   const [upgradeOpen, setUpgradeOpen] = useState(false)

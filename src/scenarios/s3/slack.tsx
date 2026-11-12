@@ -1,12 +1,12 @@
 import { SlackWindow, type SlackConfig } from "../tools/slack"
 
-// Scenario 3's Slack: Whiskr's workspace on Thursday morning. While Keller was away, Christine asked in
+// Scenario 3’s Slack: the Litterbox Labs workspace on Thursday morning. While Keller was away, Christine asked in
 // #marketing and Kelly in a DM. Keller's Duet answered from Keller's confirmed decisions where one
 // covered the question (Christine's DM yesterday), and passed the rest to Keller. Kelly's question
 // touches Trevor's brand decision, so the Duet brought Trevor in. Tuesday's clash over the end card was
 // settled in Keller's DM with Trevor, and the Duet's DM opens on what happened while Keller was away.
 const S3_SLACK: SlackConfig = {
-  workspace: "Whiskr",
+  workspace: "Litterbox Labs",
   person: "MC",
   project: "whiskr",
   open: "app",
