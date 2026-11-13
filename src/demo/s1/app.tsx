@@ -146,7 +146,7 @@ function Rail({ badge }: { badge: number }) {
       <RailButton label="AI Studio · Recall"><ProjectMark project="studio" className="size-6" /></RailButton>
       <RailButton label="Holiday campaign"><ProjectMark project="holiday" className="size-6" /></RailButton>
       <RailButton label="New project"><Plus className="size-4 text-muted-foreground" /></RailButton>
-      <div className="mt-auto flex size-9 items-center justify-center"><WorkspaceMark name="Keller" className="size-7 text-sm" /></div>
+      <div className="mt-auto flex size-9 items-center justify-center"><WorkspaceMark name="Litterbox Labs" className="size-7 text-sm" /></div>
     </nav>
   )
 }

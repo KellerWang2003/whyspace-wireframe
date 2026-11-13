@@ -22,6 +22,7 @@ import { DecisionMap } from "./decision-map"
 import { ThreadTag } from "./thread-ui"
 import { useAllThreads, type Thread } from "./threads"
 import { EmptyStart } from "./empty-start"
+import { Illo } from "@/components/brand/illo/pieces"
 
 // Decisions. On Home: every thread, newest first, with saved views and a Thread column.
 // On a thread page: that thread only, filters but no views. Both switch between List and Map.
@@ -89,7 +90,7 @@ export function DecisionList({ projectId, decisions, thread, search = "" }: { pr
   const cols = thread ? 5 : 6
 
   // Decisions are caught from the work, so there is nothing to create here.
-  if (!decisions.length && !query) return <EmptyStart icon={Split} title="No decisions yet" />
+  if (!decisions.length && !query) return <EmptyStart icon={Split} title="No decisions yet" art={<Illo name="no-projects" className="mb-3 h-20" />} />
 
   return (
     <div className="flex min-w-0 flex-col gap-4">

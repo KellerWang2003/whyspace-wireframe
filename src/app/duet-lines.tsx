@@ -14,6 +14,8 @@ import { whenOf } from "./caught-model"
 import { SURE_LABEL, SURE_LEVELS, type Sure } from "./duet"
 import { first, openReply, useDuetActivity, type Handled } from "./duet-state"
 import { SureMark, type SureLook } from "./sure-mark"
+import { Illo } from "@/components/brand/illo/pieces"
+import { PIGMENT_HEX, useDuetFace } from "./duet-face"
 import { askTopicId, conversationOf, topicOf } from "./together"
 
 const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
@@ -60,6 +62,7 @@ export function DuetWaiting() {
 // `look`: the playground draws the page with each way of showing how sure (sure-mark.tsx).
 export function DuetDecided({ look, className }: { look?: SureLook; className?: string }) {
   const { handled } = useDuetActivity()
+  const face = useDuetFace(ME.id)
   const [only, setOnly] = useState<Sure | null>(null)
   const decided = handled.filter((h): h is Handled & { sure: Sure } => !h.byYou && !!h.sure)
   const shown = only ? decided.filter((h) => h.sure === only) : decided
@@ -92,7 +95,10 @@ export function DuetDecided({ look, className }: { look?: SureLook; className?: 
           )}
         </>
       ) : (
-        <p className="text-sm text-muted-foreground">Your Duet hasn’t decided anything for you yet.</p>
+        <div className="flex flex-col items-center gap-3 py-16 text-center">
+          <Illo name="meet-duet" duet={PIGMENT_HEX[face.pigment]} className="h-32" />
+          <p className="type-body text-muted-foreground">Nothing decided for you yet</p>
+        </div>
       )}
     </div>
   )

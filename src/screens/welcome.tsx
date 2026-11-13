@@ -31,7 +31,7 @@ export function CreateWorkspaceStep() {
           onSubmit={(e) => {
             e.preventDefault()
             createWorkspace(name.trim() || "My workspace")
-            navigate("/projects")
+            navigate("/today")
           }}
         >
           <h1 className="type-display">Your workspace</h1>
@@ -45,11 +45,11 @@ export function CreateWorkspaceStep() {
             <Item variant="outline" size="sm">
               <ItemMedia variant="icon"><JoinIcon /></ItemMedia>
               <ItemContent>
-                <ItemTitle>Keller’s workspace</ItemTitle>
+                <ItemTitle>Litterbox Labs</ItemTitle>
                 <ItemDescription>Invited by Christine</ItemDescription>
               </ItemContent>
               <ItemActions>
-                <Button type="button" size="sm" variant="outline" onClick={() => { joinWorkspace(); navigate("/inbox") }}>Join</Button>
+                <Button type="button" size="sm" variant="outline" onClick={() => { joinWorkspace(); navigate("/today") }}>Join</Button>
               </ItemActions>
             </Item>
           </FieldGroup>
@@ -88,7 +88,7 @@ export function WorkspaceDialog() {
                   createWorkspace(name.trim() || "My workspace")
                   setName("")
                   close()
-                  navigate("/projects")
+                  navigate("/today")
                 }}
               >
                 Create workspace
@@ -106,11 +106,11 @@ export function WorkspaceDialog() {
               <Item variant="outline">
                 <ItemMedia variant="icon"><JoinIcon /></ItemMedia>
                 <ItemContent>
-                  <ItemTitle>Keller’s workspace</ItemTitle>
+                  <ItemTitle>Litterbox Labs</ItemTitle>
                   <ItemDescription>Invited by Christine · 4 members</ItemDescription>
                 </ItemContent>
                 <ItemActions>
-                  <Button size="sm" onClick={() => { joinWorkspace(); close(); navigate("/inbox") }}>Accept</Button>
+                  <Button size="sm" onClick={() => { joinWorkspace(); close(); navigate("/today") }}>Accept</Button>
                 </ItemActions>
               </Item>
               <Field>
@@ -121,7 +121,7 @@ export function WorkspaceDialog() {
             <DialogFooter>
               <Button variant="link" className="mr-auto px-0" onClick={() => setWorkspaceOpen("create")}>Create one instead</Button>
               <DialogClose asChild><Button variant="outline">Cancel</Button></DialogClose>
-              <Button onClick={() => { joinWorkspace(); close(); navigate("/inbox") }}>Join with link</Button>
+              <Button onClick={() => { joinWorkspace(); close(); navigate("/today") }}>Join with link</Button>
             </DialogFooter>
           </>
         )}

@@ -18,6 +18,7 @@ import { ThreadTag } from "./thread-ui"
 import { threadOf, useAllThreads, type Thread } from "./threads"
 import { AddTaskDialog } from "./new-task"
 import { EmptyStart, StartThread } from "./empty-start"
+import { Illo } from "@/components/brand/illo/pieces"
 import { dueDay } from "./work"
 
 // Tasks. On Home: every thread, with saved views and a Thread column.
@@ -102,7 +103,7 @@ export function TaskList({ projectId, tasks, thread, search = "" }: { projectId:
   return (
     <div className="flex min-w-0 flex-col gap-4">
       {empty ? (
-        <EmptyStart icon={ListTodo} title="Create your first task" action={<Button size="sm" onClick={() => setCreating(true)}><Plus />New task</Button>} />
+        <EmptyStart icon={ListTodo} title="Create your first task" art={<Illo name="new-project" className="mb-3 h-28" />} action={<Button size="sm" onClick={() => setCreating(true)}><Plus />New task</Button>} />
       ) : <>
       <ThreadToolbar>
         {!thread && <ViewSegments v={views} renaming={renaming} onRename={setRenaming} />}

@@ -120,7 +120,7 @@ export function LogIn() {
   return (
     <div className="h-svh">
       <AuthSplit art={<WelcomeArt />}>
-        <AuthForm mode="signin" onSubmit={() => { joinWorkspace(); navigate("/inbox") }} onSwitch={() => navigate("/signup")} />
+        <AuthForm mode="signin" onSubmit={() => { joinWorkspace(); navigate("/today") }} onSwitch={() => navigate("/signup")} />
       </AuthSplit>
     </div>
   )

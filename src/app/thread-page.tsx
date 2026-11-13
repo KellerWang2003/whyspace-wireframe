@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Empty, EmptyContent, EmptyHeader, EmptyTitle } from "@/components/ui/empty"
+import { Illo } from "@/components/brand/illo/pieces"
 import { DECISIONS, reachOf, type Decision, type Project } from "@/data"
 import { navigate } from "@/lib/router"
 import { useStore } from "@/lib/store"
@@ -44,7 +45,7 @@ export function ThreadPage({ project, threadId, tab, sub }: { project: Project; 
     return (
       <div className="p-6 sm:p-8">
         <Empty className="border border-dashed py-16">
-          <EmptyHeader><EmptyTitle>This thread isn't here anymore</EmptyTitle></EmptyHeader>
+          <EmptyHeader><Illo name="went-wrong" className="mb-3 h-20" /><EmptyTitle>This thread isn't here anymore</EmptyTitle></EmptyHeader>
           <EmptyContent><Button size="sm" variant="outline" onClick={() => navigate(`/p/${project.id}/home`)}>Go to Home</Button></EmptyContent>
         </Empty>
       </div>

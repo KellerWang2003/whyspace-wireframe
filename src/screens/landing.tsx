@@ -173,7 +173,7 @@ function Nav({ go }: { go: (id: string) => void }) {
           <button onClick={() => go("pricing")} className="hover:opacity-70">Pricing</button>
         </nav>
         <div className="ml-auto flex items-center gap-2">
-          <button onClick={() => navigate("/projects")} className="hidden h-9 px-3 text-[14px] hover:opacity-70 sm:block">Open app</button>
+          <button onClick={() => navigate("/today")} className="hidden h-9 px-3 text-[14px] hover:opacity-70 sm:block">Open app</button>
           <Button onClick={() => navigate("/signup")} className="h-9 px-4 text-[14px]">Start free</Button>
         </div>
       </div>

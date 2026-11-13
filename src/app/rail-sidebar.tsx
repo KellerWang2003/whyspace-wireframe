@@ -71,9 +71,11 @@ export function RailSidebar({ at }: { at?: string[] } = {}) {
             {hifi && <RailSheetTab at={route.join("/")} />}
             {/* The Whyspace mark alone, 22px wide (about 15px clear each side of the rail), centered on the panel title's line. */}
             {/* High-fi: the panel is a sheet set 8px down, so the mark drops the same 8px. */}
-            <div className={cn("mb-1 flex h-9 w-full shrink-0 items-center justify-center", hifi && "mt-2")}>
+            <div className={cn("flex h-9 w-full shrink-0 items-center justify-center", hifi && "mt-2")}>
               <WhyspaceMark className="w-[22px]" />
             </div>
+            {/* Same divider as the one above the pinned projects. */}
+            <div className="mx-1.5 my-1 h-px shrink-0 bg-sidebar-border" />
             <div data-rail-zone className="flex min-h-0 flex-col gap-(--rail-gap)">
             <RailButton label="Search" hint="⌘K" onClick={() => setSearchOpen(true)}><Search className="size-4" /></RailButton>
             <RailButton label="Today" active={route[0] === "today" || route.length === 0} badge={needs} onClick={() => navigate("/today")}><DateGlyph day={new Date(dateOfDay(todayDay())).getDate()} /></RailButton>
