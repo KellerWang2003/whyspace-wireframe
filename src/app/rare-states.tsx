@@ -1,6 +1,5 @@
 import { useEffect } from "react"
 import { Lock, Loader2, TriangleAlert, WifiOff } from "lucide-react"
-import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Empty, EmptyContent, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty"
 import { AppShell } from "@/components/app/app-shell"
@@ -13,22 +12,17 @@ import { Illo } from "@/components/brand/illo/pieces"
 // The rare moments that get a painted illustration under High-fi (Float: on the paper, no frame).
 // The wireframe keeps a plain icon in the same spot.
 
-// Someone else's project, opened from a link. The owner here is a mock.
-const OTHERS: Record<string, { name: string; owner: string }> = {
-  "brand-refresh": { name: "Brand refresh", owner: "Christine" },
-}
-
-export function NoAccess({ id }: { id?: string }) {
+// Someone else's project, opened from a link. (Nov 14: just "No access" and a way back.)
+export function NoAccess() {
   const hifi = useHifi()
-  const p = OTHERS[id ?? ""] ?? { name: "this project", owner: "the owner" }
   return (
-    <AppShell crumbs={[{ label: p.name }]}>
+    <AppShell crumbs={[{ label: "No access" }]}>
       <Empty className="flex-1">
         <EmptyHeader className="max-w-md">
           {hifi ? <Illo name="no-access" className="mb-3 h-24" /> : <EmptyMedia variant="icon"><Lock /></EmptyMedia>}
-          <EmptyTitle className="type-title">You’re not in {p.name}</EmptyTitle>
+          <EmptyTitle className="type-title">No access</EmptyTitle>
         </EmptyHeader>
-        <EmptyContent><Button onClick={() => toast(`Asked ${p.owner} to add you`)}>Ask {p.owner}</Button></EmptyContent>
+        <EmptyContent><Button onClick={() => navigate("/today")}>Back to Today</Button></EmptyContent>
       </Empty>
     </AppShell>
   )

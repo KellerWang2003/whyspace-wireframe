@@ -83,7 +83,7 @@ function Screen() {
   if (first === "decisions") return <Projects />
   if (first === "projects") return <Projects empty={second === "empty"} />
   // A link to a project you're not in.
-  if (first === "no-access") return <NoAccess id={second} />
+  if (first === "no-access") return <NoAccess />
   if (first === "went-wrong") return <WentWrong />
   // The main design organizes a project around threads; archived Design A keeps project-wide pages.
   if (first === "p") return DESIGN === "b" ? <ProjectPage /> : <Project id={second} section={third ?? "home"} sub={fourth} />
