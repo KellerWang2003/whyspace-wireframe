@@ -42,17 +42,6 @@ function Painting({ name, s = 1, x = 0, y = 0 }: { name: string; s?: number; x?:
 const R = ({ pts, color, w = 16, start = "none", end = "notch", see, opacity, draw = 1, from = 0 }: { pts: P[]; color: string; w?: number; start?: End; end?: End; see?: boolean; opacity?: number; draw?: number; from?: number }) =>
   draw <= from ? null : <Ribbon pts={pts} color={color} w={w} start={start} end={end} layers={see ? 2 : 1} opaque={!see} opacity={opacity} draw={draw} from={from} />
 
-function Path({ d, color, w, draw = 1, from = 0 }: { d: string; color: string; w: number; draw?: number; from?: number }) {
-  if (draw <= from) return null
-  return (
-    <Layer opaque>
-      <rect x={-20} y={-20} width={280} height={280} fill="none" />
-      <path d={d} fill="none" stroke={color} strokeWidth={w} strokeLinecap="butt" strokeLinejoin="round" pathLength={100}
-        strokeDasharray={draw < 1 || from > 0 ? `${((draw - from) * 100).toFixed(2)} 300` : undefined} strokeDashoffset={from > 0 ? (-from * 100).toFixed(2) : undefined} />
-    </Layer>
-  )
-}
-
 // ---------------------------------------------------------------- motion
 
 export type Motion = "once" | "loop" | "off"
@@ -85,9 +74,6 @@ function Pebble({ x, y, r = 18, color = INK.sky }: { x: number; y: number; r?: n
 const sag = (x: number) => 64 + 36 * (1 - ((x - 120) / 124) ** 2)
 const tilt = (x: number) => (Math.atan((sag(x + 1) - sag(x - 1)) / 2) * 180) / Math.PI
 const line = [-4, 30, 70, 120, 170, 210, 244].map((x) => [x, sag(x)] as P)
-
-const spiral = (cx: number, cy: number, r0: number, r1: number, turns: number, n = 40): P[] =>
-  Array.from({ length: n + 1 }, (_, i) => { const k = i / n, a = k * turns * Math.PI * 2, r = r0 + (r1 - r0) * k; return [cx + Math.cos(a) * r, cy + Math.sin(a) * r * 0.42] as P })
 
 // ---------------------------------------------------------------- the pieces
 
@@ -161,18 +147,19 @@ const NoChats = () => (
 // Leaning back. Nothing left to do.
 const CaughtUp = () => <Painting name="caught-up" s={0.86} y={30} />
 
-// The ribbon runs across, then each tool slides onto it and settles. The ribbon stays behind.
+// A plain wood thread runs across, then each tool slides onto it and settles. The thread stays behind,
+// in its own color so the deeper blue Duet bubble on it still reads (Nov 14).
 const ConnectTools = ({ motion = "off" }: Props) => {
   const { c, t, out } = useMotion(motion, 5.4, 2.3)
   const tiles = [
     { x: 40, y: 104, size: 56, angle: -6, color: INK.leaf, glyph: "braces" as const },
     { x: 98, y: 140, size: 46, angle: 4, color: INK.apricot, glyph: "arrow" as const },
     { x: 154, y: 118, size: 52, angle: -3, color: INK.rose, glyph: "lines" as const },
-    { x: 210, y: 106, size: 48, angle: 0, color: INK.sky, glyph: "dots" as const, bubble: true },
+    { x: 210, y: 106, size: 48, angle: 0, color: INK.deepSky, glyph: "dots" as const, bubble: true },
   ]
   return (
     <g opacity={1 - out}>
-      <R see color={INK.sky} w={18} start="cut" pts={[[-4, 100], [40, 112], [96, 134], [150, 126], [196, 108], [244, 120]]} draw={span(c, 0, 1)} />
+      <R see color={INK.wood} w={18} start="cut" pts={[[-4, 100], [40, 112], [96, 134], [150, 126], [196, 108], [244, 120]]} draw={span(c, 0, 1)} />
       {tiles.map((d, i) => {
         const k = span(c, 0.7 + i * 0.3, 1.3 + i * 0.3)
         if (k <= 0) return null
@@ -183,12 +170,25 @@ const ConnectTools = ({ motion = "off" }: Props) => {
   )
 }
 
-// The coil winds out from its middle, then the loose end sways. Nothing started yet.
+// An empty line strung across, pegs ready and nothing hung on it yet. The line draws across, the
+// pegs drop on one by one and the line sways a little. (Was a coil until Nov 14: it read as a snake.)
+const PEGS = [[70, INK.apricot, -4], [120, INK.wood, 0], [170, INK.rose, 4]] as const
+const peg = (x: number, sway: number) => 112 - 16 * ((x - 120) / 124) ** 2 + 6 + sway * (1 - ((x - 120) / 124) ** 2)
 const NoProjects = ({ motion = "off" }: Props) => {
-  const { c, t, out } = useMotion(motion, 5.6, 2.2)
-  const sway = (k: number, ph: number) => Math.sin(t * 1.4 + ph) * k
-  const pts: P[] = [...spiral(112, 136, 8, 66, 2.25), [196, 150 + sway(2, 0)], [226, 156 + sway(4, 0.8)]]
-  return <R color={INK.leaf} w={11} start="cut" pts={pts} draw={span(c, 0, 2)} from={out} />
+  const { c, t, out } = useMotion(motion, 5.2, 2.0)
+  const sway = Math.sin(t * 1.3) * 2
+  const pts: P[] = [-4, 60, 120, 180, 244].map((x) => [x, peg(x, sway) - 6] as P)
+  return (
+    <g opacity={1 - out}>
+      <R color={INK.leaf} w={6} start="cut" end="cut" pts={pts} draw={span(c, 0, 0.9)} />
+      {PEGS.map(([x, col, a], i) => {
+        const k = span(c, 0.8 + i * 0.25, 1.3 + i * 0.25)
+        if (k <= 0) return null
+        const y = peg(x, sway)
+        return <Layer key={x} opaque><rect x={x - 5} y={y - 14 - (1 - k) * 14} width={10} height={30} rx={3} fill={col} opacity={k} transform={`rotate(${a} ${x} ${y})`} /></Layer>
+      })}
+    </g>
+  )
 }
 
 // The page settles, then the bookmark slips in across its corner and its tail sways.
@@ -215,15 +215,29 @@ const WentWrong = ({ motion = "off" }: Props) => {
   return <R color={INK.rose} w={14} pts={pts} draw={span(c, 0, 2.2)} from={out} />
 }
 
-// A ribbon runs across, then ties itself into a bow: the loops grow, the tails drop.
+// A rope barrier: two posts rise in, the ribbon slings across between them, sags and sways a little.
+// (Was a tied bow until Nov 14: it read as a gift.)
+function Post({ x, k }: { x: number; k: number }) {
+  if (k <= 0) return null
+  return (
+    <g opacity={k} transform={`translate(0 ${(1 - k) * 10})`}>
+      <Layer opaque><ellipse cx={x} cy={180} rx={22} ry={7} fill={INK.wood} /></Layer>
+      <Layer opaque><rect x={x - 6} y={96} width={12} height={84} rx={5} fill={INK.wood} /></Layer>
+      <Layer opaque><circle cx={x} cy={94} r={9} fill={INK.wood} /></Layer>
+    </g>
+  )
+}
 const NoAccess = ({ motion = "off" }: Props) => {
-  const { c, out } = useMotion(motion, 5.4, 2.1)
+  const { c, t, out } = useMotion(motion, 5.2, 1.9)
+  const settle = c > 1.3 ? Math.sin((c - 1.3) * 9) * Math.max(0, 1.9 - c) * 10 : 0
+  const sway = Math.sin(t * 1.2) * 1.5
+  const dip = 30 + settle + sway
+  const pts: P[] = [[54, 104], [88, 104 + dip * 0.75], [120, 104 + dip], [152, 104 + dip * 0.75], [186, 104]]
   return (
     <g opacity={1 - out}>
-      <R color={INK.rose} end="none" pts={[[-4, 128], [120, 124], [244, 128]]} draw={span(c, 0, 0.8)} />
-      <Path color={INK.rose} w={14} draw={span(c, 0.7, 1.6)} d="M120 124 C 102 92, 62 86, 62 110 C 62 132, 98 132, 120 124 C 142 132, 178 132, 178 110 C 178 86, 138 92, 120 124" />
-      <R color={INK.rose} w={14} pts={[[118, 126], [104, 152], [94, 178]]} draw={span(c, 1.4, 1.9)} />
-      <R color={INK.rose} w={14} pts={[[122, 126], [138, 152], [150, 176]]} draw={span(c, 1.5, 2.0)} />
+      <Post x={52} k={span(c, 0, 0.5)} />
+      <Post x={188} k={span(c, 0.15, 0.65)} />
+      <R color={INK.rose} w={13} end="none" pts={pts} draw={span(c, 0.6, 1.4)} />
     </g>
   )
 }
@@ -267,10 +281,10 @@ export const ILLO = {
   "no-chats": { label: "No chats yet", kind: "person", where: "Chats, a chat with no messages", view: "0 69 240 144", Art: NoChats },
   "caught-up": { label: "All caught up", kind: "person", where: "Today and the overlay, all done", view: "2 80 177 128", Art: CaughtUp },
   "connect-tools": { label: "Connect your AI tools", kind: "ribbon", where: "Settings, Connectors", view: "0 68 240 101", Art: ConnectTools },
-  "no-projects": { label: "No projects yet", kind: "ribbon", where: "All projects, Decisions, Search", view: "54 101 187 74", Art: NoProjects },
+  "no-projects": { label: "No projects yet", kind: "ribbon", where: "All projects, Decisions, Search", view: "-6 76 252 76", Art: NoProjects },
   "new-project": { label: "New project, nothing in it", kind: "ribbon", where: "A project's first page, Tasks, Artifacts", view: "56 30 183 158", Art: NewProject },
   "went-wrong": { label: "Something went wrong", kind: "ribbon", where: "Errors, gone threads and chats", view: "0 71 240 93", Art: WentWrong },
-  "no-access": { label: "No access", kind: "ribbon", where: "A project you're not in", view: "0 82 240 115", Art: NoAccess },
+  "no-access": { label: "No access", kind: "ribbon", where: "A project you're not in", view: "16 76 208 124", Art: NoAccess },
   "lost-connection": { label: "Lost connection", kind: "ribbon", where: "Strip at the top of the page", view: "0 77 240 72", Art: LostConnection },
 } satisfies Record<string, Piece>
 

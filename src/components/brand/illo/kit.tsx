@@ -18,6 +18,8 @@ export const INK = {
   apricot: "#f19d57",
   rose: "#e07aa0",
   sky: "#6fa6d4",
+  // Only the Duet bubble in Connect your AI tools: the system sky was too weak there (Nov 14).
+  deepSky: "#2E5FA8",
   peach: "#f9dcc0",
   card: "#F3EBDC",
   wood: "#d9b88e",

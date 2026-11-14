@@ -10,18 +10,18 @@ import { useHifi } from "@/lib/hifi"
 import { setPinned, usePinned } from "@/app/pins"
 import { cn } from "@/lib/utils"
 import { Illo } from "@/components/brand/illo/pieces"
+import { ProjectCover } from "@/components/app/project-cover"
 
 function ProjectCard({ project }: { project: Project }) {
   const ask = `#/p/${project.id}/home`
   const summary = WEEK_SUMMARY[project.id]?.match(/^.*?[.!?](\s|$)/)?.[0].trim() ?? "No updates yet."
   const waiting = useNeedsYou(project.id).length
   const next = nextMilestone(project.id)
-  const cover = { whiskr: "whiskr", studio: "recall" }[project.id]
 
   return (
     <Card className="min-w-0 gap-0 overflow-hidden py-0 shadow-none">
       <a href={ask} aria-label={`Open ${project.name}`} className="block overflow-hidden bg-muted focus-visible:outline-2 focus-visible:outline-ring focus-visible:-outline-offset-2">
-        {cover ? <img src={`${import.meta.env.BASE_URL}projects/${cover}.svg`} alt={`${project.name} concept preview`} className="h-44 w-full object-cover" /> : <div className="flex h-44 items-center justify-center"><FolderKanban className="size-10 text-muted-foreground" /></div>}
+        <ProjectCover id={project.id} name={project.name} />
       </a>
       <div className="space-y-3 p-5">
         <div className="flex items-center justify-between gap-3">
