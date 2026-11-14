@@ -230,13 +230,13 @@ export function Inbox() {
 // Meetings across all your projects, next first, as a vertical list grouped by day.
 // Reads the same calendar the project Home edits. Calendar opens every project on one calendar.
 // Lives on My tasks (Inbox is for what needs you now).
-export function ComingUp({ className }: { className?: string }) {
+export function ComingUp({ className, limit = 8 }: { className?: string; limit?: number }) {
   const [open, setOpen] = useState(false)
   const from = dateOfDay(TODAY)
   const next = useEvents()
     .filter((e) => e.status === "Live" || (e.status === "Scheduled" && e.end >= from))
     .sort((a, b) => Number(b.status === "Live") - Number(a.status === "Live") || a.start - b.start)
-    .slice(0, 8)
+    .slice(0, limit)
   const days: [string, typeof next][] = []
   for (const e of next) {
     const day = e.status === "Live" ? "Now" : fmtDay(e.start)

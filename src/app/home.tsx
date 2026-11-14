@@ -29,7 +29,7 @@ import { CaughtForYou } from "./caught"
 
 // Home: the project's landing page, plus the rollup pages (Tasks, Decisions, Artifacts),
 // each reached from the project nav, not tabs.
-// Overview keeps the calendar, who's working now, Caught for you, members and threads. Tasks, Decisions and Artifacts
+// Overview keeps the calendar, Caught for you (While you were away), who's working now, members and threads. Tasks, Decisions and Artifacts
 // show every thread's work in one place.
 
 export type HomeTab = "home" | "tasks" | "decisions" | "artifacts"
@@ -81,11 +81,11 @@ export function ProjectHome({ project, tab, sub }: { project: Project; tab: Home
                 {noWork && (noThreads ? <StartThread projectId={project.id} /> : <StartTask projectId={project.id} />)}
                 <ProjectCalendar project={project} today={todayOf(project)} />
                 {!noWork && <>
+                  <CaughtForYou project={project} />
                   <section aria-labelledby="working-now" className="flex flex-col gap-3">
                     <h2 id="working-now" className="type-section">Working now</h2>
                     <WorkingNow projects={[project.id]} />
                   </section>
-                  <CaughtForYou project={project} />
                 </>}
               </div>
               <aside aria-label="About this project" className="space-y-8">

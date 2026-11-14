@@ -1,3 +1,4 @@
+import { useState } from "react"
 import { ArrowUpRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { PersonAvatar } from "@/components/app/person"
@@ -112,6 +113,68 @@ function Doing({ activity: a, artifact, where, inThread }: { activity: Activity;
           <ArrowUpRight />
         </Button>
       )}
+    </div>
+  )
+}
+
+// Working now in brief, for Today's side column: grouped by project, each person with their thread and what they're
+// doing, at most `cap` people per project before "Show all". The full cards stay on each project's page.
+const shortName = (id: string) => (PROJECTS.find((p) => p.id === id)?.name ?? id).replace(/\s*\(.*\)$/, "")
+export function WorkingByProject({ projects, cap = 4 }: { projects: string[]; cap?: number }) {
+  const allTasks = useAllTasks()
+  const [expanded, setExpanded] = useState<string[]>([])
+  const live = ACTIVITY.filter((a) => a.state === "active" && projects.includes(a.project))
+  const tasks = allTasks.filter((t) => t.status !== "done" && projects.includes(idOfProject(t.project)))
+  const people = [...new Set([...live.map((a) => a.who), ...tasks.flatMap((t) => [t.owner, ...(t.assignees ?? [])])])]
+  const isLive = (id: string) => live.some((a) => a.who === id)
+  people.sort((a, b) => Number(isLive(b)) - Number(isLive(a)))
+  // Where someone is in a project: their live work there, or else the thread of their open tasks there.
+  const spotIn = (id: string, project: string) => {
+    const a = live.find((x) => x.who === id && x.project === project)
+    if (a) return { part: a.part, doing: a.aiDoing ?? a.doing }
+    const open = tasks.filter((t) => isTheirs(t, id) && idOfProject(t.project) === project)
+    return open.length ? { part: open[0].part, doing: undefined, open: open.length } : undefined
+  }
+  const groups = projects.map((project) => ({ project, who: people.filter((id) => spotIn(id, project)) })).filter((g) => g.who.length)
+
+  if (!groups.length) return <p className="text-sm text-muted-foreground">No one is working on anything yet.</p>
+  return (
+    <div className="flex flex-col gap-5">
+      {groups.map(({ project, who }) => {
+        const all = expanded.includes(project)
+        return (
+          <div key={project} className="flex flex-col gap-1">
+            <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <ProjectMark project={project} className="size-3.5" /><span className="text-foreground">{shortName(project)}</span>
+              <span className="ml-auto tabular-nums">{who.length} working</span>
+            </p>
+            <ul className="-mx-2 flex flex-col">
+              {(all ? who : who.slice(0, cap)).map((id) => {
+                const spot = spotIn(id, project)!
+                return (
+                  <li key={id} className="flex items-start gap-2.5 px-2 py-1.5 text-sm">
+                    <PersonAvatar id={id} className={cn("mt-0.5 size-6 shrink-0", isLive(id) && "ring-2 ring-foreground ring-offset-2 ring-offset-[var(--side-bg,var(--card))]")} />
+                    <span className="min-w-0 flex-1">
+                      <span className="flex items-center gap-2">
+                        <span className="shrink-0 font-medium">{firstName(id)}</span>
+                        <ThreadChip projectId={project} part={spot.part} className="ml-auto text-xs text-muted-foreground [&_svg]:size-3.5" />
+                      </span>
+                      <span className="mt-0.5 block truncate text-xs text-muted-foreground">
+                        {spot.doing ? <span className="shimmer-text">{spot.doing}</span> : `${spot.open} open task${spot.open === 1 ? "" : "s"}`}
+                      </span>
+                    </span>
+                  </li>
+                )
+              })}
+            </ul>
+            {who.length > cap && (
+              <button type="button" onClick={() => setExpanded((e) => (all ? e.filter((x) => x !== project) : [...e, project]))} className="self-start text-xs text-muted-foreground hover:text-foreground">
+                {all ? "Show less" : `Show all ${who.length}`}
+              </button>
+            )}
+          </div>
+        )
+      })}
     </div>
   )
 }

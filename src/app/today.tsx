@@ -21,7 +21,7 @@ import { dateOfDay, fmtDay } from "@/components/app/calendar/events"
 import { ComingUp } from "@/screens/inbox"
 import { chatFor, chatOfLine } from "./chats-model"
 import { NeedsFocus, Skipped } from "./needs-focus"
-import { WorkingNow } from "./people-cards"
+import { WorkingByProject } from "./people-cards"
 import { SureMark } from "./sure-mark"
 import { useNeedsItems, useNeedsQueue, type NeedsItem } from "./needs-model"
 import { InboxWhere } from "./where"
@@ -36,6 +36,8 @@ import { Illo } from "@/components/brand/illo/pieces"
 const KIND_LABEL: Record<InboxKind, string> = { review: "Decision review", change: "Project update", alert: "Possible misalignment", invite: "Meeting invitation", mention: "Mention" }
 const labelOf = (item: InboxItem) => (item.need === "do" ? "Do" : item.need === "decide" ? "Decide" : KIND_LABEL[item.kind])
 const isMine = (t: Task) => t.owner === ME.id || !!t.assignees?.includes(ME.id)
+// A side column card: the faintest gray on the paper. --side-bg lets avatar rings cut out against it.
+const SIDE_CARD = "rounded-[24px] bg-[color-mix(in_oklab,var(--foreground)_2%,var(--background))] p-5 [--side-bg:color-mix(in_oklab,var(--foreground)_2%,var(--background))]"
 
 export function Today() {
   const { current, openDecision, patchTask, setInboxRead } = useStore()
@@ -106,12 +108,6 @@ export function Today() {
               </Collapsible>
             )}
 
-            {current?.example && (
-              <Lane title="Working now">
-                <WorkingNow projects={MY_PROJECTS.map((p) => p.id)} />
-              </Lane>
-            )}
-
             <Lane title="Handled">
               {open.length === 0 && <p className="py-4 text-sm text-muted-foreground">Nothing today or yesterday.</p>}
               <ul className="flex flex-col">{open.map(line)}</ul>
@@ -130,7 +126,15 @@ export function Today() {
             )}
           </div>
         </div>
-        {current?.example && <ComingUp className={cn("shrink-0 border-t p-6 xl:w-80 xl:overflow-y-auto xl:border-t-0 xl:border-l", hifi ? "sm:px-8 sm:py-12 xl:w-84" : "sm:p-8 xl:px-6")} />}
+        {/* The side column: what's coming up and who's working where. High-fi: two soft cards on the paper, no column fill. */}
+        {current?.example && (
+          <aside aria-label="Around you" className={cn("flex shrink-0 flex-col border-t p-6 xl:w-80 xl:overflow-y-auto xl:border-t-0", hifi ? "gap-3 sm:px-5 sm:py-12 xl:w-84" : "gap-10 sm:p-8 xl:border-l xl:px-6")}>
+            <ComingUp limit={4} className={cn(hifi && SIDE_CARD)} />
+            <Lane title="Working now" className={cn(hifi && SIDE_CARD)}>
+              <WorkingByProject projects={MY_PROJECTS.map((p) => p.id)} />
+            </Lane>
+          </aside>
+        )}
       </div>
       <ItemPeek item={peeked} onClose={() => setPeekId(null)} onTask={setTaskId} />
       <TaskSheet task={openTask} onClose={() => setTaskId(null)} onChange={(patch) => openTask && patchTask(openTask.id, patch)} />
@@ -138,10 +142,10 @@ export function Today() {
   )
 }
 
-function Lane({ title, count, aside, children }: { title: string; count?: string; aside?: ReactNode; children: ReactNode }) {
+function Lane({ title, count, aside, children, className }: { title: string; count?: string; aside?: ReactNode; children: ReactNode; className?: string }) {
   const hifi = useHifi()
   return (
-    <section aria-label={title} className={cn("flex flex-col", hifi ? "gap-5" : "gap-3")}>
+    <section aria-label={title} className={cn("flex flex-col", hifi ? "gap-5" : "gap-3", className)}>
       <div className="flex h-8 items-center gap-2">
         <h2 className="type-section">{title}</h2>
         {count && <span className="text-sm text-muted-foreground tabular-nums">{count}</span>}

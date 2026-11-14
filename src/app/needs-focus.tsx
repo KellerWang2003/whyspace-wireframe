@@ -162,7 +162,7 @@ export function NeedsFocus({ queue, onOpen, compact }: { queue: NeedsQueue; onOp
         )
       })}
       <article ref={hifi ? measure : undefined} key={hifi ? it.id : undefined} aria-label={it.title} className={cn("bg-card", hifi ? cn("rounded-[24px] px-8 pt-6 pb-8 shadow-[0_0_0_1px_oklch(0_0_0/0.05)]", (leaving === it.id ? `hifi-${look.motion}-out` : `hifi-${look.motion}`)) : "rounded-xl border", !hifi && (compact ? "p-4" : "px-6 pt-5 pb-6"))}>
-        <CardBand kind={kindOfRow(it.row)} className={compact ? "-mx-8 -mt-6 mb-4 rounded-t-[24px] px-8 py-2" : "-mx-8 -mt-6 mb-5 rounded-t-[24px] px-8 py-2.5"} />
+        <CardBand kind={kindOfRow(it.row)} className={compact ? "-mx-4 -mt-4 mb-3 rounded-t-[calc(var(--radius-xl)-1px)] px-4 py-1.5" : "-mx-8 -mt-6 mb-5 rounded-t-[24px] px-8 py-2.5"} />
         {/* The project and thread on the left, who raised it on the right; Skip sits at the bottom right, beside the suggestions. */}
         <div className={cn("flex items-center gap-x-3 gap-y-1", compact ? "mb-2" : "flex-wrap", hifi ? "mb-3 min-h-8 text-sm" : "mb-2 min-h-7 text-xs", "text-muted-foreground")}>
           {!compact && <Where project={it.row.project} part={thread?.part} />}
