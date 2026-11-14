@@ -3,7 +3,7 @@ import { DECISIONS, addLinks, getDataVersion, patchDecision, recordDecision, sub
 import { DUET_LOG } from "@/app/duet"
 import { answerAsk, useDuetState } from "@/app/duet-state"
 import { askOfTopic, saveAnswer, saveMessage, sendTogether, settleTogether, topicOf } from "@/app/together"
-import { addArtifact } from "@/app/work"
+import { addArtifact, addTask, useAllTasks } from "@/app/work"
 import { askWhyspace } from "@/lib/ask"
 import { navigate, useRoute } from "@/lib/router"
 import { useStore } from "@/lib/store"
@@ -21,6 +21,8 @@ export function AppLink() {
   const version = useSyncExternalStore(subscribeData, getDataVersion)
   const statusOf = useStatusOf()
   const duet = useDuetState()
+  const tracked = useAllTasks().filter((t) => t.id.startsWith("clash-") && t.status !== "done" && t.decision).map((t) => t.decision!)
+  const trackedKey = tracked.join()
   const path = `/${useRoute().join("/")}`
 
   useEffect(() => {
@@ -32,6 +34,7 @@ export function AppLink() {
         status: Object.fromEntries(DECISIONS.map((d) => [d.id, statusOf(d)])),
         confirmed: store.confirmed,
         clashes: store.clashes,
+        tracked: trackedKey ? trackedKey.split(",") : [],
         duet: {
           answered: { ...duet.answered },
           asks: everything.filter((m) => m.who === "me").map((m) => m.text),
@@ -48,7 +51,8 @@ export function AppLink() {
           addLinks(copy(links))
           for (const d of decisions) recordDecision(copy(d))
         },
-        settleClash: (id, choice) => store.settleClash(id, choice),
+        settleClash: (id, choice, reason) => store.settleClash(id, choice, reason),
+        addTask: (task) => { addTask(copy(task)); store.patchTask(task.id, {}) },
         confirm: (id, why) => {
           if (why) patchDecision(id, { why })
           store.confirmDecision(id)
@@ -69,7 +73,7 @@ export function AppLink() {
         navigate: (to) => navigate(to),
       },
     )
-  }, [version, statusOf, store, duet])
+  }, [version, statusOf, store, duet, trackedKey])
 
   useEffect(() => { deskApi()?.route(path) }, [path])
 

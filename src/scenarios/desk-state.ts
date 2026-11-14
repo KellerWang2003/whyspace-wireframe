@@ -45,13 +45,11 @@ export function emit(e: ToolEvent) {
     api?.record(e.decisions, e.links)
     const ids = e.decisions.map((d) => d.id)
     const clash = e.decisions.some((d) => d.status === "flag")
-    // A guess with no reason yet: the pill asks why as it arrives, instead of a quiet count.
-    const ask = e.decisions.find((d) => !["flag", "prec", "conf", "chg"].includes(d.status) && !d.why)
+    // Only a clash opens the pill by itself. A guess without a reason waits in it (asks wait for a pause, like a share).
     setDesk((d) => ({
       caught: [...d.caught.filter((x) => !ids.includes(x)), ...ids],
       auto: clash ? "alert" : d.auto,
       trace: clash ? d.trace + 1 : d.trace,
-      peek: !clash && ask ? ask.id : d.peek,
     }))
   } else if (e.type === "share") {
     api?.addArtifact(e.artifact)

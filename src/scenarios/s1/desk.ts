@@ -12,4 +12,5 @@ export const S1_DESK: DeskConfig = {
   Overlay: S1Overlay,
   takes: { [S1_DECISIONS.red.id]: { decision: S1_DECISIONS.blue, link: ["nored", S1_DECISIONS.blue.id] } },
   hints: S1_HINTS,
+  asks: { short: "Why 15 seconds?", "s1-luna": "Why open on Luna’s real clip?", "s1-dot": "Why end on the moving dot?" },
 }

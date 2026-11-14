@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from "react"
-import { AudioLines, Check, ChevronDown, Mic, MicOff, X } from "lucide-react"
+import { Check, ChevronDown, Mic, MicOff, X } from "lucide-react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import {
@@ -11,19 +11,20 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { ProjectMark } from "@/components/app/project-mark"
-import { OverlayCount, OverlayLogo, OverlayWhere } from "@/components/app/overlay-kit"
+import { OverlayFold, OverlayLogo, OverlayWhere } from "@/components/app/overlay-kit"
+import { OverlayStack } from "@/components/app/overlay-stack"
 import { PROJECTS } from "@/data"
 import { cn } from "@/lib/utils"
 import { MockDesktop } from "@/screens/mock-desktop"
-import { checkRows, confirmedHere, needsYou, useCaught, type Caught, type CaughtActions } from "@/screens/overlay-model"
-import { ExpandedPanel } from "@/screens/overlay-panel"
+import { checkRows, firstName, needsElsewhere, needsYou, otherOf, useCaught, caughtIn, type Caught, type CaughtActions } from "@/screens/overlay-model"
+import { deskItems, deskLog } from "@/screens/overlay-items"
 
-// The overlay outside the app: one pill, three moments. Layout "inline" from the pill playground
-// (Expanded tab) reads best at this width; the other two are a one-word change here. While you work it shows the most urgent
-// mark with everything waiting inside; click it and the expanded pill shows what needs you here and
-// what was caught. When you share (Share in the app you work in), it opens once with the guesses
-// still in the work: the check. Nothing blocks. OverlayPill is the pill itself, so the Desk can
-// drop it on any scene; DesktopMode is the standalone demo with the mock Claude window.
+// The overlay outside the app: one pill, three levels (Nov 13). An alert, a possible misalignment, is the only
+// thing that opens it by itself; asks (a guess without a why) wait in it until you open it or share; Saved is
+// the log. Open, it shows one card at a time, Today's Needs you card in the same words (components/app/overlay-stack).
+// Folded, it shows the project's mark and how many need you (overlay-kit OverlayFold). When you share (Share
+// in the app you work in), it opens once with the guesses still in the work: the check. Nothing blocks.
+// OverlayPill is the pill itself, so the Desk can drop it on any scene; DesktopMode is the standalone demo.
 
 export type Where = { project: string; part: string }
 
@@ -42,13 +43,6 @@ const reducedMotion = () => window.matchMedia("(prefers-reduced-motion: reduce)"
 function fadeIn(el: HTMLElement | null, delay = 0) {
   if (!el || reducedMotion()) return
   el.animate([{ opacity: 0, transform: "translateY(4px)" }, { opacity: 1, transform: "none" }], { duration: 220, delay, easing: EASE, fill: "backwards" })
-}
-
-// Fades an element in the first time it renders.
-function useFadeIn<T extends HTMLElement>() {
-  const ref = useRef<T>(null)
-  useLayoutEffect(() => fadeIn(ref.current), [])
-  return ref
 }
 
 // The pill docks to any screen edge. On the top or bottom edge it lays out sideways.
@@ -111,9 +105,18 @@ export function OverlayPill({ all, act, where, onWhere, expanded, onExpanded, ch
   const horizontal = !expanded && (dock.edge === "top" || dock.edge === "bottom")
   const projectName = PROJECTS.find((p) => p.id === where.project)?.name?.replace(/\s*\(.*\)$/, "")
   const needs = needsYou(all, where)
-  const confirmed = confirmedHere(all, where)
-  // The pill's shape is the badge: ▲ if anything clashes, ○ if guesses wait, else the confirmed count.
-  const top = needs.some((c) => c.kind === "clash") ? "triangle" : needs.length ? "empty" : null
+  // Folded: the decisions captured this session, or the alert symbol while a clash waits.
+  const clash = needs.find((c) => c.kind === "clash")
+  const other = clash ? otherOf(clash) : undefined
+  // A clash waiting when the scene starts: the yellow line runs once around the pill, then it opens on it.
+  const [trace, setTrace] = useState(0)
+  const [alerted] = useState(() => !!clash && !expanded && !check)
+  useEffect(() => {
+    if (!alerted) return
+    const a = setTimeout(() => setTrace(1), 400)
+    const b = setTimeout(() => { setTrace(0); onExpanded(true) }, 1600)
+    return () => { clearTimeout(a); clearTimeout(b) }
+  }, [alerted, onExpanded])
 
   function close() {
     // Closing the check is fine: the work travels as it is, and the next share asks only about new guesses.
@@ -213,13 +216,17 @@ export function OverlayPill({ all, act, where, onWhere, expanded, onExpanded, ch
       data-edge={horizontal ? "h" : "v"}
       onKeyDown={(e) => { if (e.key === "Escape") { close(); pillRef.current?.focus() } }}
       className={cn(
-        "group/box fixed z-30 flex max-h-[calc(100svh-1.5rem)] max-w-[calc(100vw-1.5rem)] flex-col overflow-hidden border border-white/60 bg-background/85 shadow-xl ring-1 ring-black/5 backdrop-blur-xl",
+        "group/box fixed z-30 flex max-h-[calc(100svh-1.5rem)] max-w-[calc(100vw-1.5rem)] flex-col border border-white/60 bg-background/85 shadow-xl ring-1 ring-black/5 backdrop-blur-xl [--badge-cut:var(--hifi-layer,var(--background))]",
         "transition-[border-radius,box-shadow,background-color] duration-300",
-        expanded ? "max-h-[560px] w-[320px] rounded-2xl" : cn(horizontal ? "h-12" : "w-12", "rounded-[24px] hover:bg-background hover:shadow-2xl hover:ring-black/15"),
+        expanded ? "max-h-[640px] w-[340px] overflow-hidden rounded-[24px]" : cn(
+          horizontal ? "h-12" : "w-12", "rounded-[24px]",
+          "hover:bg-background hover:shadow-2xl hover:ring-black/15",
+        ),
         dragAt && "cursor-grabbing shadow-2xl",
       )}
       style={dragAt ? { left: dragAt.x, top: dragAt.y } : dockStyle(dock)}
     >
+      {trace > 0 && !expanded && <span key={trace} aria-hidden className="pill-trace" />}
       <button
         ref={pillRef}
         type="button"
@@ -231,68 +238,55 @@ export function OverlayPill({ all, act, where, onWhere, expanded, onExpanded, ch
         onPointerUp={onPillUp}
         onPointerCancel={onPillUp}
         onClick={() => { if (justDragged.current) { justDragged.current = false; return } onExpanded(true) }}
-        className={cn("touch-none items-center gap-2.5 outline-none select-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring", expanded ? "hidden" : horizontal ? "flex h-full flex-row px-2.5" : "flex flex-col px-2 py-3")}
+        className={cn("touch-none items-center justify-center gap-2.5 rounded-[inherit] outline-none select-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring", expanded ? "hidden" : cn("flex size-full", horizontal ? "flex-row px-2.5" : "flex-col py-3"))}
       >
-        <ProjectMark project={where.project} className="size-7 rounded-md" />
-        {/* Only the most urgent mark shows, with everything waiting inside. Nothing waiting: the confirmed count. */}
-        {top ? <OverlayCount top={top} n={needs.length} /> : confirmed.length > 0 && (
-          <span role="status" className="text-xs font-medium tabular-nums text-muted-foreground">
-            {confirmed.length}<span className="sr-only"> confirmed</span>
-          </span>
-        )}
-        {live && (
-          <FadeIn as="span" role="status" className="grid size-5 place-items-center">
-            <AudioLines className="size-4" />
-            <span className="sr-only">Live session on</span>
-          </FadeIn>
-        )}
+        <OverlayFold project={where.project} captured={caughtIn(all, where).length} alert={clash ? `${clash.title}, against ${other ? firstName(other.owner) : "a teammate"}’s decision` : undefined} live={live} />
       </button>
 
       <div ref={panelRef} hidden={!expanded} className={cn("min-h-0 flex-1 flex-col", expanded ? "flex" : "hidden")}>
-        <ExpandedPanel
-          layout="inline"
-          all={all}
-          act={act}
-          where={where}
-          check={check}
-          onCheckDone={() => { onCheck(null); onExpanded(false) }}
-          header={
-            <header data-overlay-head className="flex h-12 shrink-0 items-center gap-2 border-b pr-2 pl-4">
-              <OverlayLogo onClick={onOpenApp} />
-              {onWhere ? (
-                <DropdownMenu modal={false} open={menuOpen} onOpenChange={setMenuOpen}>
-                  <DropdownMenuTrigger className="flex min-w-0 flex-1 items-center gap-1.5 rounded-sm py-1 text-left text-xs outline-none focus-visible:ring-2 focus-visible:ring-ring" aria-label={`Save to ${projectName}, ${where.part}`}>
-                    {whereLabel}
-                    <ChevronDown className="size-3 shrink-0 text-muted-foreground" />
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="start" className="w-60">
-                    {Object.entries(PARTS).map(([project, parts], i) => (
-                      <div key={project}>
-                        {i > 0 && <DropdownMenuSeparator />}
-                        <DropdownMenuLabel className="flex items-center gap-2 text-xs text-muted-foreground">
-                          <ProjectMark project={project} className="size-4" />
-                          {PROJECTS.find((p) => p.id === project)?.name}
-                        </DropdownMenuLabel>
-                        {parts.map((part) => (
-                          <DropdownMenuItem key={part} onSelect={() => onWhere({ project, part })}>
-                            {part}
-                            {where.project === project && where.part === part && <Check className="ml-auto" />}
-                          </DropdownMenuItem>
-                        ))}
-                      </div>
+        <header data-overlay-head className="flex h-12 shrink-0 items-center gap-2 border-b pr-2 pl-4">
+          <OverlayLogo onClick={onOpenApp} />
+          {onWhere ? (
+            <DropdownMenu modal={false} open={menuOpen} onOpenChange={setMenuOpen}>
+              <DropdownMenuTrigger className="flex min-w-0 flex-1 items-center gap-1.5 rounded-sm py-1 text-left text-xs outline-none focus-visible:ring-2 focus-visible:ring-ring" aria-label={`Save to ${projectName}, ${where.part}`}>
+                {whereLabel}
+                <ChevronDown className="size-3 shrink-0 text-muted-foreground" />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-60">
+                {Object.entries(PARTS).map(([project, parts], i) => (
+                  <div key={project}>
+                    {i > 0 && <DropdownMenuSeparator />}
+                    <DropdownMenuLabel className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <ProjectMark project={project} className="size-4" />
+                      {PROJECTS.find((p) => p.id === project)?.name}
+                    </DropdownMenuLabel>
+                    {parts.map((part) => (
+                      <DropdownMenuItem key={part} onSelect={() => onWhere({ project, part })}>
+                        {part}
+                        {where.project === project && where.part === part && <Check className="ml-auto" />}
+                      </DropdownMenuItem>
                     ))}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              ) : (
-                <span className="flex min-w-0 flex-1 items-center gap-1.5 py-1 text-xs" aria-label={`Saving to ${projectName}, ${where.part}`}>{whereLabel}</span>
-              )}
-              <Button size="icon-sm" variant="ghost" className={cn("size-7", live && "text-foreground")} title={live ? "End live session" : "Start live"} aria-label={live ? "End live session" : "Start live"} aria-pressed={live} onClick={() => { setLive((v) => !v); if (live) toast("Session saved") }}>
-                {live ? <MicOff className="size-3.5" /> : <Mic className="size-3.5" />}
-              </Button>
-              <Button size="icon-sm" variant="ghost" className="size-7" aria-label="Close" onClick={close}><X className="size-3.5" /></Button>
-            </header>
-          }
-        />
+                  </div>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <span className="flex min-w-0 flex-1 items-center gap-1.5 py-1 text-xs" aria-label={`Saving to ${projectName}, ${where.part}`}>{whereLabel}</span>
+          )}
+          <Button size="icon-sm" variant="ghost" className={cn("size-7", live && "text-foreground")} title={live ? "End live session" : "Start live"} aria-label={live ? "End live session" : "Start live"} aria-pressed={live} onClick={() => { setLive((v) => !v); if (live) toast("Session saved") }}>
+            {live ? <MicOff className="size-3.5" /> : <Mic className="size-3.5" />}
+          </Button>
+          <Button size="icon-sm" variant="ghost" className="size-7" aria-label="Close" onClick={close}><X className="size-3.5" /></Button>
+        </header>
+        <div className="min-h-0 flex-1 overflow-y-auto">
+          <OverlayStack
+            key={check ? `check-${check.join()}` : "needs"}
+            items={deskItems(all, where, act, check ?? undefined)}
+            log={deskLog(all, where, act)}
+            more={onOpenApp ? { n: needsElsewhere(all, where).length, onOpen: onOpenApp } : undefined}
+            check={check ? { intro: `${check.length} ${check.length === 1 ? "guess" : "guesses"} in what you shared`, onDone: () => { act.finishCheck(check); onCheck(null); onExpanded(false) } } : undefined}
+          />
+        </div>
       </div>
     </section>
   )
@@ -335,10 +329,4 @@ export function DesktopMode({ onExit }: { onExit?: () => void } = {}) {
       />
     </div>
   )
-}
-
-// Wraps content that should fade in when it appears (give it a key to replay on change).
-function FadeIn({ as: Tag = "div", ...props }: { as?: "div" | "span" } & React.HTMLAttributes<HTMLElement>) {
-  const ref = useFadeIn<HTMLElement>()
-  return <Tag ref={ref as React.Ref<HTMLDivElement & HTMLSpanElement>} {...props} />
 }

@@ -31,13 +31,13 @@ const M: Where = { project: "whiskr", part: "Marketing" }
 const A: Where = { project: "whiskr", part: "App" }
 
 // Keller's decisions in the promo video plan, Monday morning with Claude.
-const LEN: Caught = { id: "d1", title: "Make the promo video 15 seconds", kind: "guess", hints: ["Cats lose interest fast", "Fits a reel"], source: "Claude · Promo video plan · 10:12", owner: "MC", ...M }
-const LUNA: Caught = { id: "d2", title: "Start the promo video with Luna’s real clip", kind: "guess", hints: ["Shows the idea in the first second", "Real footage feels honest"], source: "Claude · Promo video plan · 10:14", owner: "MC", ...M }
+const LEN: Caught = { id: "d1", title: "Make the promo video 15 seconds", kind: "guess", ask: "Why 15 seconds?", hints: ["Cats lose interest fast", "Fits a reel"], source: "Claude · Promo video plan · 10:12", owner: "MC", ...M }
+const LUNA: Caught = { id: "d2", title: "Start the promo video with Luna’s real clip", kind: "guess", ask: "Why open on Luna’s real clip?", hints: ["Shows the idea in the first second", "Real footage feels honest"], source: "Claude · Promo video plan · 10:14", owner: "MC", ...M }
 const BLUE: Caught = { id: "d3", title: "Use blue for the title card", kind: "prec", why: "Follows Trevor’s brand decision", source: "Claude · Promo video plan · 10:16", owner: "MC", ...M }
-const PURR: Caught = { id: "d4", title: "Add a purr when the dot moves in the video", kind: "guess", hints: ["The dot purrs in the app"], source: "Claude · Promo video plan · 10:19", owner: "MC", ...M }
-const RED: Caught = { id: "d5", title: "Make the end card red, like the old logo", kind: "clash", clashes: "nored", taken: "Make the end card blue, like the brand", source: "Claude · Promo video plan · 10:21", owner: "MC", ...M }
+const PURR: Caught = { id: "d4", title: "Add a purr when the dot moves in the video", kind: "guess", ask: "Why a purr when the dot moves?", hints: ["The dot purrs in the app"], source: "Claude · Promo video plan · 10:19", owner: "MC", ...M }
+const RED: Caught = { id: "d5", title: "Make the end card red, like the old logo", kind: "clash", clashes: "nored", taken: "Make the end card blue, like the brand", alert: "Your end card is red, but Trevor made the brand blue.", settle: "Settle the end card color with Trevor", source: "Claude · Promo video plan · 10:21", owner: "MC", ...M }
 // Tuesday's rework adds one guess.
-const CAPTIONS: Caught = { id: "d6", title: "Burn the captions into the video", kind: "guess", hints: ["Most people watch muted"], source: "Docs · Promo video plan · 9:10", owner: "MC", ...M }
+const CAPTIONS: Caught = { id: "d6", title: "Burn the captions into the video", kind: "guess", ask: "Why burn the captions in?", hints: ["Most people watch muted"], source: "Docs · Promo video plan · 9:10", owner: "MC", ...M }
 
 export const MONDAY: Caught[] = [LEN, LUNA, BLUE, PURR, RED]
 // After round one (Mon 10:30): two confirmed at the check, the purr left a guess, the clash untouched.
@@ -59,13 +59,13 @@ export const ROUND2: Caught[] = [
 ]
 
 // Kelly's decisions while cutting the video, Tuesday with Claude.
-const POUNCE: Caught = { id: "k1", title: "Open on the pounce at 0:42, not the whole clip", kind: "guess", hints: ["It’s the one shot that explains the app"], source: "Claude · Promo cut · 10:52", owner: "KL", ...M }
-const EXPORT: Caught = { id: "k2", title: "Export 9:16 for reels and 16:9 for the site", kind: "guess", hints: ["Where the ads run"], source: "Claude · Promo cut · 10:55", owner: "KL", ...M }
+const POUNCE: Caught = { id: "k1", title: "Open on the pounce at 0:42, not the whole clip", kind: "guess", ask: "Why open on the pounce?", hints: ["It’s the one shot that explains the app"], source: "Claude · Promo cut · 10:52", owner: "KL", ...M }
+const EXPORT: Caught = { id: "k2", title: "Export 9:16 for reels and 16:9 for the site", kind: "guess", ask: "Why two sizes?", hints: ["Where the ads run"], source: "Claude · Promo cut · 10:55", owner: "KL", ...M }
 
 // Kelly's decisions in the match screen, Wednesday in Figma.
 const APP_PURR: Caught = { id: "a1", title: "The dot purrs when it moves", kind: "prec", why: "From your decision, Oct 22", source: "Figma · App design · 14:35", owner: "KL", ...A }
-const SWIPE: Caught = { id: "a2", title: "Swipe right is a match, left is a pass", kind: "guess", hints: ["Every swipe app does it this way"], source: "Figma · App design · 14:40", owner: "KL", ...A }
-const TWO_SECONDS: Caught = { id: "a3", title: "Show the match screen for two seconds, then go back", kind: "guess", hints: ["Cats don’t read", "Keeps the loop going"], source: "Figma · App design · 14:48", owner: "KL", ...A }
+const SWIPE: Caught = { id: "a2", title: "Swipe right is a match, left is a pass", kind: "guess", ask: "Why swipe right for a match?", hints: ["Every swipe app does it this way"], source: "Figma · App design · 14:40", owner: "KL", ...A }
+const TWO_SECONDS: Caught = { id: "a3", title: "Show the match screen for two seconds, then go back", kind: "guess", ask: "Why two seconds?", hints: ["Cats don’t read", "Keeps the loop going"], source: "Figma · App design · 14:48", owner: "KL", ...A }
 const BIG_DOT: Caught = { id: "a4", title: "Make the dot bigger on the match screen", kind: "conf", why: "Cats track big, slow things", source: "Figma · App design · 14:52", owner: "KL", ...A }
 
 export const SCENES: Scene[] = [
