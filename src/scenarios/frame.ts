@@ -25,6 +25,8 @@ export type AppSnapshot = {
   status: Record<string, Status>
   confirmed: Record<string, boolean>
   clashes: Record<string, Settled>
+  // Clashes you turned into a task to settle ("Add a task"), while the task is open.
+  tracked: string[]
   // The Duet: questions you answered for teammates (by Duet line id) and what you asked it, in order;
   // answers saved as decisions; the conversations it started between two owners; the decisions saved
   // from answers, conversations and Slack messages, in order, for Slack to post to the linked channel;
@@ -34,7 +36,9 @@ export type AppSnapshot = {
 export type AppApi = {
   // Decisions a tool recorded, with the decisions they follow as LINKS edges [followed, follower].
   record: (decisions: Decision[], links: [string, string][]) => void
-  settleClash: (id: string, choice: "theirs" | "mine") => void
+  settleClash: (id: string, choice: "theirs" | "mine", reason?: string) => void
+  // Add a task to the app (a clash turned into work).
+  addTask: (task: Task) => void
   // Confirm a decision, with the reason when one was given.
   confirm: (id: string, why?: string) => void
   // Undo a confirmation made in the pill, putting back the reason it had before.
@@ -87,7 +91,7 @@ export function publishApp(snapshot: AppSnapshot, api: AppApi) {
 let appWindow: AppWindow | null = null
 const listeners = new Set<() => void>()
 const notify = () => listeners.forEach((l) => l())
-const EMPTY: AppSnapshot = { decisions: [], status: {}, confirmed: {}, clashes: {}, duet: { answered: {}, asks: [], pending: null, saved: {}, together: {}, posted: [], chat: [] } }
+const EMPTY: AppSnapshot = { decisions: [], status: {}, confirmed: {}, clashes: {}, tracked: [], duet: { answered: {}, asks: [], pending: null, saved: {}, together: {}, posted: [], chat: [] } }
 
 export function attachApp(w: Window | null) {
   appWindow = w as AppWindow | null

@@ -24,6 +24,15 @@ const img = (name: string) => `${import.meta.env.BASE_URL}ds-explorations/${name
 
 const EXPLORATIONS: Exploration[] = [
   {
+    title: "Skipping a Needs you card",
+    when: "Nov 13",
+    tried: "Skip used to send a card to the back of the stack, so it came around again. Keller wanted a skipped card out of the stack, with a small count and a way back. Three ways for skipped cards to come back, each built on Today.",
+    options: ["Skipped list", "Pile under the stack", "Back on their own"],
+    picked: "Skipped list",
+    outcome: "A skipped card leaves the stack and the Today badge. “2 skipped” at the top right of Needs you opens the list, and Put back puts a card on top of the stack. It stays skipped until you put it back.",
+    shots: [{ src: img("needs-skip"), caption: "1 Skipped list, 2 Pile under the stack, 3 Back on their own", wide: true }],
+  },
+  {
     title: "Illustrations",
     when: "Nov 11",
     tried: "Started from Keller's painted sheet, then drew everything in code with the marker ribbon from Loading and the Duet loop. People drawn in code looked wrong, so people are painted in Figma AI with empty hands and the ribbon is drawn in code from the hand. Then we tried a person in every spot.",

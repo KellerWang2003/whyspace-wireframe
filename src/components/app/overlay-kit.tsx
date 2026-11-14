@@ -1,12 +1,10 @@
 import type { ComponentType, ReactNode } from "react"
-import { ChevronRight } from "lucide-react"
+import { AudioLines, ChevronRight } from "lucide-react"
 import { ProjectMark } from "@/components/app/project-mark"
 import { WhyspaceMark } from "@/components/brand/logo"
-import { CountBadge } from "@/components/app/count-badge"
 import { MarkIcon } from "@/components/app/status-badge"
 import { ThreadChip } from "@/app/hifi-kit"
 import { useHifi } from "@/lib/hifi"
-import type { Mark } from "@/lib/marks"
 import { cn } from "@/lib/utils"
 
 // The pieces both desktop overlays share (the Desk's pill and the scenario pill), so they follow the design system.
@@ -40,27 +38,47 @@ export function OverlayWhere({ project, name, part }: { project: string; name?: 
   )
 }
 
-// What waits in the folded pill: the most urgent mark and how many. High-fi: the mark beside the painted count.
-// Wireframe: the big wire mark with the number inside.
-export function OverlayCount({ top, n }: { top: Mark; n: number }) {
-  const hifi = useHifi()
-  const label = <span className="sr-only"> waiting, most urgent: {top === "triangle" ? "a clash" : "a guess"}</span>
-  if (hifi) {
-    return (
-      <span role="status" className="flex flex-col items-center gap-1.5 [[data-edge=h]_&]:flex-row">
-        <MarkIcon mark={top} className="size-4" />
-        <CountBadge n={n} />
-        {label}
-      </span>
-    )
-  }
+// The folded pill (Keller, Nov 13): upright on a side edge, sideways on the top or bottom. Its parts, in order:
+// the project's mark (where your decisions save); how many decisions it captured this session, as a plain
+// number; while a clash waits, the alert symbol in place of that number until the clash is cleared; and while
+// a live session records, a third part, the voice wave.
+// Working in more than one project at once (Claude in Whiskr, Figma in Recall), the marks stack, the project
+// of the app in front on top, each with a ring in the pill's color so the overlap reads; past two, "+1".
+// The number counts every project's decisions.
+export function OverlayFold({ project, projects, captured, alert, live }: { project: string; projects?: string[]; captured: number; alert?: string; live?: boolean }) {
+  const all = [project, ...(projects ?? []).filter((p) => p !== project)]
+  const shown = all.slice(0, 2)
+  const extra = all.length - shown.length
+  const label = alert ? `Clash: ${alert}` : `${captured} decision${captured === 1 ? "" : "s"} captured this session${all.length > 1 ? `, in ${all.length} projects` : ""}`
   return (
-    <span role="status" className="relative grid size-8 place-items-center">
-      <MarkIcon mark={top} look="wire" className={cn("absolute inset-0 size-8", top === "empty" && "[&>span]:size-full [&>span]:border-[1.25px]", top === "triangle" && "text-foreground/15")} />
-      {top === "triangle" && <svg aria-hidden viewBox="0 0 16 16" className="absolute inset-0 size-8 fill-none stroke-foreground" strokeWidth={0.9}><path d="M8 3 L13.2 12.8 H2.8 Z" strokeLinejoin="round" /></svg>}
-      <span className={cn("relative text-[11px] leading-none font-semibold tabular-nums", top === "triangle" && "translate-y-[3px]")}>{n}</span>
-      {label}
-    </span>
+    <>
+      {all.length > 1 ? (
+        <span className="flex flex-col items-center [[data-edge=h]_&]:flex-row" aria-label={`${all.length} projects`}>
+          {shown.map((p, i) => (
+            <span key={p} style={{ zIndex: shown.length - i }} className={cn("relative grid size-8 place-items-center rounded-[10px] bg-background shadow-[0_0_0_2px_var(--badge-cut,var(--background))]", i > 0 && "-mt-1.5 [[data-edge=h]_&]:mt-0 [[data-edge=h]_&]:-ml-1.5")}>
+              <ProjectMark project={p} className="size-[22px] rounded-md" />
+            </span>
+          ))}
+          {extra > 0 && (
+            <span className="relative -mt-1.5 grid size-8 place-items-center rounded-[10px] bg-muted text-[11px] font-semibold text-muted-foreground tabular-nums shadow-[0_0_0_2px_var(--badge-cut,var(--background))] [[data-edge=h]_&]:mt-0 [[data-edge=h]_&]:-ml-1.5">+{extra}</span>
+          )}
+        </span>
+      ) : (
+        <ProjectMark project={project} className="size-7 shrink-0 rounded-md" />
+      )}
+      <span role="status" title={label} className="grid size-6 shrink-0 place-items-center">
+        {alert
+          ? <MarkIcon mark="triangle" className="size-4" />
+          : <span className="text-sm leading-none font-semibold tabular-nums">{captured}</span>}
+        <span className="sr-only">{label}</span>
+      </span>
+      {live && (
+        <span role="status" className="grid size-6 shrink-0 place-items-center">
+          <AudioLines className="size-4" />
+          <span className="sr-only">Live session on</span>
+        </span>
+      )}
+    </>
   )
 }
 

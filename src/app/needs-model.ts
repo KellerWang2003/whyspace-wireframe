@@ -1,10 +1,12 @@
 import { useState } from "react"
 import { toast } from "sonner"
-import { INBOX, ME, SESSIONS, decisionById, patchDecision, projectName, recordDecision, type Decision, type InboxItem } from "@/data"
+import { INBOX, ME, SESSIONS, decisionById, patchDecision, projectName, recordDecision, type Decision, type InboxItem, type Task } from "@/data"
 import { navigate } from "@/lib/router"
 import { useStore } from "@/lib/store"
 import { chatFor, chatOfLine, chatOfTopic, makeChat } from "./chats-model"
-import { first, type Row } from "./today-model"
+import { first, todayDay, type Row } from "./today-model"
+import { addTask } from "./work"
+import { skipNeed, unskipNeed, useSkipped } from "./needs-skip"
 import { askTopicId, clashTopicId, topicOf } from "./together"
 
 // Needs you, one at a time. Each row becomes one item: a plain sentence of what needs you, its two
@@ -12,8 +14,8 @@ import { askTopicId, clashTopicId, topicOf } from "./together"
 // Every answer finishes the item, or opens the talk it names.
 
 export type Side = { label: string; text: string; note?: string }
-// What the answer does, for its icon: finish it, talk it over, write your own, say no, copy, open.
-export type AnswerIcon = "done" | "talk" | "write" | "no" | "copy" | "open"
+// What the answer does, for its icon: finish it, talk it over, write your own, say no, copy, open, make a task.
+export type AnswerIcon = "done" | "talk" | "write" | "no" | "copy" | "open" | "task"
 export type Answer = {
   label: string
   primary?: boolean
@@ -24,14 +26,22 @@ export type Answer = {
 }
 // Where the item comes from: who raised it and how ("Your Duet" "caught this in", tool "Claude").
 export type Source = { face: string; agent?: boolean; who: string; what: string; tool?: string }
+// Each card names its kind in a small label on top (Keller, Nov 13). Only a possible misalignment is in color.
+export type CardKind = "misalign" | "open" | "question" | "review" | "asked" | "invite" | "task"
+export const CARD_KIND_LABEL: Record<CardKind, string> = {
+  misalign: "Possible misalignment", open: "Open decision", question: "Open question", review: "To review",
+  asked: "Question for you", invite: "Meeting invite", task: "Task",
+}
+export const kindOfRow = (r: Row): CardKind =>
+  r.kind === "decide" ? ({ clash: "misalign", confirm: "open", answer: "question", review: "review" } as const)[r.ask] : r.kind === "do" ? "task" : r.kind
 export type NeedsItem = { id: string; row: Row; face: string; agent?: boolean; source: Source; title: string; sides: Side[]; answers: Answer[] }
 
-// Plain words for rows the data can't phrase on its own: a clash's sentence and the answer that takes
-// the teammate's side, or a review's question with its options. Keyed by decision id or inbox item id.
-type Copy = { title?: string; take?: string; first?: Side; options?: { label: string; decision: string }[] }
+// Plain words for rows the data can't phrase on its own: a clash's sentence and the task it becomes,
+// or a review's question with its options. Keyed by decision id or inbox item id.
+type Copy = { title?: string; task?: string; first?: Side; options?: { label: string; decision: string }[] }
 const COPY: Record<string, Copy> = {
-  redcard: { title: "Your end card is red, but Trevor made the brand blue.", take: "Make it blue" },
-  "s1-red": { title: "Your video uses red, but Trevor made the brand blue.", take: "Use blue" },
+  redcard: { title: "Your end card is red, but Trevor made the brand blue.", task: "Settle the end card color with Trevor" },
+  "s1-red": { title: "Your video uses red, but Trevor made the brand blue.", task: "Settle the video’s color with Trevor" },
   i7: {
     title: "Two of 15 test questions have no source page.",
     first: { label: "Jordan’s test", text: "15 questions from three course PDFs", note: "Two had no supporting passage." },
@@ -67,6 +77,34 @@ const names = (ids: string[]) => {
 }
 
 const DUET: Pick<Source, "face" | "agent" | "who"> = { face: ME.id, agent: true, who: "Your Duet" }
+
+// A clash, in the same words wherever it shows (Today's card, the desktop overlay): the sentence, and the
+// four answers Keller set on Nov 13: use theirs, use mine, add a task, ask them why.
+export const clashTitle = (d: Decision, other: Decision) => COPY[d.id]?.title ?? `Your decision clashes with ${first(other.owner)}’s.`
+// "Add a task" turns the clash into work: a task to settle it with them, due today. While it's open,
+// the clash waits in the task instead of in a card of its own.
+export const clashTaskId = (id: string) => `clash-${id}`
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+// Today as a due date, "Tue Oct 27": day numbers count from Oct 1, 2026.
+const dueToday = () => { const d = new Date(2026, 9, todayDay()); return `${DAYS[d.getDay()]} ${MONTHS[d.getMonth()]} ${d.getDate()}` }
+export function clashTask(d: Decision, other: Decision, owner = ME.id): Task {
+  const name = first(other.owner)
+  return {
+    id: clashTaskId(d.id),
+    title: COPY[d.id]?.task ?? `Settle your clash with ${name}`,
+    project: d.project,
+    part: d.part,
+    owner,
+    assignees: [other.owner],
+    due: dueToday(),
+    status: "todo",
+    priority: "high",
+    decision: d.id,
+    description: `Yours: ${d.title}. ${name}’s: ${other.title}. Agree on one, then use it.`,
+    related: { decisions: [d.id, other.id] },
+  }
+}
 // Where a decision was said: the tool, or for Whyspace's own Chats, which chat.
 const toolOf = (d: Decision) => (d.tool === "Chats" ? d.evidence?.[0]?.label : d.tool)
 // "Jordan’s first question evaluation · 15 questions" -> "first question evaluation".
@@ -88,15 +126,17 @@ export function useNeedsItems(rows: Row[]): NeedsItem[] {
         return [{
           id: r.id, row: r, face: other.owner,
           source: { ...DUET, what: toolOf(d) ? "caught this in" : "caught this", tool: toolOf(d) },
-          title: copy.title ?? `Your decision clashes with ${name}’s.`,
+          title: clashTitle(d, other),
           sides: [
             { label: ["Yours", saidAt(d)].filter(Boolean).join(" · "), text: d.title, note: d.why },
             { label: `${name}’s · confirmed${other.when ? ` ${dayOf(other.when)}` : ""}`, text: other.title, note: other.why },
           ],
           answers: [
-            { label: copy.take ?? `Use ${name}’s`, primary: true, icon: "done", run: () => { settleClash(d.id, "theirs"); toast(`Took ${name}’s decision`) } },
-            // Your Duet brings you both into one conversation, each decision and why on top. Keep mine stays on the decision sheet.
-            { label: `Talk with ${name}`, icon: "talk", run: () => chatFor(chatOfTopic(clashTopicId(d.id)), other.owner) },
+            { label: `Use ${name}’s`, primary: true, icon: "done", run: () => { settleClash(d.id, "theirs"); toast(`Took ${name}’s decision`) } },
+            { label: "Use mine", icon: "write", input: { placeholder: `Why keep yours? ${name} will see it.`, save: "Keep mine", run: (why) => { settleClash(d.id, "mine", sentence(why)); toast(`Kept yours. ${name} will see why.`) } } },
+            { label: "Add a task", icon: "task", run: () => { addTask(clashTask(d, other)); patchTask(clashTaskId(d.id), {}); toast("Task added for today") } },
+            // Your Duet brings you both into one conversation, each decision and why on top, and theirs answers first.
+            { label: `Ask ${name} why`, icon: "talk", run: () => chatFor(chatOfTopic(clashTopicId(d.id)), other.owner) },
           ],
         }]
       }
@@ -258,22 +298,27 @@ export function useNeedsItems(rows: Row[]): NeedsItem[] {
   })
 }
 
-// The queue: items in order, skipped ones moved to the back. "2 of 7" counts what you've handled
-// since the page opened.
+// The queue: the stack still to go, and the cards you skipped, which wait outside it until you put them back.
+// "2 of 7" counts what you've moved past since the page opened, skipped cards included.
 export function useNeedsQueue(items: NeedsItem[]) {
-  const [skipped, setSkipped] = useState<string[]>([])
+  const isSkipped = useSkipped()
+  // Cards you bring back from the skipped list go on top of the stack.
+  const [front, setFront] = useState<string[]>([])
   const [seen, setSeen] = useState<string[]>(() => items.map((i) => i.id))
   const added = items.filter((i) => !seen.includes(i.id)).map((i) => i.id)
   if (added.length) setSeen([...seen, ...added])
-  const queue = [...items].sort((a, b) => skipped.indexOf(a.id) - skipped.indexOf(b.id))
+  const rank = (i: NeedsItem) => (front.includes(i.id) ? front.indexOf(i.id) : front.length)
+  const queue = items.filter((i) => !isSkipped(i.row)).sort((a, b) => rank(a) - rank(b))
+  const skipped = items.filter((i) => isSkipped(i.row))
   const total = seen.length + added.length
   return {
     queue,
+    skipped,
     current: queue[0] as NeedsItem | undefined,
-    pos: total - items.length + 1,
+    pos: total - queue.length + 1,
     total,
-    cleared: items.length === 0 && total > 0,
-    skip: (id: string) => setSkipped((s) => [...s.filter((x) => x !== id), id]),
+    skip: (item: NeedsItem) => { skipNeed(item.id); setFront((f) => f.filter((x) => x !== item.id)) },
+    putBack: (item: NeedsItem) => { unskipNeed(item.id); setFront((f) => [item.id, ...f.filter((x) => x !== item.id)]) },
   }
 }
 export type NeedsQueue = ReturnType<typeof useNeedsQueue>

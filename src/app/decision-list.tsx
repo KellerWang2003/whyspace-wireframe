@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { LayoutList, Network, Sparkles, Split, X } from "lucide-react"
+import { Group, LayoutList, Network, Sparkles, Split, X } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components/ui/table"
@@ -18,7 +18,7 @@ import { useSort, type Sort } from "@/lib/use-sort"
 import { useStatusOf, useTasks, useWithdrawn } from "@/lib/work"
 import { cn } from "@/lib/utils"
 import { dayOf } from "@/playground/model"
-import { DecisionMap } from "./decision-map"
+import { DecisionMap, type MapGroup } from "./decision-map"
 import { ThreadTag } from "./thread-ui"
 import { useAllThreads, type Thread } from "./threads"
 import { EmptyStart } from "./empty-start"
@@ -27,9 +27,11 @@ import { Illo } from "@/components/brand/illo/pieces"
 // Decisions. On Home: every thread, newest first, with saved views and a Thread column.
 // On a thread page: that thread only, filters but no views. Both switch between List and Map.
 
-type Filters = { thread: string; state: "all" | Mark; update: boolean; week: boolean; layout: "list" | "map" }
+// group: what the map gathers decisions by, a view setting like the layout.
+type Filters = { thread: string; state: "all" | Mark; update: boolean; week: boolean; layout: "list" | "map"; group: MapGroup }
 type SortKey = "thread" | "title" | "state" | "by" | "date" | "reach"
-const BLANK: Filters = { thread: "all", state: "all", update: false, week: false, layout: "list" }
+const BLANK: Filters = { thread: "all", state: "all", update: false, week: false, layout: "list", group: "thread" }
+const GROUPS: [MapGroup, string][] = [["thread", "Thread"], ["person", "Decided by"], ["none", "None"]]
 const SEED: SavedView<Filters>[] = [
   { id: "all", name: "All", filters: BLANK, sort: null, locked: true },
   { id: "confirm", name: "To confirm", filters: { ...BLANK, state: "empty" }, sort: null },
@@ -86,7 +88,7 @@ export function DecisionList({ projectId, decisions, thread, search = "" }: { pr
   const open = (d: Decision) => (thread ? openDecision(d.id) : navigate(`/p/${projectId}/decisions/${d.id}`))
   const filtering = (!thread && filters.thread !== "all") || filters.state !== "all" || filters.update || filters.week
   const seed = SEED.find((x) => x.id === views.active.id)?.filters ?? BLANK
-  const changed = thread ? filtering : JSON.stringify({ ...filters, layout: seed.layout }) !== JSON.stringify(seed)
+  const changed = thread ? filtering : JSON.stringify({ ...filters, layout: seed.layout, group: seed.group }) !== JSON.stringify(seed)
   const cols = thread ? 5 : 6
 
   // Decisions are caught from the work, so there is nothing to create here.
@@ -102,6 +104,16 @@ export function DecisionList({ projectId, decisions, thread, search = "" }: { pr
               <DropdownMenuRadioItem value="list"><LayoutList />List</DropdownMenuRadioItem>
               <DropdownMenuRadioItem value="map"><Network />Map</DropdownMenuRadioItem>
             </DropdownMenuRadioGroup>
+            {filters.layout === "map" && (
+              <DropdownMenuSub>
+                <DropdownMenuSubTrigger><Group />Group by<span className="ml-auto text-xs text-muted-foreground">{GROUPS.find(([k]) => k === filters.group)?.[1]}</span></DropdownMenuSubTrigger>
+                <DropdownMenuSubContent>
+                  <DropdownMenuRadioGroup value={filters.group} onValueChange={(x) => setFilters({ group: x as MapGroup })}>
+                    {GROUPS.map(([k, label]) => <DropdownMenuRadioItem key={k} value={k}>{label}</DropdownMenuRadioItem>)}
+                  </DropdownMenuRadioGroup>
+                </DropdownMenuSubContent>
+              </DropdownMenuSub>
+            )}
             <DropdownMenuSeparator />
             {!thread && (
               <DropdownMenuSub>
@@ -125,7 +137,7 @@ export function DecisionList({ projectId, decisions, thread, search = "" }: { pr
             </DropdownMenuSub>
             <DropdownMenuCheckboxItem checked={filters.update} onCheckedChange={(c) => setFilters({ update: !!c })} onSelect={(e) => e.preventDefault()}>Needs update</DropdownMenuCheckboxItem>
             <DropdownMenuCheckboxItem checked={filters.week} onCheckedChange={(c) => setFilters({ week: !!c })} onSelect={(e) => e.preventDefault()}>This week</DropdownMenuCheckboxItem>
-            {changed && <><DropdownMenuSeparator /><DropdownMenuItem onSelect={() => (thread ? setLocal({ ...BLANK, layout: filters.layout }) : views.resetFilters())}>Clear filters</DropdownMenuItem></>}
+            {changed && <><DropdownMenuSeparator /><DropdownMenuItem onSelect={() => (thread ? setLocal({ ...BLANK, layout: filters.layout, group: filters.group }) : views.resetFilters())}>Clear filters</DropdownMenuItem></>}
             {!thread && <><DropdownMenuSeparator /><ViewActions v={views} onRename={setRenaming} /></>}
           </FilterMenu>
         </div>
@@ -140,7 +152,7 @@ export function DecisionList({ projectId, decisions, thread, search = "" }: { pr
       )}
 
       {filters.layout === "map" ? (
-        <DecisionMap projectId={projectId} decisions={rows} thread={thread} onOpen={open} />
+        <DecisionMap projectId={projectId} decisions={rows} thread={thread} group={filters.group} onOpen={open} />
       ) : (
         <Table>
           <TableHeader className="[&_tr]:border-0 [&_tr]:bg-muted [&_tr]:hover:bg-muted [&_th:first-child]:rounded-l-lg [&_th:last-child]:rounded-r-lg">

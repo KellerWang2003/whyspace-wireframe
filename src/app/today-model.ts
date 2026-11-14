@@ -58,8 +58,10 @@ export function useTodayRows(): Row[] {
     const items = INBOX.filter((i) => projectIdOf(i.project) === p.id && !isDone(i))
     for (const n of needsYou(p.id, tasks, confirmed)) {
       if (n.kind === "decide") {
-        // A decision from precedent stands on a confirmed one; it waits on nobody. Nor does a settled clash.
+        // A decision from precedent stands on a confirmed one; it waits on nobody. Nor does a settled clash,
+        // or one you turned into a task ("Add a task"): it waits in that task until it's done.
         if (statusOf(n.decision) === "prec" || clashes[n.decision.id]) continue
+        if (n.ask === "clash" && tasks.some((t) => t.id === `clash-${n.decision.id}` && t.status !== "done")) continue
         const item = items.find((i) => i.need === "decide" && i.decision === n.decision.id)
         if (!item && INBOX.some((i) => i.need === "decide" && i.decision === n.decision.id && isDone(i))) continue
         rows.push({ kind: "decide", id: `d-${n.id}`, project: p.id, decision: n.decision, ask: n.ask, item })
