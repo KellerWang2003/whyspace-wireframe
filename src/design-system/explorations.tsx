@@ -24,6 +24,18 @@ const img = (name: string) => `${import.meta.env.BASE_URL}ds-explorations/${name
 
 const EXPLORATIONS: Exploration[] = [
   {
+    title: "A cohesive rail",
+    when: "Nov 14",
+    tried: "From the professor's Week 8 feedback: gray line icons, plain colored project icons, two badge styles and a painted Duet read as four systems. Round 1 tried flat and painted washes, full paint, and washing the Duet too. Keller liked full paint but found it heavy, so round 2 tried it at three strengths.",
+    options: ["Full paint", "Middle", "Soft"],
+    picked: "Middle",
+    outcome: "Projects in the rail are hand-cut painted tiles at 45% pigment with one ink for every icon, and the Duet face uses the same paint everywhere. Nav icons stay gray lines. Every badge is an ink count, projects included. The open tab follows the painted tile's or the Duet's outline.",
+    shots: [
+      { src: img("rail-cohesion-2"), caption: "Round 2: Now, Full paint, Middle, Soft", wide: true },
+      { src: img("rail-cohesion-1"), caption: "Round 1: Now, Flat wash, Painted wash, Full paint, All wash", wide: true },
+    ],
+  },
+  {
     title: "Skipping a Needs you card",
     when: "Nov 13",
     tried: "Skip used to send a card to the back of the stack, so it came around again. Keller wanted a skipped card out of the stack, with a small count and a way back. Three ways for skipped cards to come back, each built on Today.",

@@ -3,7 +3,7 @@ import { toast } from "sonner"
 import { Archive, Blend, LayoutGrid, Link2, MessageCircle, MoreHorizontal, Pin, PinOff, Plus, Search } from "lucide-react"
 import { AccountMenuContent, WorkspaceMark } from "@/components/app/app-sidebar"
 import { dateOfDay } from "@/components/app/calendar/events"
-import { ProjectMark } from "@/components/app/project-mark"
+import { ProjectMark, markOutline } from "@/components/app/project-mark"
 import { RailCount } from "@/components/app/count-badge"
 import { WhyspaceMark } from "@/components/brand/logo"
 import { ProjectNewMenu } from "@/components/app/project-new-menu"
@@ -23,8 +23,10 @@ import { DuetPanel } from "./duet-page"
 import { SettingsPanel } from "@/screens/settings-page"
 import { PROJECT_TABS } from "@/lib/project-tabs"
 import { DuetSettingsRow } from "./duet-settings"
-import { DuetAvatar } from "./duet-avatar"
+import { DuetAvatar, duetOutline } from "./duet-avatar"
+import { useDuetFace } from "./duet-face"
 import { RailPeekLayer, closePeek, enterPeek, leavePeek } from "./rail-peek"
+import { railTabPath } from "./rail-tab-shape"
 import { setPanelCollapsed, usePanelCollapsed } from "./rail-state"
 import { FoldPanelButton } from "./fold-panel"
 import { onToday, todayDay, useTodayRows } from "./today-model"
@@ -64,6 +66,7 @@ export function RailSidebar({ at }: { at?: string[] } = {}) {
   const panel = !!open || chats || duet || settings
   const folded = usePanelCollapsed()
   const railRef = useRef<HTMLElement>(null)
+  const duetShape = duetOutline(useDuetFace(ME.id))
 
   return (
     // z-30 keeps the wide rail above the page's own layers (sticky rows, the calendar's now line).
@@ -83,7 +86,7 @@ export function RailSidebar({ at }: { at?: string[] } = {}) {
             <RailButton label="Search" hint="⌘K" onClick={() => setSearchOpen(true)}><Search className="size-4" /></RailButton>
             <RailButton label="Today" active={route[0] === "today" || route.length === 0} badge={needs} onClick={() => navigate("/today")}><DateGlyph day={new Date(dateOfDay(todayDay())).getDate()} /></RailButton>
             {/* High-fi: your own Duet face stands in for the Duet icon. */}
-            <RailButton label="Duet" active={duet} onClick={() => navigate("/duet")}>{hifi ? <DuetAvatar owner={ME.id} className="size-7" /> : <Blend className="size-4" />}</RailButton>
+            <RailButton label="Duet" active={duet} outline={duetShape} onClick={() => navigate("/duet")}>{hifi ? <DuetAvatar owner={ME.id} className="size-[30px]" /> : <Blend className="size-4" />}</RailButton>
             <RailButton label="All projects" active={route[0] === "projects"} onClick={() => navigate("/projects")}><LayoutGrid className="size-4" /></RailButton>
             <div className="mx-1.5 my-1 h-px shrink-0 bg-sidebar-border" />
             <div data-rail-projects className="-mx-(--rail-pad) flex min-h-0 flex-col gap-(--rail-gap) overflow-y-auto px-(--rail-pad)">
@@ -122,7 +125,7 @@ export function RailSidebar({ at }: { at?: string[] } = {}) {
 // High-fi: the open tab's paper tile, one piece that slides from tab to tab when you switch.
 function RailSheetTab({ at }: { at: string }) {
   const self = useRef<HTMLDivElement>(null)
-  const [box, setBox] = useState<{ top: number; height: number; slide: boolean } | null>(null)
+  const [box, setBox] = useState<{ top: number; height: number; slide: boolean; d?: string } | null>(null)
   useLayoutEffect(() => {
     const nav = self.current?.parentElement
     if (!nav) return
@@ -131,7 +134,11 @@ function RailSheetTab({ at }: { at: string }) {
       if (!tab) return setBox(null)
       const t = tab.getBoundingClientRect()
       const top = t.top - nav.getBoundingClientRect().top
-      setBox((b) => (b && b.top === top && b.height === t.height ? b : { top, height: t.height, slide: slide && !!b }))
+      // A painted tile or the Duet hands over its outline, so the tab can follow it (rail-tab-shape.ts).
+      const outline = tab.dataset.railOutline
+      const tile = tab.querySelector<HTMLElement>("[data-rail-icon] > :first-child")?.offsetWidth
+      const d = outline && tile ? railTabPath(outline, tab.dataset.railOutlineT, tile, t.height, self.current?.offsetWidth ?? t.width) : undefined
+      setBox((b) => (b && b.top === top && b.height === t.height && b.d === d ? b : { top, height: t.height, slide: slide && !!b, d }))
     }
     place(true)
     // Scrolling the project list or resizing moves the tab without sliding.
@@ -146,10 +153,14 @@ function RailSheetTab({ at }: { at: string }) {
     <div
       ref={self}
       data-rail-sheet
+      data-hand={box?.d ? "" : undefined}
       aria-hidden
       className="pointer-events-none absolute top-0 right-0 left-(--rail-pad)"
       style={box ? { height: box.height, transform: `translateY(${box.top}px)`, transition: box.slide ? "transform 280ms cubic-bezier(0.22, 1, 0.36, 1)" : "none" } : { display: "none" }}
-    />
+    >
+      {/* One clean path: the shape grown by an even ring of paper (thicker for round shapes), then into the sheet. */}
+      {box?.d && <svg><path d={box.d} /></svg>}
+    </div>
   )
 }
 
@@ -174,7 +185,7 @@ const TAB_OPEN = "bg-sidebar-foreground/[0.07] hover:bg-sidebar-foreground/[0.07
 const ICON_QUIET = "text-muted-foreground group-hover/tab:text-sidebar-foreground group-focus-visible/tab:text-sidebar-foreground group-data-[state=open]/tab:text-sidebar-foreground"
 
 // A rail tab: an icon with its badge. Hover shows its name, or a `card` when given (projects).
-function RailButton({ label, hint, active, badge, dot, card, tip = true, className, children, onClick, ...props }: { label: string; hint?: string; active?: boolean; badge?: number; dot?: boolean; card?: ReactNode; tip?: boolean; children: ReactNode } & ComponentProps<"button">) {
+function RailButton({ label, hint, active, badge, dot, card, outline, tip = true, className, children, onClick, ...props }: { label: string; hint?: string; active?: boolean; badge?: number; dot?: boolean; card?: ReactNode; outline?: { d: string; transform?: string }; tip?: boolean; children: ReactNode } & ComponentProps<"button">) {
   // High-fi: counts sit inside the tile, smaller, so nothing is clipped; a project shows only a dot.
   const hifi = useHifi()
   // A mouse click doesn't leave focus in the rail, so a dialog closing later doesn't hand focus back to it.
@@ -188,6 +199,8 @@ function RailButton({ label, hint, active, badge, dot, card, tip = true, classNa
       type="button"
       aria-label={label}
       aria-current={active ? "page" : undefined}
+      data-rail-outline={hifi ? outline?.d : undefined}
+      data-rail-outline-t={hifi ? outline?.transform : undefined}
       className={cn(TAB, active && TAB_OPEN, className)}
       onClick={click}
       onPointerEnter={peek ? (e) => { if (e.pointerType === "mouse") peek(e.currentTarget) } : undefined}
@@ -210,9 +223,9 @@ function RailProject({ id, name, active }: { id: string; name: string; active: b
   const needs = useNeedsYou(id).filter((n) => (n.kind === "decide" ? onToday(n.decision.id, "decision") : onToday(n.task.id, "task")))
   const hifi = useHifi()
   return (
-    <RailButton data-rail-project label={name} active={active} badge={needs.length} dot card={<ProjectCard id={id} name={name} needs={needs} />} onClick={() => { if (active) unfold(); navigate(`/p/${id}/home`) }}>
-      {/* High-fi: 23px so the glyph (88% of the mark) lands at 20px, the same as the tab icons. */}
-      <ProjectMark project={id} className={hifi ? "size-[23px]" : "size-6"} />
+    <RailButton data-rail-project label={name} active={active} badge={needs.length} outline={hifi ? { d: markOutline(id) } : undefined} card={<ProjectCard id={id} name={name} needs={needs} />} onClick={() => { if (active) unfold(); navigate(`/p/${id}/home`) }}>
+      {/* High-fi: a painted tile (Nov 14) at the Duet's size, its icon 18px; projects show their count like Today and Chats. */}
+      <ProjectMark project={id} look={hifi ? "tile" : undefined} className={hifi ? "size-[30px]" : "size-6"} />
     </RailButton>
   )
 }
@@ -226,7 +239,7 @@ function ProjectCard({ id, name, needs }: { id: string; name: string; needs: Ret
   return (
     <div className="flex flex-col gap-2 text-sm">
       <div className="flex items-center gap-2">
-        <ProjectMark project={id} className="size-5" />
+        <ProjectMark project={id} look="tile" className="size-6" />
         <span className="min-w-0 flex-1 truncate font-medium">{name}</span>
         {project?.updated && <span className="shrink-0 text-xs text-muted-foreground">{project.updated}</span>}
       </div>

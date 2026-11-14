@@ -5,8 +5,8 @@ import { cn } from "@/lib/utils"
 import { MARK_COLORS, MARK_HEX, MARK_WASH, MARK_WASH_INK, PROJECT_ICONS, setProjectIcon, useProjectIcon, type ProjectIcon } from "./project-icon"
 import { MARK_LOOK, MarkTile } from "./project-mark"
 
-// Color, then icon. The letter comes first: it's the default.
-export function ProjectIconPicker({ letter, value, onChange }: { letter: string; value: ProjectIcon; onChange: (next: ProjectIcon) => void }) {
+// Color, then icon. Every project has an icon; there is no letter option (Nov 14).
+export function ProjectIconPicker({ value, onChange }: { value: ProjectIcon; onChange: (next: ProjectIcon) => void }) {
   return (
     <div className="flex flex-col gap-3">
       <div role="radiogroup" aria-label="Color" className="flex gap-1.5 px-1">
@@ -24,10 +24,6 @@ export function ProjectIconPicker({ letter, value, onChange }: { letter: string;
         ))}
       </div>
       <div role="radiogroup" aria-label="Icon" className="grid grid-cols-8 gap-0.5">
-        <button type="button" role="radio" aria-checked={!value.icon} aria-label="Letter" onClick={() => onChange({ color: value.color })}
-          className={cn("flex size-8 items-center justify-center rounded-lg font-serif text-base outline-none focus-visible:ring-2 focus-visible:ring-ring", !value.icon ? "bg-foreground/[0.08]" : "hover:bg-foreground/[0.05]")} style={MARK_LOOK === "plain" && !value.icon ? { color: MARK_WASH_INK[value.color] } : undefined}>
-          {letter}
-        </button>
         {PROJECT_ICONS.map(([k, Icon]) => (
           <button key={k} type="button" role="radio" aria-checked={value.icon === k} aria-label={k} onClick={() => onChange({ ...value, icon: k })}
             className={cn("flex size-8 items-center justify-center rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-ring", value.icon === k ? "bg-foreground/[0.08] text-foreground" : "text-muted-foreground hover:bg-foreground/[0.05]")} style={MARK_LOOK === "plain" && value.icon === k ? { color: MARK_WASH_INK[value.color] } : undefined}>
@@ -39,18 +35,16 @@ export function ProjectIconPicker({ letter, value, onChange }: { letter: string;
   )
 }
 
-function PickerPopover({ trigger, letter, value, onChange }: { trigger: ReactNode; letter: string; value: ProjectIcon; onChange: (next: ProjectIcon) => void }) {
+function PickerPopover({ trigger, value, onChange }: { trigger: ReactNode; value: ProjectIcon; onChange: (next: ProjectIcon) => void }) {
   return (
     <Popover>
       <PopoverTrigger asChild>{trigger}</PopoverTrigger>
       <PopoverContent data-icon-picker align="start" className="w-auto rounded-2xl p-3">
-        <ProjectIconPicker letter={letter} value={value} onChange={onChange} />
+        <ProjectIconPicker value={value} onChange={onChange} />
       </PopoverContent>
     </Popover>
   )
 }
-
-const letterOf = (name: string) => name.trim()[0]?.toUpperCase() ?? "P"
 
 // The project's mark as a button: click it to change the icon.
 export function ProjectIconButton({ id, className }: { id: string; className?: string }) {
@@ -58,12 +52,11 @@ export function ProjectIconButton({ id, className }: { id: string; className?: s
   const name = PROJECTS.find((p) => p.id === id)?.name ?? id
   return (
     <PickerPopover
-      letter={letterOf(name)}
       value={icon}
       onChange={(next) => setProjectIcon(id, next)}
       trigger={
         <button type="button" aria-label="Change icon" className="shrink-0 rounded-xl outline-none transition-transform hover:scale-105 focus-visible:ring-2 focus-visible:ring-ring">
-          <MarkTile id={id} name={name} icon={icon} className={className} />
+          <MarkTile id={id} name={name} icon={icon} look="tile" className={className} />
         </button>
       }
     />
@@ -74,12 +67,11 @@ export function ProjectIconButton({ id, className }: { id: string; className?: s
 export function NewProjectIconButton({ name, value, onChange, className }: { name: string; value: ProjectIcon; onChange: (next: ProjectIcon) => void; className?: string }) {
   return (
     <PickerPopover
-      letter={letterOf(name)}
       value={value}
       onChange={onChange}
       trigger={
         <button type="button" aria-label="Choose icon" className="shrink-0 rounded-xl outline-none transition-transform hover:scale-105 focus-visible:ring-2 focus-visible:ring-ring">
-          <MarkTile id="new" name={name || "P"} icon={value} className={className} />
+          <MarkTile id="new" name={name || "P"} icon={value} look="tile" className={className} />
         </button>
       }
     />

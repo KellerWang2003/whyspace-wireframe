@@ -3,6 +3,7 @@ import { DecisionLayouts } from "@/screens/decision-layouts"
 import { NavPlayground } from "@/screens/nav-playground"
 import { PillPlayground } from "@/screens/pill-playground"
 import { RailPlayground } from "@/screens/rail-playground"
+import { RailCohesion } from "@/screens/rail-cohesion"
 import { SurePlayground } from "@/screens/sure-playground"
 import { FoldPlayground } from "@/screens/fold-playground"
 import { SystemPlayground } from "@/screens/system-playground"
@@ -33,6 +34,7 @@ export function Playground({ project = "whiskr", view = "board" }: { project?: s
   if (project === "nav") return <NavPlayground option={view} />
   if (project === "pill") return <PillPlayground view={view} />
   if (project === "rail") return <RailPlayground />
+  if (project === "rail-looks") return <RailCohesion />
   if (project === "sure") return <SurePlayground />
   if (project === "fold") return <FoldPlayground version={view} />
   if (project === "system") return <SystemPlayground part={view} />

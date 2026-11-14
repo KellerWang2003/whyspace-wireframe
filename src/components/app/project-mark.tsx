@@ -1,10 +1,11 @@
 import { useId } from "react"
 import { handPath } from "@/components/brand/hand"
 import { Paint } from "@/components/brand/paint"
+import { paintTint } from "@/components/brand/tint"
 import { PROJECTS } from "@/data"
 import { useHifi } from "@/lib/hifi"
 import { cn } from "@/lib/utils"
-import { ICON_OF, MARK_HEX, MARK_INK, MARK_WASH, MARK_WASH_INK, hashId, useProjectIcon, type ProjectIcon } from "./project-icon"
+import { MARK_HEX, MARK_INK, MARK_WASH, MARK_WASH_INK, hashId, iconOf, useProjectIcon, type ProjectIcon } from "./project-icon"
 
 // Wireframe: each project's own shade, so you can tell projects apart without adding color to the grayscale UI.
 const TONE: Record<string, string> = {
@@ -13,36 +14,52 @@ const TONE: Record<string, string> = {
 }
 
 // `project` can be a project's id or its name.
-export function ProjectMark({ project, className }: { project: string; className?: string }) {
+export function ProjectMark({ project, look, className }: { project: string; look?: Look; className?: string }) {
   const p = PROJECTS.find((x) => x.id === project || x.name === project)
   const id = p?.id ?? project
   const icon = useProjectIcon(id)
-  return <MarkTile id={id} name={p?.name ?? project} icon={icon} className={className} />
+  return <MarkTile id={id} name={p?.name ?? project} icon={icon} look={look} className={className} />
 }
 
+// The painted tile's hand-cut outline in its 64 box, seeded by the project. The rail's open tab grows it to the tab's size.
+export const markOutline = (id: string) => handPath([[3, 3], [61, 3], [61, 61], [3, 61]], { seed: (hashId(id) % 40) + 1, radius: 18, wobble: 1, unevenCorners: 0.4 })
+
 // Keller picked Painted, then Wash (so project icons never look like the painted Duet faces), then Plain (Nov 11):
-// no tile, just the icon in its pigment. The default letter is drawn the same way, in the title serif.
-type Look = "painted" | "wash" | "plain"
+// no tile, just the icon in its pigment. Every project has an icon (no letters since Nov 14).
+// Tile (Nov 14, the rail and headers): a hand-cut painted tile at MARK_STRENGTH (45% pigment) with an ink icon, the same paint as the Duet faces.
+type Look = "painted" | "wash" | "plain" | "tile"
 export const MARK_LOOK: Look = "plain"
 
 // The mark itself, for a given icon (the picker previews with it before saving).
-export function MarkTile({ id, name, icon, look = MARK_LOOK, className }: { id: string; name: string; icon: ProjectIcon; look?: Look; className?: string }) {
+export function MarkTile({ id, icon, look = MARK_LOOK, className }: { id: string; name: string; icon: ProjectIcon; look?: Look; className?: string }) {
   const hifi = useHifi()
   const uid = useId().replace(/:/g, "")
-  const Icon = icon.icon ? ICON_OF[icon.icon] : undefined
-  const letter = name.trim()[0]?.toUpperCase() ?? "P"
+  const Icon = iconOf(icon, id)
   if (!hifi) {
     return (
       <span className={cn("inline-flex size-4 shrink-0 items-center justify-center rounded-[4px] [container-type:size]", TONE[id] ?? "bg-muted text-foreground", className)}>
-        {Icon ? <Icon className="size-[70%]" /> : <span className="font-semibold leading-none" style={{ fontSize: "56cqw" }}>{letter}</span>}
+        <Icon className="size-[70%]" />
       </span>
     )
   }
-  const glyph = Icon ? <Icon className="relative size-[62%]" strokeWidth={1.75} /> : <span className="relative font-serif leading-none" style={{ fontSize: "62cqw" }}>{letter}</span>
+  const glyph = <Icon className="relative size-[62%]" strokeWidth={1.75} />
+  if (look === "tile") {
+    const t = paintTint(MARK_HEX[icon.color])
+    return (
+      <span data-project-mark data-mark-look="tile" className={cn("relative inline-flex size-4 shrink-0 items-center justify-center [container-type:size]", className, "rounded-none")} style={{ color: t.ink }}>
+        <svg viewBox="0 0 64 64" className="absolute inset-0 size-full overflow-visible" aria-hidden>
+          <defs><Paint id={`pt${uid}`} level="soft" seed={(hashId(id) % 40) + 1} /></defs>
+          <path d={markOutline(id)} fill={t.bg} opacity={0.55} transform="translate(32 32) scale(0.9) translate(-32 -32)" />
+          <path d={markOutline(id)} fill={t.bg} filter={`url(#pt${uid})`} />
+        </svg>
+        <Icon className="relative size-[60%]" strokeWidth={1.5} />
+      </span>
+    )
+  }
   if (look === "plain") {
     return (
       <span data-project-mark className={cn("inline-flex size-4 shrink-0 items-center justify-center [container-type:size]", className, "rounded-none")} style={{ color: MARK_WASH_INK[icon.color] }}>
-        {Icon ? <Icon className="size-[88%]" strokeWidth={1.75} /> : <span className="font-serif leading-none" style={{ fontSize: "100cqw" }}>{letter}</span>}
+        <Icon className="size-[88%]" strokeWidth={1.75} />
       </span>
     )
   }

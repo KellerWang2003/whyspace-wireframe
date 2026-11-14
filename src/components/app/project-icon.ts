@@ -6,7 +6,7 @@ import {
 import { PIGMENT } from "@/components/brand/hand"
 
 // Project icons (Nov 11): each project's icon is drawn in one pigment, with no tile (Plain; Wash and Painted are kept in MarkTile),
-// or its name's first letter by default. Anyone can change it from the mark in the project header.
+// Anyone can change it from the mark in the project header. Every project has an icon: the letter option is gone (Keller, Nov 14: "so ugly").
 export const PROJECT_ICONS: [string, LucideIcon][] = [
   ["cat", Cat], ["graduation", GraduationCap], ["gift", Gift], ["sprout", Sprout], ["users", Users], ["phone", Smartphone],
   ["rocket", Rocket], ["megaphone", Megaphone], ["palette", Palette], ["flask", FlaskConical], ["briefcase", Briefcase], ["book", BookOpen],
@@ -25,7 +25,7 @@ export const MARK_INK: Record<MarkColor, string> = { apricot: "#2B2B27", rose: "
 export const MARK_WASH: Record<MarkColor, string> = { apricot: PIGMENT.apricotWash, rose: PIGMENT.roseWash, sky: PIGMENT.skyWash, leaf: PIGMENT.leafWash, forest: "#E3EADB", gray: "#EDEDE8" }
 export const MARK_WASH_INK: Record<MarkColor, string> = { apricot: "#D9772A", rose: "#D45A83", sky: "#4E87AB", leaf: PIGMENT.leaf, forest: PIGMENT.forest, gray: "#6B6B64" }
 
-// No icon means the default: the name's first letter.
+// `icon` can be missing in icons saved before Nov 14 (they were letters); iconOf picks one for those.
 export type ProjectIcon = { icon?: string; color: MarkColor }
 
 const START: Record<string, ProjectIcon> = {
@@ -34,6 +34,7 @@ const START: Record<string, ProjectIcon> = {
   holiday: { icon: "gift", color: "rose" },
   seed: { icon: "sprout", color: "leaf" },
   panel: { icon: "users", color: "forest" },
+  android: { icon: "phone", color: "leaf" },
 }
 
 export function hashId(s: string) {
@@ -42,8 +43,12 @@ export function hashId(s: string) {
   return h
 }
 
-// A new project: its letter on a pigment picked from its id, so new projects differ before anyone changes them.
-export const defaultIcon = (id: string): ProjectIcon => ({ color: (["apricot", "sky", "rose", "leaf"] as const)[hashId(id) % 4] })
+// A new project: an icon and a pigment picked from its id, so new projects differ before anyone changes them.
+const DEFAULT_ICONS = ["star", "rocket", "target", "bulb", "globe", "book", "leaf", "heart"]
+const pickIcon = (id: string) => DEFAULT_ICONS[(hashId(id) >> 3) % DEFAULT_ICONS.length]
+export const defaultIcon = (id: string): ProjectIcon => ({ icon: pickIcon(id), color: (["apricot", "sky", "rose", "leaf"] as const)[hashId(id) % 4] })
+// The icon to draw: the chosen one, or one picked from the id for an icon saved as a letter.
+export const iconOf = (icon: ProjectIcon, id: string): LucideIcon => ICON_OF[icon.icon ?? ""] ?? ICON_OF[pickIcon(id)]
 export const startIcon = (id: string): ProjectIcon => START[id] ?? defaultIcon(id)
 
 const KEY = "whyspace-project-icons"
@@ -87,5 +92,6 @@ function subscribe(listener: () => void) {
 // A project's icon, live. Read it from the hook's value so the React Compiler redraws it when it changes.
 export function useProjectIcon(id: string): ProjectIcon {
   const all = useSyncExternalStore(subscribe, () => icons)
-  return all[id] ?? startIcon(id)
+  const icon = all[id] ?? startIcon(id)
+  return icon.icon ? icon : { ...icon, icon: startIcon(id).icon ?? pickIcon(id) }
 }

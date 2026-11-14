@@ -116,8 +116,8 @@
   --rail-gap: 4px;
   --radius: 1rem;
   --hifi-layer: #f0f0ec;
-  /* Count badges and needs-you dots: a deeper, more saturated green than Forest, so the paper number reads. */
-  --hifi-badge: #2a6527;
+  /* Count badges and needs-you dots. Ink (Nov 14): beside the painted project tiles and Duet faces a green pebble fought the color, and Forest stays on primary actions. Was #2a6527. */
+  --hifi-badge: #2B2B27;
   /* Buttons and segmented controls stay rounded rectangles; fields, cards and the page are the rounder ones. */
   --hifi-button-radius: 10px;
   /* Page titles (Today, project names) one step heavier. */
@@ -384,6 +384,12 @@ html[data-resizing] * {
   background: var(--rail-open);
   border-radius: 12px 0 0 12px;
 }
+:root[data-hifi] [data-rail-sheet][data-hand] { background: transparent; border-radius: 0; }
+/* Around a painted tile or the Duet, the whole tab is one path (rail-tab-shape.ts): the shape grown by an even ring
+   of paper, thicker for round shapes so it reads the same weight, then straight into the sheet with its curves. */
+:root[data-hifi] [data-rail-sheet] > svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; fill: var(--rail-open); }
+:root[data-hifi] [data-rail-sheet][data-hand]::before,
+:root[data-hifi] [data-rail-sheet][data-hand]::after { content: none; }
 :root[data-hifi] [data-rail-sheet]::before,
 :root[data-hifi] [data-rail-sheet]::after {
   content: "";
@@ -412,9 +418,11 @@ html[data-resizing] * {
 :root[data-hifi] nav[aria-label="Rail"] [data-rail-projects] { padding-block: 12px; margin-block: -12px; }
 /* Icons one step up to sit in the bigger tiles. */
 :root[data-hifi] nav[aria-label="Rail"] [data-rail-icon] > svg.lucide { width: 20px; height: 20px; }
-/* One line weight in the rail: every Lucide stroke draws at 1.5px whatever the icon's size (nav icons at 20px,
-   project icons at their mark size), matching the date glyph's and the logo's 1.5px borders. */
-:root[data-hifi] nav[aria-label="Rail"] svg.lucide :is(path, circle, rect, line, polyline, polygon, ellipse) { vector-effect: non-scaling-stroke; }
+/* Rail line weights (Keller, Nov 14): nav icons (and the date glyph) at exactly 1.5px. Icons on a painted project
+   tile draw lighter, at 1.125px, wherever the tile sits (rail, header, hover card), whatever the tile's size. */
+:root[data-hifi] nav[aria-label="Rail"] [data-rail-icon] > svg.lucide :is(path, circle, rect, line, polyline, polygon, ellipse) { vector-effect: non-scaling-stroke; }
+:root[data-hifi] [data-mark-look="tile"] svg.lucide { stroke-width: 1.125px; }
+:root[data-hifi] [data-mark-look="tile"] svg.lucide :is(path, circle, rect, line, polyline, polygon, ellipse) { vector-effect: non-scaling-stroke; }
 :root[data-hifi] nav[aria-label="Rail"] [data-rail-icon] > [data-date-glyph] { width: 21px; height: 21px; }
 /* Badges cut out of whatever is behind them. */
 :root[data-hifi] nav[aria-label="Rail"] [data-rail-badge] { --tw-ring-color: var(--sidebar); }

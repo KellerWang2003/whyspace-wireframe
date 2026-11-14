@@ -129,7 +129,7 @@ export function BadgesSection() {
       <Group title="Decision state">
         <Row>{STATES.map((s) => <Specimen key={s} name={s}><StatusBadge status={s} /></Specimen>)}</Row>
       </Group>
-      <Group title="Count badge" note="A painted pebble, 20px tall, in a deeper green than Forest so the number reads. Used on the rail, in Chats, Waiting for you and Today.">
+      <Group title="Count badge" note="A painted pebble, 20px tall, in ink with a paper number. Used on the rail (projects show their count too), in Chats, Waiting for you and Today.">
         <Row>
           <Specimen name="CountBadge"><CountBadge n={3} size="md" /></Specimen>
           <Specimen name="CountBadge"><CountBadge n={12} size="md" /></Specimen>
@@ -345,7 +345,7 @@ export function PeopleSection() {
       <Group title="Sizes">
         <Row className="items-end">{AVATAR_SIZES.map((s) => <Specimen key={s} name={s}><PersonAvatar id="MC" className={s} /></Specimen>)}</Row>
       </Group>
-      <Group title="Duet" note="Every Duet is a painted pebble in a deep pigment. A teammate's Duet carries their photo. Hover one: it hops and grins.">
+      <Group title="Duet" note="Every Duet is a painted pebble at 45% pigment, the same paint as the rail's project tiles. A teammate's Duet carries their photo. Hover one: it hops and grins.">
         <div className="flex flex-col gap-8">
         <Row className="items-end">
           {["size-5", "size-6", "size-8", "size-14"].map((s) => <Specimen key={s} name={s} note={s === "size-5" ? "Your Duet" : undefined}><PersonAvatar id="MC" agent className={s} /></Specimen>)}
@@ -375,11 +375,11 @@ export function PlacesSection() {
   const decisions = DECISIONS.filter((d) => d.project === WHISKR.id)
   return (
     <>
-      <Group title="Project marks" note="The icon drawn in its pigment, with no tile. A new project starts with its first letter in the title serif.">
+      <Group title="Project marks" note="In the rail, the project header and the New project dialog, a hand-cut painted tile at 45% pigment with an ink icon; the rail's open tab follows its outline. In rows, the icon alone in its pigment. A new project starts with an icon and a pigment picked for it; there are no letter marks.">
         <div className="flex flex-col gap-8">
           <Row>
             <Specimen name="16px" note="In rows"><ProjectMark project={WHISKR.id} className="size-4" /></Specimen>
-            <Specimen name="23px" note="Rail, glyph at 20px"><ProjectMark project={WHISKR.id} className="size-[23px]" /></Specimen>
+            <Specimen name="30px tile" note="Rail"><ProjectMark project={WHISKR.id} look="tile" className="size-[30px]" /></Specimen>
             <Specimen name="36px" note="Project header, Today"><ProjectMark project={WHISKR.id} className="size-9" /></Specimen>
             <Specimen name="Change it" note="Click the header mark"><ProjectIconButton id={WHISKR.id} className="size-9 rounded-lg" /></Specimen>
           </Row>
@@ -387,7 +387,6 @@ export function PlacesSection() {
             {MARK_COLORS.map((c) => (
               <Specimen key={c} name={c}>
                 <span className="flex items-center gap-3">
-                  <MarkTile id={`ds-${c}`} name="Whiskr" icon={{ color: c }} className="size-6" />
                   <MarkTile id={`ds-${c}`} name="Whiskr" icon={{ icon: "cat", color: c }} className="size-6" />
                 </span>
               </Specimen>
