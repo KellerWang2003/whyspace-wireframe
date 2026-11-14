@@ -16,6 +16,7 @@ import { activityOf, useChats, useChatsState, useUnread } from "@/app/chats-mode
 import { ThreadIcon } from "@/app/thread-ui"
 import { useThreads } from "@/app/threads"
 import { onToday, todayDay, useTodayRows } from "@/app/today-model"
+import { useSkipped } from "@/app/needs-skip"
 
 // Playground (#/playground/rail): hovering the rail widens it to show each tab's name, in place of tooltips.
 // The wide rail floats over the panel and the page, so nothing beside it moves or reflows.
@@ -38,7 +39,8 @@ export function RailPlayground() {
   const [tab, setTab] = useState("today")
   const projects = current?.example ? MY_PROJECTS : []
   const project = projects.find((p) => p.id === tab)
-  const needs = useTodayRows().length
+  const isSkipped = useSkipped()
+  const needs = useTodayRows().filter((r) => !isSkipped(r)).length
   const unread = Object.values(useUnread()).reduce((a, b) => a + b, 0)
 
   return (

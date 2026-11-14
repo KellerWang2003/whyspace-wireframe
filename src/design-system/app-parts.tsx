@@ -4,7 +4,7 @@ import { Greeting, Messages } from "@/components/app/ask-whyspace"
 import { ME, PEOPLE, decisionById } from "@/data"
 import { Message } from "@/app/chats"
 import { chatById, foldReplies, msgsOf } from "@/app/chats-model"
-import { NeedsFocus } from "@/app/needs-focus"
+import { NeedsFocus, Skipped } from "@/app/needs-focus"
 import { useNeedsItems, useNeedsQueue } from "@/app/needs-model"
 import { RailSidebar } from "@/app/rail-sidebar"
 import { Bubble, DuetNote } from "@/app/reply-dialog"
@@ -18,13 +18,20 @@ import { Group, Specimen } from "./kit"
 
 export function NeedsSection() {
   const queue = useNeedsQueue(useNeedsItems(useTodayRows()))
+  // The count above the stack, as the section header shows it: where you are, and how many you skipped.
+  const head = (compact?: boolean) => (
+    <div className={compact ? "mb-2 flex h-6 items-center gap-2 text-xs" : "mb-4 flex h-8 items-center gap-2 text-sm"}>
+      {queue.current && <span className="text-muted-foreground tabular-nums">{queue.pos} of {queue.total}</span>}
+      <div className="ml-auto"><Skipped queue={queue} compact={compact} /></div>
+    </div>
+  )
   return (
     <>
-      <Group title="On Today" note="One at a time, with its source and the answers as Suggested chips; the next ones wait behind">
-        <div className="max-w-3xl"><NeedsFocus queue={queue} onOpen={() => {}} /></div>
+      <Group title="On Today" note="One at a time, with its source and the answers as Suggested chips; the next ones wait behind, and skipped ones wait in the list above">
+        <div className="max-w-3xl">{head()}<NeedsFocus queue={queue} onOpen={() => {}} /></div>
       </Group>
       <Group title="Compact" note="Beside a thread">
-        <div className="max-w-sm"><NeedsFocus queue={queue} onOpen={() => {}} compact /></div>
+        <div className="max-w-sm">{head(true)}<NeedsFocus queue={queue} onOpen={() => {}} compact /></div>
       </Group>
     </>
   )

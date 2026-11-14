@@ -28,6 +28,7 @@ import { RailPeekLayer, closePeek, enterPeek, leavePeek } from "./rail-peek"
 import { setPanelCollapsed, usePanelCollapsed } from "./rail-state"
 import { FoldPanelButton } from "./fold-panel"
 import { onToday, todayDay, useTodayRows } from "./today-model"
+import { useSkipped } from "./needs-skip"
 import { setPinned, usePinned, usePinnedFilter } from "./pins"
 
 // Clicking the open project again brings back its folded panel.
@@ -47,7 +48,9 @@ export function RailSidebar({ at }: { at?: string[] } = {}) {
   const projects = current?.example ? MY_PROJECTS : []
   const pinnedOnly = usePinnedFilter()
   const hifi = useHifi()
-  const needs = useTodayRows().length
+  // Skipped cards wait outside the stack, so they leave the badge too.
+  const isSkipped = useSkipped()
+  const needs = useTodayRows().filter((r) => !isSkipped(r)).length
   // Only questions to you count as unread in Chats.
   const unread = Object.values(useUnread()).reduce((a, b) => a + b, 0)
   const openId = route[0] === "p" ? route[1] : null

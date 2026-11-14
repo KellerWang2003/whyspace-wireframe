@@ -22,7 +22,7 @@ import { ThreadIcon, ThreadIconButton, ThreadMenu } from "./thread-ui"
 import { ThreadToolbarSlot } from "./thread-toolbar"
 import { intentOf, threadOf, updateThread, useAnyThread, type Thread } from "./threads"
 import { useAllTasks, useArtifacts } from "./work"
-import { NeedsFocus } from "./needs-focus"
+import { NeedsFocus, Skipped } from "./needs-focus"
 import { useNeedsItems, useNeedsQueue } from "./needs-model"
 import { useTodayRows } from "./today-model"
 
@@ -110,10 +110,13 @@ export function ThreadPage({ project, threadId, tab, sub }: { project: Project; 
   )
 }
 
-function Block({ title, icon, count, children }: { title: string; icon?: ReactNode; count?: ReactNode; children: ReactNode }) {
+function Block({ title, icon, count, aside, children }: { title: string; icon?: ReactNode; count?: ReactNode; aside?: ReactNode; children: ReactNode }) {
   return (
     <section className="flex flex-col gap-2">
-      <h2 className="flex items-center gap-1.5 type-section">{icon}{title}{count !== undefined && <span className="font-normal text-muted-foreground tabular-nums">{count}</span>}</h2>
+      <div className="flex items-center gap-2">
+        <h2 className="flex items-center gap-1.5 type-section">{icon}{title}{count !== undefined && <span className="font-normal text-muted-foreground tabular-nums">{count}</span>}</h2>
+        {aside && <div className="ml-auto">{aside}</div>}
+      </div>
       {children}
     </section>
   )
@@ -138,8 +141,8 @@ function ThreadContext({ project, thread }: { project: Project; thread: Thread }
     <aside aria-label="About this thread" className="grid content-start gap-8 @2xl:grid-cols-2 @4xl:grid-cols-1">
       <IntentCard projectId={project.id} thread={thread} />
 
-      {queue.current && (
-        <Block title="Needs you" count={`${queue.pos} of ${queue.total}`}>
+      {(queue.current || queue.skipped.length > 0) && (
+        <Block title="Needs you" count={queue.current ? `${queue.pos} of ${queue.total}` : undefined} aside={<Skipped queue={queue} compact />}>
           <NeedsFocus compact queue={queue} onOpen={({ row }) => row.kind === "decide" && openDecision(row.decision.id)} />
         </Block>
       )}

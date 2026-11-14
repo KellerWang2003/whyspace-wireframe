@@ -20,7 +20,7 @@ import { KIND_ICON } from "@/playground/artifact"
 import { dateOfDay, fmtDay } from "@/components/app/calendar/events"
 import { ComingUp } from "@/screens/inbox"
 import { chatFor, chatOfLine } from "./chats-model"
-import { NeedsFocus } from "./needs-focus"
+import { NeedsFocus, Skipped } from "./needs-focus"
 import { WorkingNow } from "./people-cards"
 import { SureMark } from "./sure-mark"
 import { useNeedsItems, useNeedsQueue, type NeedsItem } from "./needs-model"
@@ -91,7 +91,7 @@ export function Today() {
               </header>
             )}
 
-            <Lane title="Needs you" count={queue.current ? `${queue.pos} of ${queue.total}` : undefined}>
+            <Lane title="Needs you" count={queue.current ? `${queue.pos} of ${queue.total}` : undefined} aside={<Skipped queue={queue} />}>
               <NeedsFocus queue={queue} onOpen={openItem} />
             </Lane>
 
@@ -138,13 +138,14 @@ export function Today() {
   )
 }
 
-function Lane({ title, count, children }: { title: string; count?: string; children: ReactNode }) {
+function Lane({ title, count, aside, children }: { title: string; count?: string; aside?: ReactNode; children: ReactNode }) {
   const hifi = useHifi()
   return (
     <section aria-label={title} className={cn("flex flex-col", hifi ? "gap-5" : "gap-3")}>
       <div className="flex h-8 items-center gap-2">
         <h2 className="type-section">{title}</h2>
         {count && <span className="text-sm text-muted-foreground tabular-nums">{count}</span>}
+        {aside && <div className="ml-auto">{aside}</div>}
       </div>
       {children}
     </section>
