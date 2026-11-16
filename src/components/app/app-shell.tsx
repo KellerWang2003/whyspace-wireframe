@@ -129,8 +129,8 @@ function FloatingTrigger() {
   return <SidebarTrigger className="absolute top-3 left-3 z-20" />
 }
 
-// A folded project panel comes back from the page's top left corner, where the panel was.
-// top-3 puts its center on the rail logo's line (with and without High-fi's 8px sheet margin).
+// A folded project panel comes back from the page's bottom left corner, just right of your photo in the rail,
+// where the fold button was. Its center sits on the photo's line (with and without High-fi's 8px sheet margin).
 // (Clicking the open project in the rail also brings it back.)
 function UnfoldButton() {
   const route = useRoute()
@@ -138,8 +138,8 @@ function UnfoldButton() {
   const { state, isMobile } = useSidebar()
   if (DESIGN !== "b" || route[0] !== "p" || !folded || isMobile || state !== "expanded") return null
   return (
-    <button onClick={() => setPanelCollapsed(false)} aria-label="Expand sidebar" className="absolute top-3 left-2 z-20 flex size-7 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground">
-      <PanelLeftOpen className="size-4" />
+    <button onClick={() => setPanelCollapsed(false)} aria-label="Expand sidebar" className="absolute bottom-[calc((var(--rail-tile)-1.75rem)/2+0.5rem)] left-2 z-20 flex size-7 items-center justify-center rounded-md text-foreground hover:bg-accent [:root[data-hifi]_&]:bottom-[calc((var(--rail-tile)-1.75rem)/2)]">
+      <PanelLeftOpen className="size-4" strokeWidth={1.5} />
     </button>
   )
 }

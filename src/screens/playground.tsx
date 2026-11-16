@@ -4,6 +4,7 @@ import { NavPlayground } from "@/screens/nav-playground"
 import { PillPlayground } from "@/screens/pill-playground"
 import { RailPlayground } from "@/screens/rail-playground"
 import { RailCohesion } from "@/screens/rail-cohesion"
+import { DuetCardPlayground } from "@/screens/duet-card-playground"
 import { SurePlayground } from "@/screens/sure-playground"
 import { FoldPlayground } from "@/screens/fold-playground"
 import { SystemPlayground } from "@/screens/system-playground"
@@ -35,6 +36,7 @@ export function Playground({ project = "whiskr", view = "board" }: { project?: s
   if (project === "pill") return <PillPlayground view={view} />
   if (project === "rail") return <RailPlayground />
   if (project === "rail-looks") return <RailCohesion />
+  if (project === "duet-card") return <DuetCardPlayground />
   if (project === "sure") return <SurePlayground />
   if (project === "fold") return <FoldPlayground version={view} />
   if (project === "system") return <SystemPlayground part={view} />

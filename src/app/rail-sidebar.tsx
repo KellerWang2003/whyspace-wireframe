@@ -24,6 +24,7 @@ import { SettingsPanel } from "@/screens/settings-page"
 import { PROJECT_TABS } from "@/lib/project-tabs"
 import { DuetSettingsRow } from "./duet-settings"
 import { DuetAvatar, duetOutline } from "./duet-avatar"
+import { DuetCard } from "./duet-card"
 import { useDuetFace } from "./duet-face"
 import { RailPeekLayer, closePeek, enterPeek, leavePeek } from "./rail-peek"
 import { railTabPath } from "./rail-tab-shape"
@@ -41,7 +42,8 @@ const unfold = () => setPanelCollapsed(false)
 // Chats sits at the bottom above your photo. The panel beside it shows only in a project (that project),
 // in the Duet (your chats with it, Decided for you pinned on top, the settings at the bottom) and in Chats (the chat list).
 // The rail is --rail-w wide (48px, 60px under High-fi; tiles --rail-tile, index.css); AppShell shrinks the sidebar to that everywhere else.
-// Hovering a tab shows its name in a tooltip; hovering a project shows a small card with what's new there.
+// Hovering a tab shows its name in a tooltip; hovering a project shows a small card with what's new there,
+// and hovering the Duet shows what it decided for you today and your latest chats with it (duet-card.tsx).
 // `at` lets the design system page show the rail on a given page.
 export function RailSidebar({ at }: { at?: string[] } = {}) {
   const here = useRoute()
@@ -86,7 +88,7 @@ export function RailSidebar({ at }: { at?: string[] } = {}) {
             <RailButton label="Search" hint="⌘K" onClick={() => setSearchOpen(true)}><Search className="size-4" /></RailButton>
             <RailButton label="Today" active={route[0] === "today" || route.length === 0} badge={needs} onClick={() => navigate("/today")}><DateGlyph day={new Date(dateOfDay(todayDay())).getDate()} /></RailButton>
             {/* High-fi: your own Duet face stands in for the Duet icon. */}
-            <RailButton label="Duet" active={duet} outline={duetShape} onClick={() => navigate("/duet")}>{hifi ? <DuetAvatar owner={ME.id} className="size-[30px]" /> : <Blend className="size-4" />}</RailButton>
+            <RailButton label="Duet" active={duet} outline={duetShape} card={<DuetCard />} onClick={() => navigate("/duet")}>{hifi ? <DuetAvatar owner={ME.id} className="size-[30px]" /> : <Blend className="size-4" />}</RailButton>
             <RailButton label="All projects" active={route[0] === "projects"} onClick={() => navigate("/projects")}><LayoutGrid className="size-4" /></RailButton>
             <div className="mx-1.5 my-1 h-px shrink-0 bg-sidebar-border" />
             <div data-rail-projects className="-mx-(--rail-pad) flex min-h-0 flex-col gap-(--rail-gap) overflow-y-auto px-(--rail-pad)">
@@ -115,6 +117,8 @@ export function RailSidebar({ at }: { at?: string[] } = {}) {
               {open ? <ProjectPanel id={open.id} name={open.name} route={route} /> : duet ? <DuetPanel route={route} /> : settings ? <SettingsPanel route={route} /> : <ChatsPanel route={route} />}
             </div>
             {duet && <div className="p-2"><DuetSettingsRow className="w-full" /></div>}
+            {/* The fold button sits at the panel's bottom left, centered on your photo's line in the rail. */}
+            {open && <div className={cn("flex h-(--rail-tile) shrink-0 items-center px-2", !hifi && "mb-2")}><FoldPanelButton /></div>}
           </div>
         )}
       </SidebarContent>
@@ -286,7 +290,6 @@ function ProjectPanel({ id, name, route }: { id: string; name: string; route: st
             <DropdownMenuItem onSelect={() => toast(`${name} archived`)}><Archive />Archive</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
-        <FoldPanelButton />
       </div>
       <ProjectNavList id={id} route={route} className="mx-0 translate-x-0 border-l-0 px-0" />
     </div>

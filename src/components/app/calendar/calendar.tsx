@@ -1,9 +1,9 @@
 import { useLayoutEffect, useRef, useState } from "react"
-import { ChevronLeft, ChevronRight, Layers, Pencil, Radio, Repeat, Trash2, TriangleAlert } from "lucide-react"
+import { ChevronLeft, ChevronRight, MoreHorizontal, Pencil, Radio, Repeat, Trash2, TriangleAlert } from "lucide-react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Popover, PopoverAnchor, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { Toggle } from "@/components/ui/toggle"
+import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { PersonAvatar } from "@/components/app/person"
 import { ProjectLabel, ProjectMark } from "@/components/app/project-mark"
@@ -146,16 +146,21 @@ export function Calendar({ project, today: todayDay, decisions = [], title = nul
         </div>
         <span className="text-sm tabular-nums">{label}</span>
         <div className="ml-auto flex items-center gap-2">
-          {project && (
-            <Toggle variant="outline" size="sm" pressed={others} onPressedChange={setOthers} className="px-2.5">
-              <Layers />Other projects
-            </Toggle>
-          )}
           <ToggleGroup type="single" variant="outline" size="sm" value={view} onValueChange={(v) => { if (v) { closePopover(); setView(v as View) } }} aria-label="Calendar view">
             <ToggleGroupItem value="day" className="px-3">Day</ToggleGroupItem>
             <ToggleGroupItem value="week" className="px-3">Week</ToggleGroupItem>
             <ToggleGroupItem value="month" className="px-3">Month</ToggleGroupItem>
           </ToggleGroup>
+          {project && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon-sm" aria-label="Calendar options"><MoreHorizontal /></Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-44">
+                <DropdownMenuCheckboxItem checked={others} onCheckedChange={(c) => setOthers(!!c)} onSelect={(e) => e.preventDefault()}>Other projects</DropdownMenuCheckboxItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
         </div>
       </div>
 
