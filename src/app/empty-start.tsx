@@ -40,8 +40,8 @@ export function StartTask({ projectId }: { projectId: string }) {
   const [creating, setCreating] = useState(false)
   return (
     <>
-      <EmptyStart icon={ListTodo} title="Create your first task" art={<Illo name="new-project" className="mb-3 h-28" />} action={<Button size="sm" onClick={() => setCreating(true)}><Plus />New task</Button>} />
-      <AddTaskDialog projectId={projectId} open={creating} onOpenChange={setCreating} onCreated={(t) => toast(`Task added to ${threadOf(projectId, t.part).name}`)} />
+      <EmptyStart icon={ListTodo} title="No open knots." art={<Illo name="new-project" className="mb-3 h-28" />} action={<Button size="sm" onClick={() => setCreating(true)}><Plus />New knot</Button>} />
+      <AddTaskDialog projectId={projectId} open={creating} onOpenChange={setCreating} onCreated={(t) => toast(`Knot added to ${threadOf(projectId, t.part).name}`)} />
     </>
   )
 }

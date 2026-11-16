@@ -64,7 +64,7 @@ function PersonCard({ id, part, across, doing, tasks, artifacts }: {
         <div className="min-w-0 flex-1">
           <p className="truncate text-sm font-medium">{firstName(id)}</p>
           <p className="truncate text-xs text-muted-foreground">
-            {active ? `Active for ${sorted[0].since}` : `${tasks.length} open task${tasks.length === 1 ? "" : "s"}`}
+            {active ? `Active for ${sorted[0].since}` : `${tasks.length} open knot${tasks.length === 1 ? "" : "s"}`}
           </p>
         </div>
       </div>
@@ -160,7 +160,7 @@ export function WorkingByProject({ projects, cap = 4 }: { projects: string[]; ca
                         <ThreadChip projectId={project} part={spot.part} className="ml-auto text-xs text-muted-foreground [&_svg]:size-3.5" />
                       </span>
                       <span className="mt-0.5 block truncate text-xs text-muted-foreground">
-                        {spot.doing ? <span className="shimmer-text">{spot.doing}</span> : `${spot.open} open task${spot.open === 1 ? "" : "s"}`}
+                        {spot.doing ? <span className="shimmer-text">{spot.doing}</span> : `${spot.open} open knot${spot.open === 1 ? "" : "s"}`}
                       </span>
                     </span>
                   </li>

@@ -101,7 +101,7 @@ export function ProjectHome({ project, tab, sub }: { project: Project; tab: Home
   )
 }
 
-const PAGE_TITLE = { home: "Home", tasks: "Tasks", decisions: "Decisions", artifacts: "Artifacts" } as const
+const PAGE_TITLE = { home: "Home", tasks: "Knots", decisions: "Decisions", artifacts: "Artifacts" } as const
 
 export function Count({ n }: { n: number }) {
   return <span className="text-xs font-normal text-muted-foreground tabular-nums">{n}</span>

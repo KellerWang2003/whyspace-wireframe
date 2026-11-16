@@ -7,12 +7,14 @@ import { useState } from 'react'
 export type SavedView<F> = { id: string; name: string; filters: F; sort: { key: string; dir: 'asc' | 'desc' } | null; locked?: boolean }
 
 const KEY = 'whyspace.views'
+// Starting view names that changed (Tasks became Knots, Nov 14 2026).
+const RENAMED: Record<string, string> = { "My open tasks": "My open knots", Done: "Tied" }
 
 function load<F>(scope: string, seed: SavedView<F>[], blank: F): SavedView<F>[] {
   try {
     const stored = JSON.parse(localStorage.getItem(KEY) ?? '{}')[scope] as SavedView<F>[] | undefined
-    // Fill in filter fields added since the view was saved.
-    if (stored?.length) return stored.map(v => ({ ...v, filters: { ...blank, ...v.filters } }))
+    // Fill in filter fields added since the view was saved. Starting views still on an old name take the new one.
+    if (stored?.length) return stored.map(v => ({ ...v, name: RENAMED[v.name] && seed.some(s => s.id === v.id) ? RENAMED[v.name] : v.name, filters: { ...blank, ...v.filters } }))
   } catch { /* storage off */ }
   return seed
 }

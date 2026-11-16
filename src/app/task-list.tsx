@@ -30,11 +30,11 @@ type Filters = { thread: string; status: "all" | "open" | TaskStatus; owner: str
 const BLANK: Filters = { thread: "all", status: "all", owner: "all", due: "any", layout: "list" }
 const SEED: SavedView<Filters>[] = [
   { id: "all", name: "All", filters: BLANK, sort: null, locked: true },
-  { id: "mine", name: "My open tasks", filters: { ...BLANK, owner: ME.id, status: "open" }, sort: null },
+  { id: "mine", name: "My open knots", filters: { ...BLANK, owner: ME.id, status: "open" }, sort: null },
   { id: "week", name: "Due this week", filters: { ...BLANK, status: "open", due: "week" }, sort: null },
 ]
 type SortKey = "thread" | "title" | "status" | "owner" | "due"
-const SORTS: [SortKey | "default", string][] = [["default", "Default"], ["title", "Task"], ["status", "Status"], ["owner", "Assignee"], ["due", "Due date"], ["thread", "Thread"]]
+const SORTS: [SortKey | "default", string][] = [["default", "Default"], ["title", "Knot"], ["status", "Status"], ["owner", "Assignee"], ["due", "Due date"], ["thread", "Thread"]]
 
 export function TaskList({ projectId, tasks, thread, search = "" }: { projectId: string; tasks: Task[]; thread?: Thread; search?: string }) {
   // Home keeps saved views; a thread keeps its filters for this visit only.
@@ -87,7 +87,7 @@ export function TaskList({ projectId, tasks, thread, search = "" }: { projectId:
     return (
       <TableRow key={t.id} tabIndex={0} className="cursor-pointer focus-visible:bg-muted/60 focus-visible:outline-none" onClick={() => setOpenId(t.id)} onKeyDown={(e) => { if (e.target === e.currentTarget && e.key === "Enter") setOpenId(t.id) }}>
         <TableCell className="w-10 pl-4" onClick={(e) => e.stopPropagation()}>
-          <Checkbox aria-label={`Mark ${t.title} done`} checked={isDone} onCheckedChange={(v) => patchTask(t.id, { status: v ? "done" : "todo" })} />
+          <Checkbox aria-label={`Tie ${t.title}`} checked={isDone} onCheckedChange={(v) => patchTask(t.id, { status: v ? "done" : "todo" })} />
         </TableCell>
         {!thread && <TableCell className="text-xs text-muted-foreground"><ThreadTag projectId={projectId} part={t.part} /></TableCell>}
         <TableCell className={cn("max-w-0 truncate py-3", isDone ? "text-muted-foreground line-through" : "font-medium")}>{t.title}</TableCell>
@@ -103,7 +103,7 @@ export function TaskList({ projectId, tasks, thread, search = "" }: { projectId:
   return (
     <div className="flex min-w-0 flex-col gap-4">
       {empty ? (
-        <EmptyStart icon={ListTodo} title="Create your first task" art={<Illo name="new-project" className="mb-3 h-28" />} action={<Button size="sm" onClick={() => setCreating(true)}><Plus />New task</Button>} />
+        <EmptyStart icon={ListTodo} title="No open knots." art={<Illo name="new-project" className="mb-3 h-28" />} action={<Button size="sm" onClick={() => setCreating(true)}><Plus />New knot</Button>} />
       ) : <>
       <ThreadToolbar>
         {!thread && <ViewSegments v={views} renaming={renaming} onRename={setRenaming} />}
@@ -133,7 +133,7 @@ export function TaskList({ projectId, tasks, thread, search = "" }: { projectId:
                   <DropdownMenuSubContent>
                     <DropdownMenuRadioGroup value={filters.status} onValueChange={(x) => setFilters({ status: x as Filters["status"] })}>
                       <DropdownMenuRadioItem value="all">Any status</DropdownMenuRadioItem>
-                      <DropdownMenuRadioItem value="open">Not done</DropdownMenuRadioItem>
+                      <DropdownMenuRadioItem value="open">Not tied</DropdownMenuRadioItem>
                       {STATUS_ORDER.map((x) => <DropdownMenuRadioItem key={x} value={x}>{TASK_STATUS_LABEL[x]}</DropdownMenuRadioItem>)}
                     </DropdownMenuRadioGroup>
                   </DropdownMenuSubContent>
@@ -168,7 +168,7 @@ export function TaskList({ projectId, tasks, thread, search = "" }: { projectId:
             </DropdownMenuSub>
             {!thread && <><DropdownMenuSeparator /><ViewActions v={views} onRename={setRenaming} /></>}
           </FilterMenu>
-          <Button size="sm" variant={thread ? "default" : "outline"} onClick={() => setCreating(true)}><Plus />New task</Button>
+          <Button size="sm" variant={thread ? "default" : "outline"} onClick={() => setCreating(true)}><Plus />New knot</Button>
         </div>
       </ThreadToolbar>
 
@@ -178,7 +178,7 @@ export function TaskList({ projectId, tasks, thread, search = "" }: { projectId:
             <TableRow>
               <TableHead className="w-10 pl-4" />
               {!thread && <SortableHead id="thread" sort={sort} onSort={toggle} className="w-28 @4xl:w-36">Thread</SortableHead>}
-              <SortableHead id="title" sort={sort} onSort={toggle}>Task</SortableHead>
+              <SortableHead id="title" sort={sort} onSort={toggle}>Knot</SortableHead>
               <SortableHead id="status" sort={sort} onSort={toggle} className="w-28 @4xl:w-32">Status</SortableHead>
               <SortableHead id="owner" sort={sort} onSort={toggle} className="w-24 @4xl:w-44">Assignees</SortableHead>
               <SortableHead id="due" sort={sort} onSort={toggle} className="w-24 pr-4 @4xl:w-28">Due</SortableHead>
@@ -187,16 +187,16 @@ export function TaskList({ projectId, tasks, thread, search = "" }: { projectId:
           <TableBody>
             {rows.map(row)}
             {!rows.length && !done.length && (
-              <TableRow><TableCell colSpan={cols} className="py-12 text-center text-sm text-muted-foreground">{tasks.length ? "No matches." : "No tasks yet."}</TableCell></TableRow>
+              <TableRow><TableCell colSpan={cols} className="py-12 text-center text-sm text-muted-foreground">{tasks.length ? "No matches." : "No open knots."}</TableCell></TableRow>
             )}
             {!rows.length && done.length > 0 && (
-              <TableRow><TableCell colSpan={cols} className="py-6 text-center text-sm text-muted-foreground">Nothing open.</TableCell></TableRow>
+              <TableRow><TableCell colSpan={cols} className="py-6 text-center text-sm text-muted-foreground">No open knots.</TableCell></TableRow>
             )}
             {done.length > 0 && (
               <TableRow className="hover:bg-transparent">
                 <TableCell colSpan={cols} className="pl-4">
                   <button onClick={() => setShowDone(!showDone)} aria-expanded={showDone} className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground">
-                    <ChevronRight className={cn("size-3.5 transition-transform", showDone && "rotate-90")} />Done <span className="tabular-nums">{done.length}</span>
+                    <ChevronRight className={cn("size-3.5 transition-transform", showDone && "rotate-90")} />Tied <span className="tabular-nums">{done.length}</span>
                   </button>
                 </TableCell>
               </TableRow>
@@ -238,7 +238,7 @@ export function TaskList({ projectId, tasks, thread, search = "" }: { projectId:
         thread={thread?.part ?? (filters.thread !== "all" ? filters.thread : undefined)}
         open={creating}
         onOpenChange={setCreating}
-        onCreated={(t) => toast(`Task added to ${threadOf(projectId, t.part).name}`)}
+        onCreated={(t) => toast(`Knot added to ${threadOf(projectId, t.part).name}`)}
       />
     </div>
   )

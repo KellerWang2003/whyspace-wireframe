@@ -101,10 +101,10 @@ export function Today() {
               <Collapsible defaultOpen className="flex flex-col gap-4">
                 <CollapsibleTrigger className="group flex items-center gap-2 text-left">
                   <ChevronRight className="size-4 text-muted-foreground transition-transform group-data-[state=open]:rotate-90" />
-                  <h2 className="type-section">My tasks</h2>
+                  <h2 className="type-section">Knots</h2>
                   <span className="text-sm text-muted-foreground tabular-nums">{mine.filter((t) => t.status !== "done").length} open</span>
                 </CollapsibleTrigger>
-                <CollapsibleContent><TasksView title="My tasks" tasks={mine} showProject headless /></CollapsibleContent>
+                <CollapsibleContent><TasksView title="Knots" tasks={mine} showProject headless /></CollapsibleContent>
               </Collapsible>
             )}
 
@@ -203,7 +203,7 @@ function ItemPeek({ item, onClose, onTask }: { item?: InboxItem; onClose: () => 
               </section>
             ) : <p className="text-sm leading-7">{item.body}</p>}
             {item.need === "do" && task && (
-              <section aria-label="Task" className="space-y-3 rounded-xl bg-muted p-4">
+              <section aria-label="Knot" className="space-y-3 rounded-xl bg-muted p-4">
                 <div className="flex items-start gap-3">
                   <button type="button" onClick={() => { onClose(); onTask(task.id) }} className="min-w-0 flex-1 text-left">
                     <p className="text-sm font-medium hover:underline">{task.title}</p>
@@ -212,8 +212,8 @@ function ItemPeek({ item, onClose, onTask }: { item?: InboxItem; onClose: () => 
                   <Button size="sm" variant={task.status === "done" ? "secondary" : "default"} onClick={() => {
                     const finished = task.status !== "done"
                     patchTask(task.id, { status: finished ? "done" : "todo" })
-                    if (finished) toast("Task done", { action: { label: "Undo", onClick: () => patchTask(task.id, { status: task.status }) } })
-                  }}><Check />{task.status === "done" ? "Done" : "Mark done"}</Button>
+                    if (finished) toast("Knot tied", { action: { label: "Reopen", onClick: () => patchTask(task.id, { status: task.status }) } })
+                  }}>{task.status === "done" ? <><RotateCcw />Reopen</> : <><Check />Tie it</>}</Button>
                 </div>
                 {task.prompt && (
                   <div className="space-y-2 rounded-md bg-background/60 p-3">

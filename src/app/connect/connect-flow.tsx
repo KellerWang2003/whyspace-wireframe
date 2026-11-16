@@ -77,7 +77,7 @@ const TOOLS: { name: string; mode: Mode }[] = [
   { name: "Search decisions", mode: "always" },
   { name: "Read a thread", mode: "always" },
   { name: "Log a decision", mode: "ask" },
-  { name: "Add a task", mode: "ask" },
+  { name: "Add a knot", mode: "ask" },
   { name: "Ask a teammate's Duet", mode: "ask" },
 ]
 type Mode = "always" | "ask" | "off"
@@ -150,7 +150,7 @@ function Authorize({ id, onAllow, onCancel }: { id: ProviderId; onAllow: () => v
         <ul className="mt-3 space-y-3">
           {[
             [Eye, "Read your projects, threads and decisions"],
-            [PenLine, "Log decisions and tasks as you work"],
+            [PenLine, "Log decisions and knots as you work"],
             [Blend, "Ask your teammates' Duets"],
           ].map(([Icon, text]) => {
             const I = Icon as typeof Eye

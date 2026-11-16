@@ -26,11 +26,11 @@ type Hit = { key: string; kind: Kind; title: string; projectId: string; part?: s
 const TAGS: { tag: Tag; label: string }[] = [
   { tag: "all", label: "All" },
   { tag: "decision", label: "Decisions" },
-  { tag: "task", label: "Tasks" },
+  { tag: "task", label: "Knots" },
   { tag: "artifact", label: "Artifacts" },
   { tag: "thread", label: "Threads" },
 ]
-const GROUP: Record<Kind, string> = { decision: "Decisions", task: "Tasks", artifact: "Artifacts", thread: "Threads", project: "Projects" }
+const GROUP: Record<Kind, string> = { decision: "Decisions", task: "Knots", artifact: "Artifacts", thread: "Threads", project: "Projects" }
 const ORDER: Kind[] = ["decision", "task", "artifact", "thread", "project"]
 // Unsettled marks first: those are the ones you go looking for.
 const RANK: Mark[] = ["triangle", "empty", "ringed", "filled"]

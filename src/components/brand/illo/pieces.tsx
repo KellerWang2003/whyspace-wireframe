@@ -282,7 +282,7 @@ export const ILLO = {
   "caught-up": { label: "All caught up", kind: "person", where: "Today and the overlay, all done", view: "2 80 177 128", Art: CaughtUp },
   "connect-tools": { label: "Connect your AI tools", kind: "ribbon", where: "Settings, Connectors", view: "0 68 240 101", Art: ConnectTools },
   "no-projects": { label: "No projects yet", kind: "ribbon", where: "All projects, Decisions, Search", view: "-6 76 252 76", Art: NoProjects },
-  "new-project": { label: "New project, nothing in it", kind: "ribbon", where: "A project's first page, Tasks, Artifacts", view: "56 30 183 158", Art: NewProject },
+  "new-project": { label: "New project, nothing in it", kind: "ribbon", where: "A project's first page, Knots, Artifacts", view: "56 30 183 158", Art: NewProject },
   "went-wrong": { label: "Something went wrong", kind: "ribbon", where: "Errors, gone threads and chats", view: "0 71 240 93", Art: WentWrong },
   "no-access": { label: "No access", kind: "ribbon", where: "A project you're not in", view: "16 76 208 124", Art: NoAccess },
   "lost-connection": { label: "Lost connection", kind: "ribbon", where: "Strip at the top of the page", view: "0 77 240 72", Art: LostConnection },

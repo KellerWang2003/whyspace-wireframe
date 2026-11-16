@@ -31,12 +31,12 @@ export function ProjectNewMenu({
         <DropdownMenuTrigger asChild>{trigger ?? <Button variant="outline" size="sm"><Plus />New</Button>}</DropdownMenuTrigger>
         <DropdownMenuContent side={side} align={align} className="w-44">
           <DropdownMenuItem onSelect={() => setDialog("schedule")}><CalendarPlus />Schedule meeting</DropdownMenuItem>
-          <DropdownMenuItem onSelect={() => setDialog("task")}><ListTodo />New task</DropdownMenuItem>
+          <DropdownMenuItem onSelect={() => setDialog("task")}><ListTodo />New knot</DropdownMenuItem>
           <DropdownMenuItem onSelect={() => setDialog("thread")}><Spline />New thread</DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
       <ScheduleMeetingDialog project={project.id} open={dialog === "schedule"} onOpenChange={close} />
-      <NewTaskDialog open={dialog === "task"} onOpenChange={close} defaultProject={project.name} onCreate={() => toast("Task created")} />
+      <NewTaskDialog open={dialog === "task"} onOpenChange={close} defaultProject={project.name} onCreate={() => toast("Knot created")} />
       <Dialog open={dialog === "thread"} onOpenChange={close}>
         <DialogContent className="sm:max-w-sm">
           <DialogHeader><DialogTitle>New thread</DialogTitle></DialogHeader>

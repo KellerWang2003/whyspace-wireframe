@@ -29,7 +29,7 @@ export function AddTaskDialog({ projectId, thread, open, onOpenChange, onCreated
   const create = () => {
     const task: Task = {
       id: `t-${Date.now()}`,
-      title: title.trim() || "Untitled task",
+      title: title.trim() || "Untitled knot",
       project: projectNameOf(projectId),
       part,
       owner,
@@ -46,8 +46,8 @@ export function AddTaskDialog({ projectId, thread, open, onOpenChange, onCreated
     <Dialog open={open} onOpenChange={(o) => (o ? onOpenChange(true) : close())}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>New task</DialogTitle>
-          <DialogDescription className="sr-only">Add a task to a thread.</DialogDescription>
+          <DialogTitle>New knot</DialogTitle>
+          <DialogDescription className="sr-only">Add a knot to a thread.</DialogDescription>
         </DialogHeader>
         <form onSubmit={(e) => { e.preventDefault(); create() }}>
           <FieldGroup>
@@ -80,7 +80,7 @@ export function AddTaskDialog({ projectId, thread, open, onOpenChange, onCreated
           </FieldGroup>
           <DialogFooter className="mt-6">
             <DialogClose asChild><Button type="button" variant="outline">Cancel</Button></DialogClose>
-            <Button type="submit">Create task</Button>
+            <Button type="submit">Create knot</Button>
           </DialogFooter>
         </form>
       </DialogContent>

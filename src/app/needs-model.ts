@@ -30,7 +30,7 @@ export type Source = { face: string; agent?: boolean; who: string; what: string;
 export type CardKind = "misalign" | "open" | "question" | "review" | "asked" | "invite" | "task"
 export const CARD_KIND_LABEL: Record<CardKind, string> = {
   misalign: "Possible misalignment", open: "Open decision", question: "Open question", review: "To review",
-  asked: "Question for you", invite: "Meeting invite", task: "Task",
+  asked: "Question for you", invite: "Meeting invite", task: "Knot",
 }
 export const kindOfRow = (r: Row): CardKind =>
   r.kind === "decide" ? ({ clash: "misalign", confirm: "open", answer: "question", review: "review" } as const)[r.ask] : r.kind === "do" ? "task" : r.kind
@@ -134,7 +134,7 @@ export function useNeedsItems(rows: Row[]): NeedsItem[] {
           answers: [
             { label: `Use ${name}’s`, primary: true, icon: "done", run: () => { settleClash(d.id, "theirs"); toast(`Took ${name}’s decision`) } },
             { label: "Use mine", icon: "write", input: { placeholder: `Why keep yours? ${name} will see it.`, save: "Keep mine", run: (why) => { settleClash(d.id, "mine", sentence(why)); toast(`Kept yours. ${name} will see why.`) } } },
-            { label: "Add a task", icon: "task", run: () => { addTask(clashTask(d, other)); patchTask(clashTaskId(d.id), {}); toast("Task added for today") } },
+            { label: "Add a knot", icon: "task", run: () => { addTask(clashTask(d, other)); patchTask(clashTaskId(d.id), {}); toast("Knot added for today") } },
             // Your Duet brings you both into one conversation, each decision and why on top, and theirs answers first.
             { label: `Ask ${name} why`, icon: "talk", run: () => chatFor(chatOfTopic(clashTopicId(d.id)), other.owner) },
           ],
@@ -272,7 +272,7 @@ export function useNeedsItems(rows: Row[]): NeedsItem[] {
     const done = () => {
       patchTask(t.id, { status: "done" })
       if (item) setInboxDone(item.id, true)
-      toast("Task done", { action: { label: "Undo", onClick: () => { patchTask(t.id, { status: t.status }); if (item) setInboxDone(item.id, false) } } })
+      toast("Knot tied", { action: { label: "Reopen", onClick: () => { patchTask(t.id, { status: t.status }); if (item) setInboxDone(item.id, false) } } })
     }
     const copyPrompt = () => {
       try { void navigator.clipboard?.writeText(t.prompt ?? "") } catch { /* clipboard blocked: the toast still says it */ }
@@ -282,7 +282,7 @@ export function useNeedsItems(rows: Row[]): NeedsItem[] {
       id: r.id, row: r, face: item?.from ?? t.owner,
       source: item?.author.kind === "ai"
         ? { ...DUET, what: `made this from ${item.source.replace(/^Your /, "your ")}` }
-        : item ? { face: item.from, who: first(item.from), what: "asked you for this" } : { face: t.owner, who: t.owner === ME.id ? "Your task" : first(t.owner), what: `due ${lower(t.due ?? "today")}` },
+        : item ? { face: item.from, who: first(item.from), what: "asked you for this" } : { face: t.owner, who: t.owner === ME.id ? "Your knot" : first(t.owner), what: `due ${lower(t.due ?? "today")}` },
       title: t.title,
       sides: [
         from
@@ -291,7 +291,7 @@ export function useNeedsItems(rows: Row[]): NeedsItem[] {
         { label: `Due ${t.due}`, text: t.prompt && t.tool ? `A ${t.tool} prompt is ready` : t.tool ? `In ${t.tool}` : `${t.part} thread` },
       ],
       answers: [
-        { label: "Mark done", primary: true, icon: "done", run: done },
+        { label: "Tie it", primary: true, icon: "done", run: done },
         ...(t.prompt ? [{ label: t.tool ? `Copy ${t.tool} prompt` : "Copy prompt", icon: "copy" as const, run: copyPrompt }] : []),
       ],
     }]

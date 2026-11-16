@@ -49,7 +49,7 @@ export function ProjectNavList({ id, route, className }: { id: string; route: st
           <SidebarMenuSubItem key={key}>
             <SidebarMenuSubButton asChild isActive={section === key}>
               <a href={`#/p/${id}/${key}`}>
-                {key[0].toUpperCase() + key.slice(1)}
+                {key === "tasks" ? "Knots" : key[0].toUpperCase() + key.slice(1)}
               </a>
             </SidebarMenuSubButton>
           </SidebarMenuSubItem>

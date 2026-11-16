@@ -75,12 +75,12 @@ type Group = "project" | "thread" | "none"
 type TaskFilters = { thread: string; status: "all" | "open" | TaskStatus; owner: string; due: "any" | "week"; layout: "list" | "board"; group: Group }
 const BLANK: TaskFilters = { thread: "all", status: "all", owner: "all", due: "any", layout: "list", group: "project" }
 const GROUPS: [Group, string][] = [["project", "Project"], ["thread", "Thread"], ["none", "None"]]
-const SORTS: [string, string][] = [["default", "Default"], ["title", "Task"], ["status", "Status"], ["owner", "Assignee"], ["due", "Due date"], ["thread", "Thread"]]
+const SORTS: [string, string][] = [["default", "Default"], ["title", "Knot"], ["status", "Status"], ["owner", "Assignee"], ["due", "Due date"], ["thread", "Thread"]]
 const SEED: SavedView<TaskFilters>[] = [
   { id: "all", name: "All", filters: BLANK, sort: null, locked: true },
-  { id: "mine", name: "My open tasks", filters: { ...BLANK, owner: ME.id, status: "open" }, sort: null },
+  { id: "mine", name: "My open knots", filters: { ...BLANK, owner: ME.id, status: "open" }, sort: null },
   { id: "week", name: "Due this week", filters: { ...BLANK, status: "open", due: "week" }, sort: null },
-  { id: "done", name: "Done", filters: { ...BLANK, status: "done" }, sort: null },
+  { id: "done", name: "Tied", filters: { ...BLANK, status: "done" }, sort: null },
 ]
 const TODAY_DAY = 33 // Mon Nov 2, on the dueDay scale
 // "Fri Oct 30" / "Mon Nov 2" as a day number, so due dates sort in order.
@@ -179,7 +179,7 @@ export function TasksView({ title, tasks: initial, showProject = false, defaultP
             <DropdownMenuSubContent>
               <DropdownMenuRadioGroup value={status} onValueChange={(x) => v.setFilters({ status: x as TaskFilters["status"] })}>
                 <DropdownMenuRadioItem value="all">Any status</DropdownMenuRadioItem>
-                <DropdownMenuRadioItem value="open">Not done</DropdownMenuRadioItem>
+                <DropdownMenuRadioItem value="open">Not tied</DropdownMenuRadioItem>
                 {STATUS_ORDER.map((x) => <DropdownMenuRadioItem key={x} value={x}>{TASK_STATUS_LABEL[x]}</DropdownMenuRadioItem>)}
               </DropdownMenuRadioGroup>
             </DropdownMenuSubContent>
@@ -219,13 +219,13 @@ export function TasksView({ title, tasks: initial, showProject = false, defaultP
 
   return (
     <div className="flex flex-col gap-4">
-      {!headless && <TablePageHeader title={title} search={search} onSearch={setSearch} placeholder="Search tasks…" />}
+      {!headless && <TablePageHeader title={title} search={search} onSearch={setSearch} placeholder="Search knots…" />}
       <div className="flex flex-wrap items-center gap-2">
         <ViewSegments v={v} renaming={renaming} onRename={setRenaming} />
         <div className="ml-auto flex items-center gap-2">
-          {headless && <SearchToggle value={search} onChange={setSearch} placeholder="Search tasks…" />}
+          {headless && <SearchToggle value={search} onChange={setSearch} placeholder="Search knots…" />}
           {menu}
-          <Button size="sm" onClick={() => setCreating(true)}><Plus />New task</Button>
+          <Button size="sm" onClick={() => setCreating(true)}><Plus />New knot</Button>
         </div>
       </div>
 
@@ -235,7 +235,7 @@ export function TasksView({ title, tasks: initial, showProject = false, defaultP
             <TableRow>
               <TableHead className="w-10 pl-4" />
               {group !== "thread" && <SortableHead id="thread" sort={sort} onSort={toggle} className={group === "project" ? "w-36" : "w-44"}>Thread</SortableHead>}
-              <SortableHead id="title" sort={sort} onSort={toggle}>Task</SortableHead>
+              <SortableHead id="title" sort={sort} onSort={toggle}>Knot</SortableHead>
               <SortableHead id="status" sort={sort} onSort={toggle} className="w-32">Status</SortableHead>
               <SortableHead id="owner" sort={sort} onSort={toggle} className="w-44">Assignees</SortableHead>
               <SortableHead id="due" sort={sort} onSort={toggle} className="w-28 pr-4">Due</SortableHead>
@@ -292,7 +292,7 @@ export function TasksView({ title, tasks: initial, showProject = false, defaultP
         defaultProject={defaultProject}
         onCreate={(t) => {
           setCreated((all) => [t, ...all])
-          toast("Task created")
+          toast("Knot created")
         }}
       />
     </div>
@@ -403,7 +403,7 @@ export function TaskSheet({ task: t, onClose, onChange }: { task?: Task; onClose
                 </SheetHeader>
                 {t.status === "done"
                   ? <Button size="sm" variant="ghost" className="shrink-0 text-muted-foreground" onClick={() => onChange({ status: "todo" })}><RotateCcw />Reopen</Button>
-                  : <Button size="sm" variant="outline" className="shrink-0" onClick={() => { onChange({ status: "done" }); toast("Task done") }}><Check />Done</Button>}
+                  : <Button size="sm" variant="outline" className="shrink-0" onClick={() => { const was = t.status; onChange({ status: "done" }); toast("Knot tied", { action: { label: "Reopen", onClick: () => onChange({ status: was }) } }) }}><Check />Tie it</Button>}
               </div>
               <Textarea
                 key={t.id}
@@ -585,8 +585,8 @@ export function NewTaskDialog({ open, onOpenChange, defaultProject, onCreate }: 
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>New task</DialogTitle>
-          <DialogDescription className="sr-only">Add a task to a thread.</DialogDescription>
+          <DialogTitle>New knot</DialogTitle>
+          <DialogDescription className="sr-only">Add a knot to a thread.</DialogDescription>
         </DialogHeader>
         <FieldGroup>
           <Field>
@@ -629,7 +629,7 @@ export function NewTaskDialog({ open, onOpenChange, defaultProject, onCreate }: 
             onClick={() => {
               onCreate({
                 id: `t-${Date.now()}`,
-                title: title.trim() || "Untitled task",
+                title: title.trim() || "Untitled knot",
                 project,
                 part,
                 owner,
@@ -642,7 +642,7 @@ export function NewTaskDialog({ open, onOpenChange, defaultProject, onCreate }: 
               onOpenChange(false)
             }}
           >
-            Create task
+            Create knot
           </Button>
         </DialogFooter>
       </DialogContent>

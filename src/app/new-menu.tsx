@@ -25,12 +25,12 @@ export function NewMenu({ project, trigger, side, align = "start", thread }: {
         <DropdownMenuTrigger asChild>{trigger ?? <Button variant="outline" size="sm"><Plus />New</Button>}</DropdownMenuTrigger>
         <DropdownMenuContent side={side} align={align} className="w-44">
           <DropdownMenuItem onSelect={() => setDialog("schedule")}><CalendarPlus />Schedule meeting</DropdownMenuItem>
-          <DropdownMenuItem onSelect={() => setDialog("task")}><ListTodo />New task</DropdownMenuItem>
+          <DropdownMenuItem onSelect={() => setDialog("task")}><ListTodo />New knot</DropdownMenuItem>
           <DropdownMenuItem onSelect={() => setDialog("thread")}><Spline />New thread</DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
       <ScheduleMeetingDialog project={project.id} open={dialog === "schedule"} onOpenChange={close} />
-      <AddTaskDialog projectId={project.id} thread={thread} open={dialog === "task"} onOpenChange={close} onCreated={(t) => toast(`Task added to ${threadOf(project.id, t.part).name}`)} />
+      <AddTaskDialog projectId={project.id} thread={thread} open={dialog === "task"} onOpenChange={close} onCreated={(t) => toast(`Knot added to ${threadOf(project.id, t.part).name}`)} />
       <NewThreadDialog projectId={project.id} open={dialog === "thread"} onOpenChange={close} />
     </>
   )

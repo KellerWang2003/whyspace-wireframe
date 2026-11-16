@@ -155,7 +155,7 @@ export const SPOTS: Spot[] = [
   { id: "no-projects", label: "No projects yet", where: "Projects", action: "Unroll", framing: "float", source: "new",
     subject: "three ribbon rolls standing on the empty paper, seen from slightly above, each still wound; one has begun to unroll, its loose end running out across the paper. No people, no hands",
     colors: "leaf, apricot and rose rolls" },
-  { id: "no-threads", label: "No threads yet", where: "New project Home, Tasks, Artifacts", action: "Lay out", framing: "float", source: "new",
+  { id: "no-threads", label: "No threads yet", where: "New project Home, Knots, Artifacts", action: "Lay out", framing: "float", source: "new",
     subject: "seen from above, a single person sitting at the edge of the paper lays one ribbon down in a wide, open curve, marking out an empty space in front of them",
     colors: "apricot ribbon, leaf clothes" },
   { id: "nothing-yet", label: "Nothing yet", where: "Today in a new workspace", action: "Lay out", framing: "float", source: "new",

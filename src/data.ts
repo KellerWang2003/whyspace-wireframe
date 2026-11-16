@@ -410,7 +410,7 @@ export type Task = {
   tool?: string
 }
 
-export const TASK_STATUS_LABEL: Record<TaskStatus, string> = { todo: "To do", prog: "In progress", review: "In review", done: "Done" }
+export const TASK_STATUS_LABEL: Record<TaskStatus, string> = { todo: "Open", prog: "In progress", review: "In review", done: "Tied" }
 export const PRIORITY_LABEL: Record<Priority, string> = { urgent: "Urgent", high: "High", med: "Medium", low: "Low", none: "No priority" }
 
 const ALL_TASKS: Task[] = [
@@ -667,7 +667,7 @@ const ALL_INBOX: InboxItem[] = [
     "time": "2h",
     "unread": true,
     "decision": "nored",
-    "body": "Trevor changed the brand color. Your task and Claude Code prompt are ready."
+    "body": "Trevor changed the brand color. Your knot and Claude Code prompt are ready."
   },
   {
     "need": "decide", "touches": "Your brand guidelines", "id": "i5",
@@ -717,7 +717,7 @@ const ALL_INBOX: InboxItem[] = [
     "time": "1d",
     "unread": true,
     "decision": "nored",
-    "body": "Trevor changed the brand color. Your task and Figma prompt are ready."
+    "body": "Trevor changed the brand color. Your knot and Figma prompt are ready."
   },
   {
     "touches": "Your posters and promo video", "id": "i2",

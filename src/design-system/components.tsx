@@ -138,7 +138,7 @@ export function BadgesSection() {
         </Row>
       </Group>
       <Group title="Count">
-        <Row><Specimen name="Count"><span className="flex items-center gap-1.5 text-sm font-medium">Tasks<Count n={3} /></span></Specimen></Row>
+        <Row><Specimen name="Count"><span className="flex items-center gap-1.5 text-sm font-medium">Knots<Count n={3} /></span></Specimen></Row>
       </Group>
     </>
   )
@@ -223,7 +223,7 @@ export function ChoicesSection() {
 type NoFilters = Record<string, never>
 const VIEW_SEED: SavedView<NoFilters>[] = [
   { id: "all", name: "All", filters: {}, sort: null, locked: true },
-  { id: "mine", name: "My open tasks", filters: {}, sort: null },
+  { id: "mine", name: "My open knots", filters: {}, sort: null },
   { id: "week", name: "Due this week", filters: {}, sort: null },
 ]
 
@@ -249,7 +249,7 @@ export function TabsSection() {
         <Tabs defaultValue="tasks">
           <div className="border-b pb-1.5">
             <TabsList variant="line" className="-ml-2 [&>button]:after:!bottom-[-11px]">
-              <TabsTrigger value="tasks">Tasks<Count n={n.tasks} /></TabsTrigger>
+              <TabsTrigger value="tasks">Knots<Count n={n.tasks} /></TabsTrigger>
               <TabsTrigger value="decisions">Decisions<Count n={n.decisions} /></TabsTrigger>
               <TabsTrigger value="artifacts">Artifacts<Count n={n.artifacts} /></TabsTrigger>
             </TabsList>
@@ -360,7 +360,7 @@ export function PeopleSection() {
       <Group title="Together">
         <Row>
           <Specimen name="Faces" note="Asked, with who else"><Faces ids={["CH", "TR"]} /></Specimen>
-          <Specimen name="MiniStack" note="On a task"><MiniStack ids={["MC", "CH", "KL"]} /></Specimen>
+          <Specimen name="MiniStack" note="On a knot"><MiniStack ids={["MC", "CH", "KL"]} /></Specimen>
         </Row>
       </Group>
     </>
@@ -416,7 +416,7 @@ export function PlacesSection() {
           })}
         </ul>
       </Group>
-      <Group title="Thread tags" note="Where a task, decision or chat belongs, with its count">
+      <Group title="Thread tags" note="Where a knot, decision or chat belongs, with its count">
         <ul className="flex max-w-sm flex-col gap-3 text-sm">
           {threads.map((t) => (
             <li key={t.id} className="flex items-center gap-3">

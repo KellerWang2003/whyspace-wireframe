@@ -138,11 +138,11 @@ export function useHandledLines(): Line[] {
   }
   for (const i of INBOX) if (isDone(i)) {
     const task = tasks.find((t) => t.id === i.task)
-    lines.push({ id: `i-${i.id}`, day: inboxState[i.id]?.done ? "today" : dayOfTime(i.time), when: inboxState[i.id]?.done ? "Just now" : i.time, who: i.from, text: task ? `You finished “${task.title}”` : i.summary, item: i, task })
+    lines.push({ id: `i-${i.id}`, day: inboxState[i.id]?.done ? "today" : dayOfTime(i.time), when: inboxState[i.id]?.done ? "Just now" : i.time, who: i.from, text: task ? `You tied “${task.title}”` : i.summary, item: i, task })
   }
   // A task of yours you finished here, when no update on Today was about it.
   for (const t of tasks) if (taskPatches[t.id]?.status === "done" && t.owner === ME.id && !INBOX.some((i) => i.task === t.id && isDone(i))) {
-    lines.push({ id: `t-${t.id}`, day: "today", when: "Just now", who: ME.id, text: `You finished “${t.title}”`, task: t })
+    lines.push({ id: `t-${t.id}`, day: "today", when: "Just now", who: ME.id, text: `You tied “${t.title}”`, task: t })
   }
   for (const [id, state] of Object.entries(inboxState)) {
     const i = INBOX.find((x) => x.id === id)

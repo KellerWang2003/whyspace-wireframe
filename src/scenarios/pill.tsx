@@ -51,7 +51,7 @@ function itemOf(app: AppSnapshot, r: Row): OverlayItem {
         input: { placeholder: `Why keep yours? ${name} will see it.`, save: "Keep mine", run: (why) => appApi()?.settleClash(r.id, "mine", why.trim()) },
         flash: (why) => ({ text: "Kept yours", note: why }),
       },
-      ...(mine && theirs ? [{ label: "Add a task", icon: "task" as const, run: () => appApi()?.addTask(clashTask(mine, theirs, me)), flash: () => ({ text: "Task added for today", note: clashTask(mine, theirs, me).title }) }] : []),
+      ...(mine && theirs ? [{ label: "Add a knot", icon: "task" as const, run: () => appApi()?.addTask(clashTask(mine, theirs, me)), flash: () => ({ text: "Knot added for today", note: clashTask(mine, theirs, me).title }) }] : []),
       ...(theirs ? [{ label: `Ask ${name} why`, icon: "talk" as const }] : []),
     ]
     return {
@@ -83,7 +83,7 @@ function itemOf(app: AppSnapshot, r: Row): OverlayItem {
 
 const logOf = (rows: Row[]): LogEntry[] =>
   rows.filter((r) => !waits(r)).map((r) => (r.task
-    ? { id: r.id, mark: "task", title: r.title, note: "A task, for today" }
+    ? { id: r.id, mark: "task", title: r.title, note: "A knot, for today" }
     : { id: r.id, mark: markOfKind(r.kind), title: r.title, note: r.why }))
 
 export function Pill() {

@@ -51,7 +51,7 @@ export function ClaudeCodeApp({ onEvent, person = "Kelly", repo = "whiskr-app" }
           <div className="rounded-md border border-neutral-700 px-4 py-3 text-neutral-400">
             <p><span className="text-[#d97757]">✻</span> <span className="text-neutral-100">Claude Code</span> · {repo}</p>
             <p>MCP: whyspace connected · 3 tools</p>
-            <p>Tip: paste a task’s prompt from Whyspace to start with its context.</p>
+            <p>Tip: paste a knot’s prompt from Whyspace to start with its context.</p>
           </div>
           {xs.map((me, i) => {
             const last = i === xs.length - 1

@@ -83,7 +83,7 @@ export function ThreadPage({ project, threadId, tab, sub }: { project: Project; 
               <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-b pb-1.5">
                 <Tabs value={tab} onValueChange={(v) => navigate(v === "tasks" ? base : `${base}/${v}`)}>
                   <TabsList variant="line" className="-ml-2 [&>button]:focus-visible:border-transparent [&>button]:focus-visible:bg-muted [&>button]:focus-visible:ring-0 [&>button]:focus-visible:outline-none [&>button]:after:!bottom-[-11px]">
-                    <TabsTrigger value="tasks">Tasks<Count n={tasks.filter((t) => t.status !== "done" && taskMatches(t, query)).length} /></TabsTrigger>
+                    <TabsTrigger value="tasks">Knots<Count n={tasks.filter((t) => t.status !== "done" && taskMatches(t, query)).length} /></TabsTrigger>
                     <TabsTrigger value="decisions">Decisions<Count n={decisions.filter((d) => decisionMatches(d, query)).length} /></TabsTrigger>
                     <TabsTrigger value="artifacts">Artifacts<Count n={mine.filter((a) => artifactMatches(a, query)).length} /></TabsTrigger>
                   </TabsList>
